@@ -1,14 +1,20 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import home from '@/pages/HomePage.vue'
+import HomePage from '../pages/HomePage.vue'
+
+// 기능별 라우터 import
+import authRoutes from './auth'
+import contractRoutes from './contract'
+import homesRoutes from './homes'
+import riskCheckRoutes from './risk-check'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    {
-      path: '/',
-      name: 'home',
-      component: home,
-    },
+    { path: '/', name: 'home', component: HomePage },
+    ...authRoutes,
+    ...contractRoutes,
+    ...homesRoutes,
+    ...riskCheckRoutes,
   ],
 })
 
