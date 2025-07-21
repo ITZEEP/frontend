@@ -6,6 +6,7 @@ import authRoutes from './auth'
 import contractRoutes from './contract'
 import homesRoutes from './homes'
 import riskCheckRoutes from './risk-check'
+import chat from './chat'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -15,6 +16,7 @@ const router = createRouter({
     ...contractRoutes,
     ...homesRoutes,
     ...riskCheckRoutes,
+    ...chat,
   ],
 })
 

@@ -18,6 +18,10 @@ export default {
       title: '계약서 작성',
       url: '/contract',
     },
+    {
+      title: '채팅',
+      url: '/chat',
+    },
   ],
 
   // 인증 관련 메뉴 정보
