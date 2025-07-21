@@ -1,7 +1,6 @@
 <template>
   <section class="pre-contract-page">
     <PreContractLayout :currentStep="step" :role="role">
-      <!-- 단계별 컴포넌트 동적 렌더링 -->
       <component :is="currentStepComponent" />
     </PreContractLayout>
   </section>
@@ -12,7 +11,7 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 
 // 레이아웃 공통
-import PreContractLayout from '@/components/pre-contract/owner/PreContractLayout.vue'
+import PreContractLayout from '@/components/pre-contract/PreContractLayout.vue'
 
 // buyer 컴포넌트
 import BuyerStep1 from '@/components/pre-contract/buyer/Step1SelectHome.vue'
@@ -32,7 +31,7 @@ import OwnerStep6 from '@/components/pre-contract/owner/Step6UploadTerms.vue'
 
 // 라우터 정보 가져오기
 const route = useRoute()
-const role = computed(() => route.params.role) // buyer or owner
+const role = computed(() => route.params.role)
 const step = computed(() => Number(route.query.step) || 1)
 
 // 각 role별 단계별 컴포넌트 매핑
