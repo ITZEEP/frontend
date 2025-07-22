@@ -33,6 +33,30 @@
       </div>
     </Modal>
   </div>
+
+  <div class="p-8">
+    <h1 class="text-2xl font-bold mb-4">공통 스타일 유닛 테스트</h1>
+    <!-- 컨테이너 박스 -->
+    <div class="white-box">
+      <h2 class="text-lg font-bold">기본 정보</h2>
+      <p>컨테이너 내용</p>
+    </div>
+
+    <!-- 위험도 박스 -->
+    <div class="safe-box">안전</div>
+    <div class="warning-box">주의</div>
+    <div class="danger-box">위험</div>
+
+    <!-- 인풋 필드 -->
+    <input class="input-field" placeholder="주소를 입력하세요" />
+
+    <!-- 태그 -->
+    <span class="tag-green">전세권 존재</span>
+    <span class="tag-red">주소 불일치</span>
+    <span class="tag-orange">건물 전체 vs 일부 여부</span>
+    <span class="tag-purple">등기일자 vs 계약일자</span>
+    <span class="tag-blue">근저당 존재</span>
+  </div>
 </template>
 
 <script setup>
