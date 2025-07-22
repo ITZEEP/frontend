@@ -25,7 +25,7 @@
 </template>
 
 <script setup>
-import { onMounted, onUnmounted, defineProps } from 'vue'
+import { defineProps, watch } from 'vue'
 import { useModalStore } from '@/stores/modal'
 
 const modalStore = useModalStore()
@@ -45,13 +45,13 @@ function onMaskClick() {
   if (props.maskCloseable) modalStore.close()
 }
 
-onMounted(() => {
-  document.body.style.overflow = 'hidden'
-})
-
-onUnmounted(() => {
-  document.body.style.overflow = ''
-})
+watch(
+  () => modalStore.isOpen,
+  (isOpen) => {
+    document.body.style.overflow = isOpen ? 'hidden' : ''
+  },
+  { immediate: true },
+)
 </script>
 
 <style scoped>
