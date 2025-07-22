@@ -3,7 +3,6 @@
 <template>
   <div class="flex flex-col min-h-screen">
     <Header />
-    <NavBar />
     <main class="flex-1 my-layout-y px-layout-x">
       <slot />
     </main>
