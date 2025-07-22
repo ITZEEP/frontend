@@ -16,12 +16,18 @@
           <input
             class="w-full rounded-md border border-gray-300 px-4 py-2 text-sm"
             type="text"
+            :value="address"
             placeholder="주소 검색"
-            disabled="true"
+            disabled
           />
-          <BaseButton class="w-36" variant="primary"
-            ><img :src="searchIcon" /><span class="ml-2">주소 검색</span></BaseButton
-          >
+          <BaseButton class="w-36" @click="modalStore.open()" variant="primary">
+            <img :src="searchIcon" />
+            <span class="ml-2">주소 검색</span>
+          </BaseButton>
+
+          <Modal :closable="true" :maskCloseable="true">
+            <SearchAddress @select="setAddress" />
+          </Modal>
         </div>
       </div>
 
@@ -42,6 +48,17 @@ import { ref } from 'vue'
 import BaseInput from '@/components/common/BaseInput.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import searchIcon from '@/assets/icons/searchIcon.svg'
+
+import { useModalStore } from '@/stores/modal'
+import Modal from '@/components/common/BaseModal.vue'
+import SearchAddress from '@/components/common/SearchAddress.vue'
+
+const modalStore = useModalStore()
+
+const address = ref('')
+const setAddress = (newAddress) => {
+  address.value = newAddress
+}
 
 const username = ref('')
 const detailAddress = ref('')
