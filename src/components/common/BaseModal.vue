@@ -6,7 +6,9 @@
         class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
         @click.self="onMaskClick"
       >
-        <div class="bg-white rounded-xl w-full max-w-[640px] p-6 relative">
+        <div
+          class="bg-white rounded-xl w-full max-w-[640px] p-6 relative max-h-[80vh] overflow-y-auto"
+        >
           <button
             v-if="closable"
             class="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
@@ -23,7 +25,7 @@
 </template>
 
 <script setup>
-import { defineProps } from 'vue'
+import { onMounted, onUnmounted, defineProps } from 'vue'
 import { useModalStore } from '@/stores/modal'
 
 const modalStore = useModalStore()
@@ -42,6 +44,14 @@ const props = defineProps({
 function onMaskClick() {
   if (props.maskCloseable) modalStore.close()
 }
+
+onMounted(() => {
+  document.body.style.overflow = 'hidden'
+})
+
+onUnmounted(() => {
+  document.body.style.overflow = ''
+})
 </script>
 
 <style scoped>
