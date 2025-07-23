@@ -5,7 +5,7 @@
       sizeClasses,
       variantClasses,
     ]"
-    @click="$emit('click')"
+    @click="$emit('click', $event)"
   >
     <slot />
   </button>
