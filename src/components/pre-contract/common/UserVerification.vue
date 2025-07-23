@@ -38,11 +38,34 @@
       <BaseInput v-model="detailAddress" label="상세 주소" placeholder="상세 주소를 입력하세요" />
 
       <div class="w-full flex gap-2">
-        <BaseInput v-model="ssnFront" label="주민번호 앞자리" placeholder="앞 6자리" />
-        <BaseInput v-model="ssnBack" label="주민번호 뒷자리" placeholder="뒤 7자리" />
+        <BaseInput
+          v-model="ssnFront"
+          label="주민번호 앞자리"
+          placeholder="앞 6자리"
+          id="ssnFront"
+          :inputClass="'[appearance:textfield]'"
+          @input="onFrontInput"
+        />
+
+        <BaseInput
+          v-model="ssnBack"
+          label="주민번호 뒷자리"
+          placeholder="뒤 7자리"
+          id="ssnBack"
+          @input="onBackInput"
+        />
       </div>
 
       <BaseInput v-model="issueDate" label="주민등록증 발급일자" type="date" />
+
+      <BaseInput
+        v-model="phone"
+        label="전화번호"
+        placeholder="010-1234-5678"
+        id="phone"
+        type="tel"
+        @input="onPhoneInput"
+      />
 
       <BaseButton variant="primary" size="lg" class="mt-2">인증하기</BaseButton>
     </div>
@@ -71,6 +94,38 @@ const detailAddress = ref('')
 const ssnFront = ref('')
 const ssnBack = ref('')
 const issueDate = ref('')
+const phone = ref('')
+
+// 주민번호 제한
+function filterNumber(val, maxLength) {
+  return val.replace(/\D/g, '').slice(0, maxLength)
+}
+
+function onFrontInput(e) {
+  ssnFront.value = filterNumber(e.target.value, 6)
+}
+
+function onBackInput(e) {
+  ssnBack.value = filterNumber(e.target.value, 7)
+}
+
+// 전화번호 포맷팅
+function onPhoneInput(e) {
+  const raw = e.target.value.replace(/\D/g, '')
+
+  let formatted = ''
+  if (raw.length <= 3) {
+    formatted = raw
+  } else if (raw.length <= 7) {
+    formatted = `${raw.slice(0, 3)}-${raw.slice(3)}`
+  } else if (raw.length <= 11) {
+    formatted = `${raw.slice(0, 3)}-${raw.slice(3, 7)}-${raw.slice(7)}`
+  } else {
+    formatted = `${raw.slice(0, 3)}-${raw.slice(3, 7)}-${raw.slice(7, 11)}`
+  }
+
+  phone.value = formatted
+}
 </script>
 
 <style scoped></style>
