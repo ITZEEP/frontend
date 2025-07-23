@@ -1,9 +1,23 @@
+<script setup>
+defineProps({
+  width: {
+    type: [Number, String],
+    default: 20
+  },
+  height: {
+    type: [Number, String],
+    default: 20
+  }
+})
+</script>
+
 <template>
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 20 20"
     fill="none"
-    class="icon"
+    :width="width"
+    :height="height"
   >
     <path
       d="M12.5 15L7.5 10L12.5 5"

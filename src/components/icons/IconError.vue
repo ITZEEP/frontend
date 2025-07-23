@@ -1,8 +1,23 @@
+<script setup>
+defineProps({
+  width: {
+    type: [Number, String],
+    default: 20
+  },
+  height: {
+    type: [Number, String],
+    default: 20
+  }
+})
+</script>
+
 <template>
   <svg 
     xmlns="http://www.w3.org/2000/svg" 
     viewBox="0 0 20 20" 
     fill="currentColor"
+    :width="width"
+    :height="height"
   >
     <path 
       fill-rule="evenodd" 

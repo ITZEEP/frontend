@@ -6,11 +6,10 @@
     viewBox="0 0 16 16"
     fill="none"
   >
-    <circle cx="8" cy="8" r="8" fill="currentColor" />
     <path
-      d="M11.5 6L7 10.5L4.5 8"
-      stroke="white"
-      stroke-width="1.5"
+      d="M13.3334 4L6.00008 11.3333L2.66675 8"
+      stroke="currentColor"
+      stroke-width="2"
       stroke-linecap="round"
       stroke-linejoin="round"
     />
@@ -21,11 +20,11 @@
 defineProps({
   width: {
     type: [String, Number],
-    default: 16,
+    default: '16'
   },
   height: {
     type: [String, Number],
-    default: 16,
-  },
+    default: '16'
+  }
 })
 </script>
