@@ -76,7 +76,11 @@ const closeHistoryModal = () => {
 
 const handleSelectHistory = (history) => {
   console.log('선택된 분석 기록:', history)
-  // 여기에서 선택된 기록을 기반으로 필요한 처리를 할 수 있습니다
+  // 분석 결과 페이지로 이동
+  router.push({
+    path: '/risk-check/result',
+    query: { historyId: history.id }
+  })
 }
 </script>
 
