@@ -1,10 +1,16 @@
 <script setup>
 import { defineEmits } from 'vue'
+import { useRouter } from 'vue-router'
 import IconChart from '@/components/icons/IconChart.vue'
 import IconShield from '@/components/icons/IconShield.vue'
 import IconChain from '@/components/icons/IconChain.vue'
 
 const emit = defineEmits(['analyze-another'])
+const router = useRouter()
+
+const goToInsurance = () => {
+  router.push('/risk-check/insurance')
+}
 </script>
 
 <template>
@@ -27,6 +33,7 @@ const emit = defineEmits(['analyze-another'])
 
       <!-- 보증보험 알아보기 -->
       <div
+        @click="goToInsurance"
         class="bg-yellow-400 rounded-xl p-6 text-center h-[172px] flex flex-col items-center justify-center cursor-pointer hover:opacity-90 transition-opacity"
       >
         <div class="w-12 h-12 mb-4 flex items-center justify-center">
