@@ -55,6 +55,16 @@
         "image_id": 3,
         "space_type": "주방",
         "image_url": "https://cdn.pixabay.com/photo/2024/05/22/01/39/room-8779502_1280.png"
+      },
+      {
+        "image_id": 1,
+        "space_type": "거실",
+        "image_url": "https://cdn.pixabay.com/photo/2024/05/22/01/39/room-8779502_1280.png  "
+      },
+      {
+        "image_id": 1,
+        "space_type": "거실",
+        "image_url": "https://cdn.pixabay.com/photo/2024/05/22/01/39/room-8779502_1280.png  "
       }
     ]
   },
