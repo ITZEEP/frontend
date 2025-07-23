@@ -4,7 +4,6 @@ import IconArrowRight from '@/components/icons/IconArrowRight.vue'
 import IconCheckmark from '@/components/icons/IconCheckmark.vue'
 import IconStar from '@/components/icons/IconStar.vue'
 
-// Insurance product data with official website links
 const INSURANCE_PRODUCTS = [
   {
     id: 1,
@@ -70,8 +69,8 @@ const INSURANCE_PRODUCTS = [
 
 const insuranceProducts = ref(INSURANCE_PRODUCTS)
 
-// CSS classes for styling consistency
-const CARD_CLASSES = 'block border border-gray-300 rounded-xl p-6 hover:shadow-md hover:border-gray-400 transition-all duration-200 cursor-pointer'
+const CARD_CLASSES =
+  'block border border-gray-300 rounded-xl p-6 hover:shadow-md hover:border-gray-400 transition-all duration-200 cursor-pointer'
 const ICON_CLASSES = 'w-4 h-4 text-yellow-primary mr-2 mt-0.5 flex-shrink-0'
 </script>
 

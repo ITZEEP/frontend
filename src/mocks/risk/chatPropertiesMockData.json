@@ -1,0 +1,49 @@
+{
+  "chatProperties": [
+    {
+      "id": 6,
+      "name": "송파구 잠실동 아파트",
+      "address": "서울시 송파구 잠실동 67-89",
+      "price": "매매 8억원",
+      "transactionType": "매매",
+      "priceAmount": 800000000,
+      "image": "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&auto=format&fit=crop&q=60",
+      "lastChatDate": "2024-01-14",
+      "lastMessage": "언제 방문 가능하신가요?"
+    },
+    {
+      "id": 7,
+      "name": "종로구 삼청동 한옥",
+      "address": "서울시 종로구 삼청동 12-34",
+      "price": "전세 7억원",
+      "transactionType": "전세",
+      "priceAmount": 700000000,
+      "image": "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=400&auto=format&fit=crop&q=60",
+      "lastChatDate": "2024-01-13",
+      "lastMessage": "한옥 관리 상태가 궁금합니다"
+    },
+    {
+      "id": 8,
+      "name": "노원구 중계동 오피스텔",
+      "address": "서울시 노원구 중계동 56-78",
+      "price": "월세 1천/80",
+      "transactionType": "월세",
+      "deposit": 10000000,
+      "monthlyRent": 800000,
+      "image": "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&auto=format&fit=crop&q=60",
+      "lastChatDate": "2024-01-12",
+      "lastMessage": "관리비 포함인가요?"
+    },
+    {
+      "id": 9,
+      "name": "성동구 성수동 지식산업센터",
+      "address": "서울시 성동구 성수동 234-56",
+      "price": "매매 5억원",
+      "transactionType": "매매",
+      "priceAmount": 500000000,
+      "image": "https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&auto=format&fit=crop&q=60",
+      "lastChatDate": "2024-01-11",
+      "lastMessage": "사업자등록 가능한가요?"
+    }
+  ]
+}

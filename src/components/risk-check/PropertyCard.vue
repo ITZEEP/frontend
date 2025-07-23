@@ -4,6 +4,9 @@ import IconHeart from '@/components/icons/IconHeart.vue'
 import IconChat from '@/components/icons/IconChat.vue'
 import PropertyItem from '@/components/common/PropertyItem.vue'
 
+import favoritesMockData from '@/mocks/risk/favoritesMockData.json'
+import chatPropertiesMockData from '@/mocks/risk/chatPropertiesMockData.json'
+
 const props = defineProps({
   selectedTab: {
     type: String,
@@ -13,98 +16,52 @@ const props = defineProps({
 
 const emit = defineEmits(['select-tab'])
 
-// 상태 관리
 const isLoading = ref(true)
 const scrollContainer = ref(null)
 const showTopFade = ref(false)
 const showBottomFade = ref(false)
 const selectedPropertyId = ref(null)
-
-// 매물 이미지 URL
-const propertyImage = ref(
-  'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRMR8F3CEHkjY8O48Ua9SO7GjsJrJQReAWTImJ3EsUGWjyYsSjUFFauhow&s',
-)
-
-// 더미 매물 데이터
 const properties = ref({
-  favorite: [
-    {
-      id: 1,
-      name: '강남구 신사동 오피스텔',
-      address: '서울시 강남구 신사동 123-45',
-      price: '전세 5억원',
-    },
-    {
-      id: 2,
-      name: '강남구 역삼동 아파트',
-      address: '서울시 강남구 역삼동 789-12',
-      price: '매매 12억원',
-    },
-    {
-      id: 3,
-      name: '서초구 반포동 빌라',
-      address: '서울시 서초구 반포동 456-78',
-      price: '전세 3억원',
-    },
-    {
-      id: 4,
-      name: '송파구 잠실동 오피스텔',
-      address: '서울시 송파구 잠실동 234-56',
-      price: '월세 300/150',
-    },
-    {
-      id: 5,
-      name: '강동구 천호동 아파트',
-      address: '서울시 강동구 천호동 890-12',
-      price: '매매 8억원',
-    },
-  ],
-  chat: [
-    {
-      id: 6,
-      name: '송파구 잠실동 아파트',
-      address: '서울시 송파구 잠실동 67-89',
-      price: '매매 8억원',
-    },
-    {
-      id: 7,
-      name: '성동구 성수동 오피스텔',
-      address: '서울시 성동구 성수동 345-67',
-      price: '전세 4억원',
-    },
-  ],
+  favorite: favoritesMockData.favorites.map((item) => ({
+    id: item.id,
+    name: item.name,
+    address: item.address,
+    price: item.price,
+    image: item.image,
+  })),
+  chat: chatPropertiesMockData.chatProperties.map((item) => ({
+    id: item.id,
+    name: item.name,
+    address: item.address,
+    price: item.price,
+    image: item.image,
+  })),
 })
 
-// 현재 선택된 매물들
 const currentProperties = computed(() => properties.value[props.selectedTab])
 
-// 선택된 매물을 맨 위로 정렬
 const sortedProperties = computed(() => {
   if (!selectedPropertyId.value) {
     return currentProperties.value
   }
-  
-  const selected = currentProperties.value.find(p => p.id === selectedPropertyId.value)
-  const others = currentProperties.value.filter(p => p.id !== selectedPropertyId.value)
-  
+
+  const selected = currentProperties.value.find((p) => p.id === selectedPropertyId.value)
+  const others = currentProperties.value.filter((p) => p.id !== selectedPropertyId.value)
+
   return selected ? [selected, ...others] : currentProperties.value
 })
 
-// 탭 선택
 const selectTab = (tab) => {
   emit('select-tab', tab)
 }
 
-// 매물 선택
 const selectProperty = (propertyId) => {
   selectedPropertyId.value = propertyId
-  // 선택 후 스크롤을 맨 위로
   if (scrollContainer.value) {
     scrollContainer.value.scrollTop = 0
   }
 }
 
-// 스크롤 체크 및 페이드 효과 관리
 const checkScroll = () => {
   if (!scrollContainer.value) {
     showTopFade.value = false
@@ -112,7 +69,6 @@ const checkScroll = () => {
     return
   }
 
-  // 매물이 3개 이하면 페이드 효과 없음
   if (currentProperties.value.length <= 3) {
     showTopFade.value = false
     showBottomFade.value = false
@@ -135,7 +91,6 @@ const handleScroll = () => {
   checkScroll()
 }
 
-// 라이프사이클
 onMounted(() => {
   setTimeout(() => {
     isLoading.value = false
@@ -145,23 +100,24 @@ onMounted(() => {
   }, 800)
 })
 
-// 탭 변경 감지
-watch(() => props.selectedTab, () => {
-  showTopFade.value = false
-  showBottomFade.value = false
-  selectedPropertyId.value = null // 탭 변경 시 선택 해제
-  
-  nextTick(() => {
-    if (scrollContainer.value) {
-      scrollContainer.value.scrollTop = 0
-      setTimeout(() => {
-        checkScroll()
-      }, 150)
-    }
-  })
-})
+watch(
+  () => props.selectedTab,
+  () => {
+    showTopFade.value = false
+    showBottomFade.value = false
+    selectedPropertyId.value = null
 
-// 로딩 완료 시 스크롤 체크
+    nextTick(() => {
+      if (scrollContainer.value) {
+        scrollContainer.value.scrollTop = 0
+        setTimeout(() => {
+          checkScroll()
+        }, 150)
+      }
+    })
+  },
+)
+
 watch(isLoading, (newValue) => {
   if (!newValue) {
     nextTick(() => {
@@ -239,20 +195,24 @@ watch(isLoading, (newValue) => {
                   <span class="bg-white px-3 text-gray-500">다른 매물</span>
                 </div>
               </div>
-              
-              <div class="relative" :class="[
-                index > 0 && !selectedPropertyId ? 'mt-3' : '',
-                index === 0 && selectedPropertyId === property.id ? 'mt-1' : 'mt-3'
-              ]">
-                <div v-if="selectedPropertyId === property.id && index === 0" 
-                     class="absolute -top-3 left-4 bg-yellow-primary text-white text-xs px-3 py-1 rounded-full z-10">
+
+              <div
+                class="relative"
+                :class="[
+                  index > 0 && !selectedPropertyId ? 'mt-3' : '',
+                  index === 0 && selectedPropertyId === property.id ? 'mt-1' : 'mt-3',
+                ]"
+              >
+                <div
+                  v-if="selectedPropertyId === property.id && index === 0"
+                  class="absolute -top-3 left-4 bg-yellow-primary text-white text-xs px-3 py-1 rounded-full z-10"
+                >
                   선택된 매물
                 </div>
                 <PropertyItem
                   :property="{
                     ...property,
                     title: property.name,
-                    image: propertyImage
                   }"
                   :selected="selectedPropertyId === property.id"
                   @click="selectProperty(property.id)"

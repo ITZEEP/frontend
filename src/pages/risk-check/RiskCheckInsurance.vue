@@ -13,11 +13,8 @@ const goBack = () => {
   router.back()
 }
 
-// Insurance information page
-
 onMounted(() => {
   document.body.style.backgroundColor = '#F7F7F8'
-  // 페이지 로드 시 스크롤을 맨 위로
   window.scrollTo(0, 0)
 })
 

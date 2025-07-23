@@ -1,5 +1,5 @@
 <script setup>
-import { ref, defineProps, defineEmits } from 'vue'
+import { ref, defineEmits } from 'vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import BaseModal from '@/components/common/BaseModal.vue'
 import IconDocument from '@/components/icons/IconDocument.vue'
@@ -281,31 +281,36 @@ const closeFileTypeModal = () => {
     </div>
   </div>
 
-  <BaseModal v-if="showFileTypeModal" @close="closeFileTypeModal" :closable="false" maxWidth="max-w-[420px]">
+  <BaseModal
+    v-if="showFileTypeModal"
+    @close="closeFileTypeModal"
+    :closable="false"
+    maxWidth="max-w-[420px]"
+  >
     <div class="-m-6 overflow-hidden rounded-md">
-        <div class="bg-red-50 p-5">
-          <div class="flex items-start">
-            <div class="flex-shrink-0">
-              <div class="rounded-full bg-red-100 p-2">
-                <IconError class="h-6 w-6 text-red-600" />
-              </div>
-            </div>
-            <div class="ml-4">
-              <h3 class="text-lg font-semibold text-red-900">파일 형식 오류</h3>
-              <p class="mt-2 text-sm text-red-700">PDF 파일만 업로드 가능합니다.</p>
+      <div class="bg-red-50 p-5">
+        <div class="flex items-start">
+          <div class="flex-shrink-0">
+            <div class="rounded-full bg-red-100 p-2">
+              <IconError class="h-6 w-6 text-red-600" />
             </div>
           </div>
+          <div class="ml-4">
+            <h3 class="text-lg font-semibold text-red-900">파일 형식 오류</h3>
+            <p class="mt-2 text-sm text-red-700">PDF 파일만 업로드 가능합니다.</p>
+          </div>
         </div>
-        <div class="p-5">
-          <p class="text-sm text-gray-600">
-            등기부등본 또는 건축물대장을 PDF 형식으로 준비해 주세요.
-          </p>
-        </div>
-        <div class="px-5 py-4">
-          <BaseButton @click="closeFileTypeModal" variant="danger-outline" class="w-full">
-            확인
-          </BaseButton>
-        </div>
+      </div>
+      <div class="p-5">
+        <p class="text-sm text-gray-600">
+          등기부등본 또는 건축물대장을 PDF 형식으로 준비해 주세요.
+        </p>
+      </div>
+      <div class="px-5 py-4">
+        <BaseButton @click="closeFileTypeModal" variant="danger-outline" class="w-full">
+          확인
+        </BaseButton>
+      </div>
     </div>
   </BaseModal>
 </template>

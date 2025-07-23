@@ -8,7 +8,11 @@ export default [
     component: () => import('@/pages/risk-check/RiskCheckConfirm.vue'),
   },
   {
-    path: '/risk-check/result',
+    path: '/risk-check/confirm/:id',
+    component: () => import('@/pages/risk-check/RiskCheckConfirm.vue'),
+  },
+  {
+    path: '/risk-check/result/:analysisId',
     component: () => import('@/pages/risk-check/RiskCheckResult.vue'),
   },
   {

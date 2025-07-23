@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import IconChevronLeft from '@/components/icons/IconChevronLeft.vue'
 import PropertyInfoCard from '@/components/risk-check/result/PropertyInfoCard.vue'
 import OverallRiskSection from '@/components/risk-check/result/OverallRiskSection.vue'
@@ -8,123 +8,343 @@ import DetailedAnalysis from '@/components/risk-check/result/DetailedAnalysis.vu
 import TransactionNotes from '@/components/risk-check/result/TransactionNotes.vue'
 import RecommendedServices from '@/components/risk-check/result/RecommendedServices.vue'
 
+import propertyData from '@/mocks/risk/propertyMockData.json'
+import riskAnalysisData from '@/mocks/risk/riskAnalysisMockData.json'
 
 const router = useRouter()
+const route = useRoute()
 
-// 분석 결과 데이터 (실제로는 API에서 받아오거나 이전 페이지에서 전달받아야 함)
+const analysisId = route.params.analysisId || null
+const propertyId = Number(route.params.id || 1)
+
+let currentAnalysis, currentProperty
+let dataNotFound = false
+
+if (analysisId) {
+  // analysesByHistory에서 기본 정보 가져오기
+  const historyData = riskAnalysisData.analysesByHistory?.[analysisId]
+  if (historyData) {
+    // propertyId를 이용해 전체 분석 데이터 가져오기
+    currentAnalysis = riskAnalysisData.analysesByProperty?.find(
+      (a) => a.propertyId === historyData.propertyId,
+    )
+    if (!currentAnalysis) {
+      // analysesByProperty에 없으면 historyData를 사용하되, 기본 riskFactors 생성
+      currentAnalysis = historyData
+    }
+    currentProperty =
+      propertyData.properties.find((p) => p.id === historyData.propertyId)
+    
+    if (!currentProperty) {
+      dataNotFound = true
+    }
+  } else {
+    // 잘못된 analysisId로 접근한 경우
+    dataNotFound = true
+  }
+} else {
+  currentAnalysis =
+    riskAnalysisData.analysesByProperty?.find((a) => a.propertyId === propertyId)
+  currentProperty =
+    propertyData.properties.find((p) => p.id === propertyId)
+  
+  // 데이터를 찾을 수 없는 경우
+  if (!currentAnalysis || !currentProperty) {
+    dataNotFound = true
+  }
+}
 const analysisResult = ref({
-  overallRisk: 'safe', // 'safe', 'warning', 'danger'
-  score: 85,
-  analysisDate: '2024-01-15',
+  overallRisk: currentAnalysis?.overallRisk || 'safe',
+  analysisDate: currentAnalysis?.analysisDate || '2024-01-15',
+  note: currentAnalysis?.note || '',
   propertyInfo: {
-    title: '강남구 신사동 오피스텔',
-    address: '서울시 강남구 신사동 123-45',
-    type: '오피스텔',
-    transactionType: '전세',
-    price: '5억원',
-    image:
-      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRMR8F3CEHkjY8O48Ua9SO7GjsJrJQReAWTImJ3EsUGWjyYsSjUFFauhow&s',
+    title: currentProperty?.title || '',
+    address: currentProperty?.address || '',
+    type: currentProperty?.type || '',
+    transactionType: currentProperty?.transactionType || '',
+    price: currentProperty?.priceDisplay || '',
+    image: currentProperty?.image || '',
   },
-  detailScores: {
-    legal: 85,
-    building: 90,
-    price: 70,
-    location: 95,
-    future: 80,
-  },
-  riskFactors: [
+  riskFactors: currentAnalysis?.riskFactors
+    ? [
+        {
+          title: '법적 안전성',
+          status: 'safe',
+          items: currentAnalysis.riskFactors.legalSafety.map((item) => ({
+            name: item.item,
+            status: item.status === '안전' ? 'safe' : item.status === '주의' ? 'warning' : 'danger',
+            description: item.description,
+          })),
+        },
+        {
+          title: '건물 안전성',
+          status: 'safe',
+          items: currentAnalysis.riskFactors.buildingSafety.map((item) => ({
+            name: item.item,
+            status:
+              item.status === '안전' || item.status === '적합' || item.status === '양호'
+                ? 'safe'
+                : item.status === '주의'
+                  ? 'warning'
+                  : 'danger',
+            description: item.description,
+          })),
+        },
+        {
+          title: '가격 적정성',
+          status: 'safe',
+          items: currentAnalysis.riskFactors.priceAdequacy.map((item) => ({
+            name: item.item,
+            status:
+              item.status === '안전' || item.status === '적정'
+                ? 'safe'
+                : item.status === '주의'
+                  ? 'warning'
+                  : 'danger',
+            description: item.description,
+          })),
+        },
+        {
+          title: '입지 평가',
+          status: 'safe',
+          items: currentAnalysis.riskFactors.locationEvaluation.map((item) => ({
+            name: item.item,
+            status:
+              item.status === '우수' || item.status === '양호'
+                ? 'safe'
+                : item.status === '보통'
+                  ? 'warning'
+                  : 'danger',
+            description: item.description,
+          })),
+        },
+      ]
+    : generateDefaultRiskFactors(currentAnalysis?.overallRisk || 'safe'),
+})
+
+function generateDefaultRiskFactors(overallRisk) {
+  const riskStatus =
+    overallRisk === 'safe' ? 'safe' : overallRisk === 'warning' ? 'warning' : 'danger'
+
+  return [
     {
       title: '법적 안전성',
-      status: 'safe',
-      score: 85,
+      status: riskStatus,
       items: [
-        { name: '소유권 이전', status: 'safe', description: '정상' },
-        { name: '압류/가압류', status: 'safe', description: '없음' },
-        { name: '근저당 설정', status: 'warning', description: '3억원' },
-        { name: '전입신고', status: 'safe', description: '가능' },
+        {
+          name: '소유권 확인',
+          status: riskStatus,
+          description:
+            riskStatus === 'safe'
+              ? '소유권이 확인되었습니다.'
+              : riskStatus === 'warning'
+                ? '소유권 확인이 필요합니다.'
+                : '소유권에 문제가 있습니다.',
+        },
+        {
+          name: '법적 제한',
+          status: riskStatus,
+          description:
+            riskStatus === 'safe'
+              ? '법적 제한사항이 없습니다.'
+              : riskStatus === 'warning'
+                ? '일부 제한사항이 있습니다.'
+                : '중요한 법적 제한이 있습니다.',
+        },
       ],
     },
     {
       title: '건물 안전성',
-      status: 'safe',
-      score: 90,
+      status: riskStatus,
       items: [
-        { name: '건축물 대장', status: 'safe', description: '정상' },
-        { name: '위반건축물', status: 'safe', description: '해당없음' },
-        { name: '건물 연식', status: 'safe', description: '5년' },
-        { name: '관리 상태', status: 'safe', description: '양호' },
+        {
+          name: '건물 상태',
+          status: riskStatus,
+          description:
+            riskStatus === 'safe'
+              ? '건물 상태가 양호합니다.'
+              : riskStatus === 'warning'
+                ? '일부 보수가 필요합니다.'
+                : '주요 보수가 필요합니다.',
+        },
+        {
+          name: '위반사항',
+          status: riskStatus,
+          description:
+            riskStatus === 'safe'
+              ? '위반사항이 없습니다.'
+              : riskStatus === 'warning'
+                ? '경미한 위반사항이 있습니다.'
+                : '중대한 위반사항이 있습니다.',
+        },
       ],
     },
     {
       title: '가격 적정성',
-      status: 'warning',
-      score: 70,
+      status: riskStatus,
       items: [
-        { name: '시세 대비', status: 'warning', description: '5% 높음' },
-        { name: '전세가율', status: 'safe', description: '65%' },
-        { name: '가격 추이', status: 'safe', description: '안정적' },
-        { name: '보증금 보호', status: 'safe', description: '가능' },
+        {
+          name: '시세 대비',
+          status: riskStatus,
+          description:
+            riskStatus === 'safe'
+              ? '시세 대비 적정합니다.'
+              : riskStatus === 'warning'
+                ? '시세보다 다소 높습니다.'
+                : '시세보다 매우 높습니다.',
+        },
+        {
+          name: '가격 추이',
+          status: riskStatus,
+          description:
+            riskStatus === 'safe'
+              ? '가격이 안정적입니다.'
+              : riskStatus === 'warning'
+                ? '가격 변동이 있습니다.'
+                : '가격이 불안정합니다.',
+        },
       ],
     },
     {
       title: '입지 평가',
-      status: 'safe',
-      score: 95,
+      status: riskStatus,
       items: [
-        { name: '교통 접근성', status: 'safe', description: '우수' },
-        { name: '생활 편의시설', status: 'safe', description: '우수' },
-        { name: '학군', status: 'safe', description: '우수' },
-        { name: '주변 환경', status: 'safe', description: '쾌적' },
+        {
+          name: '교통 접근성',
+          status: riskStatus,
+          description:
+            riskStatus === 'safe'
+              ? '교통이 매우 편리합니다.'
+              : riskStatus === 'warning'
+                ? '교통이 보통입니다.'
+                : '교통이 불편합니다.',
+        },
+        {
+          name: '생활 편의',
+          status: riskStatus,
+          description:
+            riskStatus === 'safe'
+              ? '편의시설이 잘 갖춰져 있습니다.'
+              : riskStatus === 'warning'
+                ? '기본 편의시설이 있습니다.'
+                : '편의시설이 부족합니다.',
+        },
       ],
     },
-  ],
-  // recommendations 배열은 제거됨 (사용하지 않음)
-})
-
-// 상세 분석 데이터 구조화
-const detailedAnalysisData = computed(() => ({
-  basicInfo: [
-    { name: '소유자 확인', status: 'safe', description: '임대인의 이름과 등기부등본의 소유자 이름이 일치합니다.' },
-    { name: '설정일', status: 'unknown', description: '확인할 수 없음' },
-  ],
-  legalSafety: [
-    { name: '가압류', status: 'safe', description: '등기부에 기재된 가압류가 없습니다.' },
-    { name: '압류', status: 'safe', description: '등기부에 기재된 압류가 없습니다.' },
-    { name: '경매', status: 'safe', description: '등기부에 경매개시결정 등기가 없습니다.' },
-    { name: '소송', status: 'unknown', description: '확인할 수 없음' },
-  ],
-  buildingSafety: [
-    { name: '위반건축물', status: 'safe', description: '건축물대장에 위반건축물로 표시되어 있지 않습니다.' },
-    { name: '용도변경', status: 'safe', description: '용도변경 이력이 없습니다.' },
-  ],
-  financialSafety: [
-    { name: '근저당', status: 'warning', description: '채권최고액 3억원의 근저당이 설정되어 있습니다.' },
-    { name: '전세가율', status: 'safe', description: '전세가율 65%로 적정 수준입니다.' },
-  ],
-}))
-
-// 점수에 따른 상태 반환
-const getScoreStatus = (score) => {
-  if (score >= 80) return 'safe'
-  if (score >= 60) return 'warning'
-  return 'danger'
+  ]
 }
 
-// 뒤로 가기
+const detailedAnalysisData = computed(() => {
+  // detailedAnalysis가 없는 경우 기본값 반환
+  if (!currentAnalysis?.detailedAnalysis) {
+    const riskStatus =
+      currentAnalysis?.overallRisk === 'safe'
+        ? 'safe'
+        : currentAnalysis?.overallRisk === 'warning'
+          ? 'warning'
+          : 'danger'
+    return {
+      basicInfo: [
+        { name: '소유자 확인', status: riskStatus, description: '분석 데이터가 없습니다.' },
+        { name: '주소 일치', status: riskStatus, description: '분석 데이터가 없습니다.' },
+      ],
+      legalSafety: [
+        { name: '법적 분쟁', status: riskStatus, description: '분석 데이터가 없습니다.' },
+        { name: '위반건축물', status: riskStatus, description: '분석 데이터가 없습니다.' },
+      ],
+      buildingSafety: [
+        { name: '건물 용도', status: riskStatus, description: '분석 데이터가 없습니다.' },
+        { name: '면적 정보', status: riskStatus, description: '분석 데이터가 없습니다.' },
+      ],
+      financialSafety: [
+        { name: '근저당', status: riskStatus, description: '분석 데이터가 없습니다.' },
+        { name: '시세 대비 가격', status: riskStatus, description: '분석 데이터가 없습니다.' },
+      ],
+    }
+  }
+
+  return {
+    basicInfo: [
+      {
+        name: '소유자 확인',
+        status: currentAnalysis.detailedAnalysis.basicInfo.ownerInfoMatch.includes('일치')
+          ? 'safe'
+          : 'warning',
+        description: currentAnalysis.detailedAnalysis.basicInfo.ownerInfoMatch,
+      },
+      {
+        name: '주소 일치',
+        status: currentAnalysis.detailedAnalysis.basicInfo.addressMatch.includes('일치')
+          ? 'safe'
+          : 'warning',
+        description: currentAnalysis.detailedAnalysis.basicInfo.addressMatch,
+      },
+    ],
+    legalSafety: [
+      {
+        name: '법적 분쟁',
+        status: currentAnalysis.detailedAnalysis.legalRisk.legalProceedingsStatus.includes('없어')
+          ? 'safe'
+          : 'danger',
+        description: currentAnalysis.detailedAnalysis.legalRisk.legalProceedingsStatus,
+      },
+      {
+        name: '위반건축물',
+        status: currentAnalysis.detailedAnalysis.legalRisk.violationBuildingStatus.includes('적법')
+          ? 'safe'
+          : 'danger',
+        description: currentAnalysis.detailedAnalysis.legalRisk.violationBuildingStatus,
+      },
+    ],
+    buildingSafety: [
+      {
+        name: '건물 용도',
+        status: currentAnalysis.detailedAnalysis.buildingInfo.buildingPurposeCheck.includes('적합')
+          ? 'safe'
+          : 'warning',
+        description: currentAnalysis.detailedAnalysis.buildingInfo.buildingPurposeCheck,
+      },
+      {
+        name: '면적 정보',
+        status: 'safe',
+        description: currentAnalysis.detailedAnalysis.buildingInfo.floorAreaInfo,
+      },
+    ],
+    financialSafety: [
+      {
+        name: '근저당',
+        status: currentAnalysis.detailedAnalysis.rightsInfo.mortgageStatus.includes('없어')
+          ? 'safe'
+          : 'warning',
+        description: currentAnalysis.detailedAnalysis.rightsInfo.mortgageStatus,
+      },
+      {
+        name: '시세 대비 가격',
+        status: currentAnalysis.detailedAnalysis.rightsInfo.realPriceRatio.includes('적정')
+          ? 'safe'
+          : 'warning',
+        description: currentAnalysis.detailedAnalysis.rightsInfo.realPriceRatio,
+      },
+    ],
+  }
+})
+
 const goBack = () => {
   router.push('/risk-check')
 }
 
-
-// 다른 매물 분석하기
 const analyzeAnother = () => {
   router.push('/risk-check')
 }
 
 onMounted(() => {
   document.body.style.backgroundColor = '#F7F7F8'
-  // 페이지 로드 시 스크롤을 맨 위로
   window.scrollTo(0, 0)
+  
+  // 데이터를 찾을 수 없는 경우 이전 페이지로 돌아가기
+  if (dataNotFound) {
+    router.push('/risk-check')
+  }
 })
 
 onUnmounted(() => {

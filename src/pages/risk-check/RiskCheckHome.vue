@@ -1,7 +1,6 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import BaseModal from '@/components/common/BaseModal.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import LoadingOverlay from '@/components/common/LoadingOverlay.vue'
 import { useModalStore } from '@/stores/modal'
@@ -22,7 +21,7 @@ const selectedPropertyType = ref(null)
 const selectedTab = ref('favorite')
 const uploadedFiles = ref({
   등기부등본: null,
-  건축물대장: null
+  건축물대장: null,
 })
 const isAnalyzing = ref(false)
 
@@ -54,12 +53,12 @@ const startRiskAnalysis = async () => {
   isAnalyzing.value = true
   console.log('AI 위험도 분석 시작')
   console.log('업로드된 파일들:', uploadedFiles.value)
-  
+
   // OCR 처리 시뮬레이션
-  await new Promise(resolve => setTimeout(resolve, 1000))
-  
+  await new Promise((resolve) => setTimeout(resolve, 1000))
+
   isAnalyzing.value = false
-  
+
   // OCR 확인 페이지로 이동
   router.push('/risk-check/confirm')
 }
@@ -75,12 +74,7 @@ const closeHistoryModal = () => {
 }
 
 const handleSelectHistory = (history) => {
-  console.log('선택된 분석 기록:', history)
-  // 분석 결과 페이지로 이동
-  router.push({
-    path: '/risk-check/result',
-    query: { historyId: history.id }
-  })
+  router.push(`/risk-check/result/${history.analysisId}`)
 }
 </script>
 
@@ -89,43 +83,37 @@ const handleSelectHistory = (history) => {
     <div class="flex items-center justify-between mb-8">
       <div>
         <h1 class="text-3xl font-bold text-gray-warm-700 mb-2">사기 위험도 분석</h1>
-        <p class="text-base text-gray-600">
-          AI 기술로 매물의 사기 위험도를 정확하게 분석합니다
-        </p>
+        <p class="text-base text-gray-600">AI 기술로 매물의 사기 위험도를 정확하게 분석합니다</p>
       </div>
-      <BaseButton
-        @click="handleCheckHistory"
-        size="lg"
-        variant="primary"
-      >
+      <BaseButton @click="handleCheckHistory" size="lg" variant="primary">
         <IconClock class="w-4 h-4 mr-2 text-white" />
         조회 기록 확인하기
       </BaseButton>
     </div>
 
     <div class="mb-8">
-      <PropertyTypeSelector 
+      <PropertyTypeSelector
         :selected-type="selectedPropertyType"
         @select-type="handlePropertyTypeSelect"
       />
     </div>
 
     <div v-if="selectedPropertyType === 'registered'" class="mb-8">
-      <PropertyCard 
-        :selected-tab="selectedTab"
-        @select-tab="handleTabSelect"
-      />
+      <PropertyCard :selected-tab="selectedTab" @select-tab="handleTabSelect" />
     </div>
 
-    <div v-if="selectedPropertyType === 'registered' || selectedPropertyType === 'unregistered'" class="mb-8">
-      <DocumentUpload 
-        :uploaded-files="uploadedFiles"
-        @update-files="handleFileUpdate"
-      />
+    <div
+      v-if="selectedPropertyType === 'registered' || selectedPropertyType === 'unregistered'"
+      class="mb-8"
+    >
+      <DocumentUpload :uploaded-files="uploadedFiles" @update-files="handleFileUpdate" />
     </div>
 
-    <div v-if="selectedPropertyType === 'registered' || selectedPropertyType === 'unregistered'" class="flex justify-center">
-      <BaseButton 
+    <div
+      v-if="selectedPropertyType === 'registered' || selectedPropertyType === 'unregistered'"
+      class="flex justify-center"
+    >
+      <BaseButton
         size="lg"
         variant="primary"
         @click="startRiskAnalysis"
@@ -138,7 +126,9 @@ const handleSelectHistory = (history) => {
             AI 위험도 분석 시작
           </div>
           <div v-else key="loading" class="flex items-center">
-            <div class="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            <div
+              class="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"
+            ></div>
             분석 중...
           </div>
         </transition>

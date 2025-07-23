@@ -35,7 +35,6 @@ const updateNestedField = (parentField, field, value) => {
   })
 }
 
-// Expose functions for child components
 defineExpose({
   updateField,
   updateNestedField

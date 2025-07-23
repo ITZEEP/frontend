@@ -1,6 +1,4 @@
-<script setup>
-// Hero section for insurance page
-</script>
+<script setup></script>
 
 <template>
   <div class="bg-gradient-to-r from-yellow-primary to-yellow-400 transition-all duration-300">
