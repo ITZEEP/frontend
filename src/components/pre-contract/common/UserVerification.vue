@@ -21,7 +21,7 @@
             disabled
           />
           <BaseButton class="w-36" @click="modalStore.open()" variant="primary">
-            <img :src="searchIcon" />
+            <SearchIcon />
             <span class="ml-2">주소 검색</span>
           </BaseButton>
 
@@ -49,7 +49,7 @@
 import { ref } from 'vue'
 import BaseInput from '@/components/common/BaseInput.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
-import searchIcon from '@/assets/icons/searchIcon.svg'
+import SearchIcon from '@/assets/icons/SearchIcon.vue'
 
 import { useModalStore } from '@/stores/modal'
 import Modal from '@/components/common/BaseModal.vue'
