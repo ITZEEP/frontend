@@ -7,9 +7,9 @@
 
     <div class="w-full flex flex-col items-center justify-center gap-4">
       <HomeInfoMain :data="HOME_DATA[0].home" />
-      <HomeInfoDashboard :data="HOME_DATA" />
-      <HomePhotos :data="HOME_DATA" />
-      <HomeConfirm :data="HOME_DATA" />
+      <HomeInfoDashboard :data="HOME_DATA[0]" />
+      <HomePhotos :data="HOME_DATA[0].images" />
+      <HomeConfirm />
     </div>
   </div>
 </template>
