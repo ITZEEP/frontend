@@ -39,6 +39,8 @@
       </div>
 
       <BaseInput v-model="issueDate" label="주민등록증 발급일자" type="date" />
+
+      <BaseButton variant="primary" size="lg" class="mt-2">인증하기</BaseButton>
     </div>
   </div>
 </template>
