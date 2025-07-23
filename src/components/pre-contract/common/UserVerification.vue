@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col gap-4 items-center justify-center">
+  <div class="flex flex-col gap-4 items-center justify-center px-24 py-4">
     <!-- 본인 인증 헤더 -->
     <div class="flex flex-col gap-2 items-center justify-center">
       <h1 class="text-gray-warm-700 font-bold text-xl">본인 인증</h1>
@@ -20,8 +20,12 @@
             placeholder="주소 검색"
             disabled
           />
-          <BaseButton class="w-36" @click="modalStore.open()" variant="primary">
-            <SearchIcon />
+          <BaseButton
+            class="w-36 flex justify-center items-center"
+            @click="modalStore.open()"
+            variant="primary"
+          >
+            <SearchIcon class="mt-1" />
             <span class="ml-2">주소 검색</span>
           </BaseButton>
 
