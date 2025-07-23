@@ -23,11 +23,11 @@ import BuyerStep6 from '@/components/pre-contract/buyer/Step06Confirm.vue'
 
 // owner 컴포넌트
 import OwnerStep1 from '@/components/pre-contract/owner/step1/Step1BasicInfo.vue'
-import OwnerStep2 from '@/components/pre-contract/owner/Step2Verification.vue'
-import OwnerStep3 from '@/components/pre-contract/owner/Step3FacilityResponsibility.vue'
-import OwnerStep4 from '@/components/pre-contract/owner/Step4ContractTerms.vue'
-import OwnerStep5 from '@/components/pre-contract/owner/Step5Confirm.vue'
-import OwnerStep6 from '@/components/pre-contract/owner/Step6UploadTerms.vue'
+import OwnerStep2 from '@/components/pre-contract/owner/step2/Step2Verification.vue'
+import OwnerStep3 from '@/components/pre-contract/owner/step3/Step3ContractTerms.vue'
+import OwnerStep4 from '@/components/pre-contract/owner/step4/Step4LivingConditions.vue'
+import OwnerStep5 from '@/components/pre-contract/owner/step5/Step5UploadTerms.vue'
+import OwnerStep6 from '@/components/pre-contract/owner/step6/Step6Confirm.vue'
 
 // 라우터 정보 가져오기
 const route = useRoute()
