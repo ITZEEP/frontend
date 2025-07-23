@@ -8,6 +8,7 @@ import { useModalStore } from '@/stores/modal'
 import PropertyTypeSelector from '@/components/risk-check/PropertyTypeSelector.vue'
 import PropertyCard from '@/components/risk-check/PropertyCard.vue'
 import DocumentUpload from '@/components/risk-check/DocumentUpload.vue'
+import RiskCheckHistoryModal from '@/components/risk-check/RiskCheckHistoryModal.vue'
 
 import IconClock from '@/components/icons/IconClock.vue'
 import IconSearch from '@/components/icons/IconSearch.vue'
@@ -60,12 +61,17 @@ const startRiskAnalysis = async () => {
 
 const handleCheckHistory = () => {
   showHistoryModal.value = true
-  modalStore.showModal()
+  modalStore.open()
 }
 
 const closeHistoryModal = () => {
   showHistoryModal.value = false
-  modalStore.hideModal()
+  modalStore.close()
+}
+
+const handleSelectHistory = (history) => {
+  console.log('선택된 분석 기록:', history)
+  // 여기에서 선택된 기록을 기반으로 필요한 처리를 할 수 있습니다
 }
 </script>
 
@@ -131,25 +137,11 @@ const closeHistoryModal = () => {
     </div>
   </div>
 
-  <BaseModal v-if="showHistoryModal" @close="closeHistoryModal">
-    <template #header>
-      <h3 class="text-xl font-semibold text-gray-warm-700">조회 기록</h3>
-    </template>
-    <template #body>
-      <div class="py-4">
-        <p class="text-gray-600 text-center">조회 기록이 없습니다.</p>
-      </div>
-    </template>
-    <template #footer>
-      <BaseButton
-        @click="closeHistoryModal"
-        variant="primary"
-        class="w-full"
-      >
-        확인
-      </BaseButton>
-    </template>
-  </BaseModal>
+  <RiskCheckHistoryModal
+    :is-open="showHistoryModal"
+    @close="closeHistoryModal"
+    @select-history="handleSelectHistory"
+  />
 </template>
 
 <style scoped>

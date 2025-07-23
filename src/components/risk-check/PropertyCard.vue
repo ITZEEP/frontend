@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import IconHeart from '@/components/icons/IconHeart.vue'
 import IconChat from '@/components/icons/IconChat.vue'
+import PropertyItem from '@/components/common/PropertyItem.vue'
 
 const props = defineProps({
   selectedTab: {
@@ -101,11 +102,6 @@ const selectProperty = (propertyId) => {
   if (scrollContainer.value) {
     scrollContainer.value.scrollTop = 0
   }
-}
-
-// 이미지 로드 에러 처리
-const handleImageError = (event) => {
-  event.target.src = propertyImage.value
 }
 
 // 스크롤 체크 및 페이드 효과 관리
@@ -244,61 +240,34 @@ watch(isLoading, (newValue) => {
                 </div>
               </div>
               
-              <div
-                @click="selectProperty(property.id)"
-                :class="[
-                  'border-2 rounded-xl p-4 transition-all cursor-pointer relative',
-                  selectedPropertyId === property.id
-                    ? 'bg-yellow-50 border-yellow-primary hover:shadow-md'
-                    : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm',
-                  index > 0 && !selectedPropertyId ? 'mt-3' : '',
-                  index === 0 && selectedPropertyId === property.id ? 'mt-1' : 'mt-3'
-                ]"
-              >
+              <div class="relative" :class="[
+                index > 0 && !selectedPropertyId ? 'mt-3' : '',
+                index === 0 && selectedPropertyId === property.id ? 'mt-1' : 'mt-3'
+              ]">
                 <div v-if="selectedPropertyId === property.id && index === 0" 
                      class="absolute -top-3 left-4 bg-yellow-primary text-white text-xs px-3 py-1 rounded-full z-10">
                   선택된 매물
                 </div>
-                <div class="flex items-center gap-4">
-                <img
-                  :src="propertyImage"
-                  alt="매물 이미지"
-                  class="w-16 h-16 object-cover rounded-lg"
-                  @error="handleImageError"
+                <PropertyItem
+                  :property="{
+                    ...property,
+                    title: property.name,
+                    image: propertyImage
+                  }"
+                  :selected="selectedPropertyId === property.id"
+                  @click="selectProperty(property.id)"
                 />
-                <div class="flex-1">
-                  <h4 class="text-base font-semibold text-gray-warm-700 mb-1">
-                    {{ property.name }}
-                  </h4>
-                  <p class="text-sm text-gray-600 mb-1">
-                    {{ property.address }}
-                  </p>
-                  <p :class="[
-                    'text-base font-semibold',
-                    selectedPropertyId === property.id ? 'text-yellow-primary' : 'text-gray-700'
-                  ]">
-                    {{ property.price }}
-                  </p>
-                </div>
-              </div>
               </div>
             </template>
           </div>
-          <div v-else key="skeleton" class="space-y-3 px-1 pt-3">
-            <div
-              v-for="i in 3"
-              :key="i"
-              class="bg-yellow-50 border-2 border-yellow-primary rounded-xl p-4"
-            >
-              <div class="flex items-center gap-4">
-                <div class="w-16 h-16 bg-gray-200 rounded-lg animate-pulse"></div>
-                <div class="flex-1">
-                  <div class="h-4 bg-gray-200 rounded w-3/4 mb-2 animate-pulse"></div>
-                  <div class="h-3 bg-gray-200 rounded w-full mb-2 animate-pulse"></div>
-                  <div class="h-4 bg-gray-200 rounded w-1/2 animate-pulse"></div>
-                </div>
-              </div>
-            </div>
+          <div v-else :key="`loading-${selectedTab}`" class="space-y-3 px-1 pt-3">
+            <PropertyItem
+              v-for="n in 3"
+              :key="n"
+              :property="{}"
+              :is-loading="true"
+              :clickable="false"
+            />
           </div>
         </transition>
       </div>
