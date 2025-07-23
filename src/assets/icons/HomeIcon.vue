@@ -2,7 +2,7 @@
   <svg
     :width="props.width"
     :height="props.height"
-    viewBox="0 0 17 15"
+    viewBox="0 0 24 24"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
   >
@@ -19,11 +19,11 @@ import { defineProps } from 'vue'
 const props = defineProps({
   width: {
     type: [String, Number],
-    default: '17',
+    default: '24',
   },
   height: {
     type: [String, Number],
-    default: '15',
+    default: '24',
   },
 })
 </script>
