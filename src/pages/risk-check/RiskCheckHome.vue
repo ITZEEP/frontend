@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import BaseModal from '@/components/common/BaseModal.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
+import LoadingOverlay from '@/components/common/LoadingOverlay.vue'
 import { useModalStore } from '@/stores/modal'
 
 import PropertyTypeSelector from '@/components/risk-check/PropertyTypeSelector.vue'
@@ -54,9 +55,13 @@ const startRiskAnalysis = async () => {
   console.log('AI 위험도 분석 시작')
   console.log('업로드된 파일들:', uploadedFiles.value)
   
-  await new Promise(resolve => setTimeout(resolve, 2000))
+  // OCR 처리 시뮬레이션
+  await new Promise(resolve => setTimeout(resolve, 1000))
   
   isAnalyzing.value = false
+  
+  // OCR 확인 페이지로 이동
+  router.push('/risk-check/confirm')
 }
 
 const handleCheckHistory = () => {
@@ -135,6 +140,13 @@ const handleSelectHistory = (history) => {
         </transition>
       </BaseButton>
     </div>
+
+    <!-- 로딩 오버레이 -->
+    <LoadingOverlay
+      :loading="isAnalyzing"
+      message="OCR 처리 중..."
+      subMessage="문서를 분석하고 있습니다"
+    />
   </div>
 
   <RiskCheckHistoryModal
