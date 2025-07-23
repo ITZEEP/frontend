@@ -1,17 +1,17 @@
 <template>
-  <div class="butter-box w-full flex justify-between items-center p-4">
+  <div class="butter-box w-full flex justify-between items-center p-6">
     <!-- 매물 기본 정보 -->
-    <div class="flex flex-col gap-1">
-      <h2 class="text-xl font-bold text-gray-800">{{ homeData.title }}</h2>
+    <div class="w-1/2 flex flex-col gap-1">
+      <h2 class="text-xl font-semibold text-gray-700">{{ homeData.title }}</h2>
       <p class="text-sm text-gray-600">{{ fullAddress }}</p>
     </div>
 
     <!-- 가격 정보 -->
-    <div class="w-full text-right">
-      <p class="text-sm text-yellow-600 font-semibold">
+    <div class="w-1/2 text-right">
+      <p class="text-xl text-yellow-primary font-semibold">
         {{ leaseTypeLabel }}
       </p>
-      <p class="text-base font-bold text-gray-800">
+      <p class="text-base text-gray-700">
         {{ formattedPrice }}
       </p>
     </div>
