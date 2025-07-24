@@ -1,13 +1,5 @@
-<template>
-  <section class="pre-contract-page">
-    <PreContractLayout :currentStep="step" :role="role">
-      <component :is="currentStepComponent" />
-    </PreContractLayout>
-  </section>
-</template>
-
 <script setup>
-import { computed } from 'vue'
+import { computed, h } from 'vue'
 import { useRoute } from 'vue-router'
 
 // 레이아웃 공통
@@ -47,17 +39,37 @@ const stepComponentsMap = {
   owner: {
     1: OwnerStep1,
     2: OwnerStep2,
-    3: OwnerStep3,
     4: OwnerStep4,
     5: OwnerStep5,
     6: OwnerStep6,
   },
 }
 
-const currentStepComponent = computed(() => {
+// 서브스텝이 있는 step 목록
+const stepsWithSubStep = {
+  3: OwnerStep3, // step 3만 예시로
+}
+
+// 현재 렌더링할 컴포넌트 계산
+const currentStepComponent = (subStep) => {
   const roleSteps = stepComponentsMap[role.value]
-  return roleSteps ? roleSteps[step.value] : null
-})
+  const subStepComp = stepsWithSubStep[step.value]
+
+  if (role.value === 'owner' && subStepComp) {
+    return () => h(subStepComp, { subStep })
+  }
+
+  const comp = roleSteps?.[step.value]
+  return typeof comp === 'function' ? comp() : comp
+}
 </script>
 
-<style scoped></style>
+<template>
+  <section class="pre-contract-page">
+    <PreContractLayout :currentStep="step" :role="role">
+      <template #default="{ subStep }">
+        <component :is="currentStepComponent(subStep)" />
+      </template>
+    </PreContractLayout>
+  </section>
+</template>
