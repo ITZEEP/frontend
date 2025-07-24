@@ -50,17 +50,25 @@ const handleFileUpdate = (fileType, file) => {
 }
 
 const startRiskAnalysis = async () => {
+  // 파일 업로드 검증
+  if (!uploadedFiles.value || uploadedFiles.value.length === 0) {
+    alert('분석할 파일을 업로드해주세요.')
+    return
+  }
+
   isAnalyzing.value = true
-  console.log('AI 위험도 분석 시작')
-  console.log('업로드된 파일들:', uploadedFiles.value)
 
-  // OCR 처리 시뮬레이션
-  await new Promise((resolve) => setTimeout(resolve, 1000))
+  try {
+    // OCR 처리 시뮬레이션
+    await new Promise((resolve) => setTimeout(resolve, 1000))
 
-  isAnalyzing.value = false
-
-  // OCR 확인 페이지로 이동
-  router.push('/risk-check/confirm')
+    // OCR 확인 페이지로 이동
+    router.push('/risk-check/confirm')
+  } catch (error) {
+    alert('분석 중 오류가 발생했습니다. 다시 시도해주세요.')
+  } finally {
+    isAnalyzing.value = false
+  }
 }
 
 const handleCheckHistory = () => {

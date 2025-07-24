@@ -1,5 +1,4 @@
 <script setup>
-import { defineEmits } from 'vue'
 import IconHome from '@/components/icons/IconHome.vue'
 
 const props = defineProps({

@@ -3,75 +3,22 @@ import { ref } from 'vue'
 import IconArrowRight from '@/components/icons/IconArrowRight.vue'
 import IconCheckmark from '@/components/icons/IconCheckmark.vue'
 import IconStar from '@/components/icons/IconStar.vue'
-
-const INSURANCE_PRODUCTS = [
-  {
-    id: 1,
-    company: 'SGI서울보증',
-    description: '개인이 직접 신청 가능한 전세금보장신용보험을 제공하는 민간 보증기관입니다.',
-    features: ['개인 신청 가능', '집주인 동의 불필요', '직거래 활용 가능'],
-    image: 'https://www.sgic.co.kr/resource/pc/images/layout/logo.png',
-    link: 'https://www.sgic.co.kr/?p=CCPMAN000001F01',
-    conditions: [
-      '만 19세 이상 개인 또는 법인',
-      '전세보증금 5억원 이하 주택',
-      '임대차계약 체결 전후 15일 이내',
-      '전입신고 완료 필수',
-    ],
-    benefits: [
-      '전세보증금 100% 보장',
-      '법적 분쟁 시 소송비용 지원',
-      '온라인 간편 신청 가능',
-      '신속한 보증금 반환 처리',
-    ],
-  },
-  {
-    id: 2,
-    company: 'HUG 주택도시보증공사',
-    description: '정부 공식 보증기관으로 안정적인 전세보증금 반환 보증을 제공합니다.',
-    features: ['정부 공식 보증기관', '온라인 간편 가입', '보증료 환급 가능'],
-    image: 'https://www.khug.or.kr/hug/image/common/logo.png',
-    link: 'https://www.khug.or.kr/index_hug_in.jsp',
-    conditions: [
-      '만 19세 이상 개인 또는 법인',
-      '전세보증금 7억원 이하 주택',
-      '계약 잔여기간 5개월 이상',
-      '확정일자 받은 계약서 필수',
-    ],
-    benefits: [
-      '정부 공식 보증으로 안정성 확보',
-      '보증료 환급 가능',
-      '청년/신혼부부 특별 할인',
-      '전국 지점 방문 상담 가능',
-    ],
-  },
-  {
-    id: 3,
-    company: 'HF한국주택금융공사',
-    description: '정부 출연기관으로 저렴한 보증료의 전세보증금 반환 보증을 제공합니다.',
-    features: ['정부 출연기관', '저렴한 보증료', '계약 갱신 시 할인'],
-    image: 'https://www.hf.go.kr/_res/hf/ko/img/logo.png',
-    link: 'https://www.hf.go.kr/ko/index.do',
-    conditions: [
-      '만 19세 이상 개인 또는 법인',
-      '전세보증금 7억원 이하 주택',
-      '전용면적 150㎡ 이하',
-      '임대차계약서 원본 제출',
-    ],
-    benefits: [
-      '업계 최저 수준 보증료',
-      '계약 갱신 시 10% 할인',
-      '전세보증금 전액 보장',
-      '신속한 보상 처리 시스템',
-    ],
-  },
-]
+import { INSURANCE_PRODUCTS } from '@/constants/insuranceData'
 
 const insuranceProducts = ref(INSURANCE_PRODUCTS)
 
 const CARD_CLASSES =
   'block border border-gray-300 rounded-xl p-6 hover:shadow-md hover:border-gray-400 transition-all duration-200 cursor-pointer'
 const ICON_CLASSES = 'w-4 h-4 text-yellow-primary mr-2 mt-0.5 flex-shrink-0'
+
+// 이미지 로딩 에러 처리
+const handleImageError = (event) => {
+  // 기본 placeholder 이미지로 대체
+  event.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"%3E%3Cpath stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /%3E%3C/svg%3E'
+  event.target.style.width = '60px'
+  event.target.style.height = '60px'
+  event.target.style.opacity = '0.3'
+}
 </script>
 
 <template>
@@ -108,6 +55,7 @@ const ICON_CLASSES = 'w-4 h-4 text-yellow-primary mr-2 mt-0.5 flex-shrink-0'
             <img
               :src="product.image"
               :alt="product.company"
+              @error="handleImageError"
               class="h-24 object-contain object-top"
             />
           </div>

@@ -1,5 +1,5 @@
 <script setup>
-import { reactive, ref, onMounted, onUnmounted } from 'vue'
+import { reactive, ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import BaseButton from '@/components/common/BaseButton.vue'
 import LoadingOverlay from '@/components/common/LoadingOverlay.vue'
@@ -12,6 +12,24 @@ import documentsMockData from '@/mocks/risk/documentsMockData.json'
 
 const router = useRouter()
 const route = useRoute()
+
+// 라우트 파라미터 타입 검증
+const validateRouteParams = () => {
+  const { id } = route.params
+  
+  // id 검증 (숫자로 변환 가능한지 확인)
+  if (id && (isNaN(Number(id)) || Number(id) <= 0)) {
+    router.push('/risk-check')
+    return false
+  }
+  
+  return true
+}
+
+// 파라미터 검증 실패 시 리다이렉트
+if (!validateRouteParams()) {
+  throw new Error('Invalid route parameters')
+}
 
 const isAnalyzing = ref(false)
 const errors = ref({})
@@ -124,13 +142,13 @@ const triggerShake = () => {
 }
 
 const focusFirstError = () => {
-  setTimeout(() => {
+  nextTick(() => {
     const firstErrorElement = document.querySelector('.border-red-500')
     if (firstErrorElement) {
       firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
       firstErrorElement.focus()
     }
-  }, 100)
+  })
 }
 
 const propertyId = Number(route.params.id || 1)
@@ -186,6 +204,8 @@ const proceedAnalysis = async () => {
     router.push(`/risk-check/result/${propertyId}`)
   } catch (error) {
     console.error('분석 중 오류:', error)
+    // 사용자에게 오류 메시지 표시
+    alert('분석 중 오류가 발생했습니다. 다시 시도해주세요.')
   } finally {
     isAnalyzing.value = false
   }

@@ -1,31 +1,29 @@
 <script setup>
-import { defineProps, defineEmits } from 'vue'
-
 const props = defineProps({
   modelValue: {
     type: String,
-    default: ''
+    default: '',
   },
   label: {
     type: String,
-    required: true
+    required: true,
   },
   placeholder: {
     type: String,
-    default: ''
+    default: '',
   },
   required: {
     type: Boolean,
-    default: false
+    default: false,
   },
   error: {
     type: String,
-    default: ''
+    default: '',
   },
   shake: {
     type: Boolean,
-    default: false
-  }
+    default: false,
+  },
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -47,7 +45,7 @@ const handleInput = (event) => {
       :class="[
         'input-field',
         error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : '',
-        shake && error ? 'animate-shake' : ''
+        shake && error ? 'animate-shake' : '',
       ]"
       :placeholder="placeholder"
     />
@@ -59,9 +57,23 @@ const handleInput = (event) => {
 
 <style scoped>
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-  20%, 40%, 60%, 80% { transform: translateX(5px); }
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-5px);
+  }
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(5px);
+  }
 }
 
 .animate-shake {

@@ -1,5 +1,4 @@
 <script setup>
-import { defineEmits } from 'vue'
 import { useRouter } from 'vue-router'
 import IconChart from '@/components/icons/IconChart.vue'
 import IconShield from '@/components/icons/IconShield.vue'
@@ -40,9 +39,7 @@ const goToInsurance = () => {
           <IconShield class="text-white" />
         </div>
         <h4 class="font-medium text-base text-white mb-2">보증보험 알아보기</h4>
-        <p class="text-sm text-white opacity-90">
-          안전한 거래를 위한 보증보험 상품을 확인하세요
-        </p>
+        <p class="text-sm text-white opacity-90">안전한 거래를 위한 보증보험 상품을 확인하세요</p>
       </div>
     </div>
 

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, defineEmits } from 'vue'
+import { ref } from 'vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import BaseModal from '@/components/common/BaseModal.vue'
 import IconDocument from '@/components/icons/IconDocument.vue'
@@ -37,20 +37,51 @@ const isUploading = ref({
 
 const showFileTypeModal = ref(false)
 
+// 파일 검증 및 처리를 위한 공통 함수
+const processFile = async (file, fileType) => {
+  // 파일 크기 검증 (50MB 제한)
+  const maxSizeInMB = 50
+  const maxSizeInBytes = maxSizeInMB * 1024 * 1024
+  
+  if (file.size > maxSizeInBytes) {
+    alert(`파일 크기는 ${maxSizeInMB}MB를 초과할 수 없습니다.`)
+    return false
+  }
+  
+  // 파일 타입 검증
+  const allowedTypes = ['application/pdf']
+  if (!allowedTypes.includes(file.type)) {
+    showFileTypeModal.value = true
+    modalStore.open()
+    return false
+  }
+  
+  // 파일 확장자 검증
+  const fileName = file.name.toLowerCase()
+  if (!fileName.endsWith('.pdf')) {
+    showFileTypeModal.value = true
+    modalStore.open()
+    return false
+  }
+  
+  try {
+    isUploading.value[fileType] = true
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    emit('update-files', fileType, file)
+    isUploading.value[fileType] = false
+    return true
+  } catch (error) {
+    alert('파일 업로드 중 오류가 발생했습니다. 다시 시도해주세요.')
+    isUploading.value[fileType] = false
+    return false
+  }
+}
+
 const handleFileUpload = async (event, fileType) => {
   const file = event.target.files[0]
   if (file) {
-    const allowedTypes = ['application/pdf']
-    if (allowedTypes.includes(file.type)) {
-      isUploading.value[fileType] = true
-
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      emit('update-files', fileType, file)
-      isUploading.value[fileType] = false
-    } else {
-      showFileTypeModal.value = true
-      modalStore.open()
+    const success = await processFile(file, fileType)
+    if (!success) {
       event.target.value = ''
     }
   }
@@ -77,19 +108,7 @@ const handleFileDrop = async (event, fileType) => {
   isDragging.value[fileType] = false
   const files = event.dataTransfer.files
   if (files.length > 0) {
-    const file = files[0]
-    const allowedTypes = ['application/pdf']
-    if (allowedTypes.includes(file.type)) {
-      isUploading.value[fileType] = true
-
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      emit('update-files', fileType, file)
-      isUploading.value[fileType] = false
-    } else {
-      showFileTypeModal.value = true
-      modalStore.open()
-    }
+    await processFile(files[0], fileType)
   }
 }
 

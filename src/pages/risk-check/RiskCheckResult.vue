@@ -14,45 +14,81 @@ import riskAnalysisData from '@/mocks/risk/riskAnalysisMockData.json'
 const router = useRouter()
 const route = useRoute()
 
+// 라우트 파라미터 타입 검증
+const validateRouteParams = () => {
+  const { analysisId, id } = route.params
+  
+  // analysisId 검증
+  if (analysisId && typeof analysisId !== 'string') {
+    router.push('/risk-check')
+    return false
+  }
+  
+  // id 검증 (숫자로 변환 가능한지 확인)
+  if (id && (isNaN(Number(id)) || Number(id) <= 0)) {
+    router.push('/risk-check')
+    return false
+  }
+  
+  return true
+}
+
+// 파라미터 검증 실패 시 리다이렉트
+if (!validateRouteParams()) {
+  throw new Error('Invalid route parameters')
+}
+
+// 데이터 검색 로직을 별도 함수로 분리
+function findAnalysisData(analysisId, propertyId) {
+  if (analysisId) {
+    const historyData = riskAnalysisData.analysesByHistory?.[analysisId]
+    if (!historyData) return null
+    
+    const analysis = riskAnalysisData.analysesByProperty?.find(
+      a => a.propertyId === historyData.propertyId
+    ) || historyData
+    
+    const property = propertyData.properties.find(
+      p => p.id === historyData.propertyId
+    )
+    
+    return property ? { analysis, property } : null
+  }
+  
+  // propertyId로 검색
+  const analysis = riskAnalysisData.analysesByProperty?.find(
+    a => a.propertyId === propertyId
+  )
+  const property = propertyData.properties.find(p => p.id === propertyId)
+  
+  return analysis && property ? { analysis, property } : null
+}
+
 const analysisId = route.params.analysisId || null
 const propertyId = Number(route.params.id || 1)
 
-let currentAnalysis, currentProperty
-let dataNotFound = false
+// 데이터 검색
+const result = findAnalysisData(analysisId, propertyId)
+const dataNotFound = !result
+const currentAnalysis = result?.analysis
+const currentProperty = result?.property
 
-if (analysisId) {
-  // analysesByHistory에서 기본 정보 가져오기
-  const historyData = riskAnalysisData.analysesByHistory?.[analysisId]
-  if (historyData) {
-    // propertyId를 이용해 전체 분석 데이터 가져오기
-    currentAnalysis = riskAnalysisData.analysesByProperty?.find(
-      (a) => a.propertyId === historyData.propertyId,
-    )
-    if (!currentAnalysis) {
-      // analysesByProperty에 없으면 historyData를 사용하되, 기본 riskFactors 생성
-      currentAnalysis = historyData
-    }
-    currentProperty =
-      propertyData.properties.find((p) => p.id === historyData.propertyId)
-    
-    if (!currentProperty) {
-      dataNotFound = true
-    }
-  } else {
-    // 잘못된 analysisId로 접근한 경우
-    dataNotFound = true
-  }
-} else {
-  currentAnalysis =
-    riskAnalysisData.analysesByProperty?.find((a) => a.propertyId === propertyId)
-  currentProperty =
-    propertyData.properties.find((p) => p.id === propertyId)
-  
-  // 데이터를 찾을 수 없는 경우
-  if (!currentAnalysis || !currentProperty) {
-    dataNotFound = true
-  }
+// 한국어 상태를 표준 상태로 매핑하는 유틸리티 함수
+const statusMapping = {
+  '안전': 'safe',
+  '적합': 'safe',
+  '양호': 'safe',
+  '우수': 'safe',
+  '적정': 'safe',
+  '주의': 'warning',
+  '보통': 'warning',
+  '위험': 'danger'
 }
+
+function mapStatus(koreanStatus) {
+  return statusMapping[koreanStatus] || 'danger'
+}
+
 const analysisResult = ref({
   overallRisk: currentAnalysis?.overallRisk || 'safe',
   analysisDate: currentAnalysis?.analysisDate || '2024-01-15',
@@ -72,7 +108,7 @@ const analysisResult = ref({
           status: 'safe',
           items: currentAnalysis.riskFactors.legalSafety.map((item) => ({
             name: item.item,
-            status: item.status === '안전' ? 'safe' : item.status === '주의' ? 'warning' : 'danger',
+            status: mapStatus(item.status),
             description: item.description,
           })),
         },
@@ -81,12 +117,7 @@ const analysisResult = ref({
           status: 'safe',
           items: currentAnalysis.riskFactors.buildingSafety.map((item) => ({
             name: item.item,
-            status:
-              item.status === '안전' || item.status === '적합' || item.status === '양호'
-                ? 'safe'
-                : item.status === '주의'
-                  ? 'warning'
-                  : 'danger',
+            status: mapStatus(item.status),
             description: item.description,
           })),
         },
@@ -95,12 +126,7 @@ const analysisResult = ref({
           status: 'safe',
           items: currentAnalysis.riskFactors.priceAdequacy.map((item) => ({
             name: item.item,
-            status:
-              item.status === '안전' || item.status === '적정'
-                ? 'safe'
-                : item.status === '주의'
-                  ? 'warning'
-                  : 'danger',
+            status: mapStatus(item.status),
             description: item.description,
           })),
         },
@@ -109,12 +135,7 @@ const analysisResult = ref({
           status: 'safe',
           items: currentAnalysis.riskFactors.locationEvaluation.map((item) => ({
             name: item.item,
-            status:
-              item.status === '우수' || item.status === '양호'
-                ? 'safe'
-                : item.status === '보통'
-                  ? 'warning'
-                  : 'danger',
+            status: mapStatus(item.status),
             description: item.description,
           })),
         },

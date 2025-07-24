@@ -1,5 +1,5 @@
 <script setup>
-import { ref, defineEmits, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import BaseModal from '@/components/common/BaseModal.vue'
 import IconClose from '@/components/icons/IconClose.vue'
 import IconChevronRight from '@/components/icons/IconChevronRight.vue'

@@ -16,6 +16,9 @@ const props = defineProps({
 
 const emit = defineEmits(['select-tab'])
 
+const LOADING_DELAY = 800
+const SCROLL_DELAY_CHECK = 150
+
 const isLoading = ref(true)
 const scrollContainer = ref(null)
 const showTopFade = ref(false)
@@ -97,7 +100,7 @@ onMounted(() => {
     nextTick(() => {
       checkScroll()
     })
-  }, 800)
+  }, LOADING_DELAY)
 })
 
 watch(
@@ -112,7 +115,7 @@ watch(
         scrollContainer.value.scrollTop = 0
         setTimeout(() => {
           checkScroll()
-        }, 150)
+        }, SCROLL_DELAY_CHECK)
       }
     })
   },
@@ -123,7 +126,7 @@ watch(isLoading, (newValue) => {
     nextTick(() => {
       setTimeout(() => {
         checkScroll()
-      }, 150)
+      }, SCROLL_DELAY_CHECK)
     })
   }
 })

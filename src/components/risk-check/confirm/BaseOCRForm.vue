@@ -1,19 +1,17 @@
 <script setup>
-import { defineProps, defineEmits } from 'vue'
-
 const props = defineProps({
   modelValue: {
     type: Object,
-    required: true
+    required: true,
   },
   errors: {
     type: Object,
-    default: () => ({})
+    default: () => ({}),
   },
   shake: {
     type: Boolean,
-    default: false
-  }
+    default: false,
+  },
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -21,7 +19,7 @@ const emit = defineEmits(['update:modelValue'])
 const updateField = (field, value) => {
   emit('update:modelValue', {
     ...props.modelValue,
-    [field]: value
+    [field]: value,
   })
 }
 
@@ -30,19 +28,19 @@ const updateNestedField = (parentField, field, value) => {
     ...props.modelValue,
     [parentField]: {
       ...props.modelValue[parentField],
-      [field]: value
-    }
+      [field]: value,
+    },
   })
 }
 
 defineExpose({
   updateField,
-  updateNestedField
+  updateNestedField,
 })
 </script>
 
 <template>
-  <slot 
+  <slot
     :modelValue="modelValue"
     :errors="errors"
     :shake="shake"

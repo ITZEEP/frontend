@@ -1,5 +1,5 @@
 <script setup>
-import { defineProps, computed } from 'vue'
+import { computed } from 'vue'
 
 const props = defineProps({
   overallRisk: {
@@ -61,12 +61,7 @@ const overallRiskDescription = computed(() => {
     <h3 class="text-xl font-semibold text-gray-warm-700 mb-4">종합 위험도</h3>
 
     <div class="flex justify-center items-center">
-      <div
-        :class="[
-          'w-[448px] h-[120px] rounded-xl p-6',
-          getRiskBgColor(overallRisk),
-        ]"
-      >
+      <div :class="['w-[448px] h-[120px] rounded-xl p-6', getRiskBgColor(overallRisk)]">
         <div class="flex flex-col items-center">
           <div :class="['text-5xl font-bold mb-3', getRiskTextColor(overallRisk)]">
             {{ overallRiskText }}

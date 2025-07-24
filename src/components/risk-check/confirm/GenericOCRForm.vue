@@ -1,5 +1,4 @@
 <script setup>
-import { defineProps, defineEmits } from 'vue'
 import OCRFormBox from './OCRFormBox.vue'
 import OCRFormField from './OCRFormField.vue'
 import OCRCheckboxField from './OCRCheckboxField.vue'
@@ -7,28 +6,28 @@ import OCRCheckboxField from './OCRCheckboxField.vue'
 const props = defineProps({
   title: {
     type: String,
-    required: true
+    required: true,
   },
   modelValue: {
     type: Object,
-    required: true
+    required: true,
   },
   errors: {
     type: Object,
-    default: () => ({})
+    default: () => ({}),
   },
   shake: {
     type: Boolean,
-    default: false
+    default: false,
   },
   fields: {
     type: Array,
-    required: true
+    required: true,
   },
   checkboxGroups: {
     type: Array,
-    default: () => []
-  }
+    default: () => [],
+  },
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -36,7 +35,7 @@ const emit = defineEmits(['update:modelValue'])
 const updateField = (field, value) => {
   emit('update:modelValue', {
     ...props.modelValue,
-    [field]: value
+    [field]: value,
   })
 }
 
@@ -45,8 +44,8 @@ const updateNestedField = (parentField, field, value) => {
     ...props.modelValue,
     [parentField]: {
       ...props.modelValue[parentField],
-      [field]: value
-    }
+      [field]: value,
+    },
   })
 }
 </script>
@@ -57,7 +56,7 @@ const updateNestedField = (parentField, field, value) => {
       v-for="fieldConfig in fields"
       :key="fieldConfig.field"
       :modelValue="modelValue[fieldConfig.field]"
-      @update:modelValue="value => updateField(fieldConfig.field, value)"
+      @update:modelValue="(value) => updateField(fieldConfig.field, value)"
       :label="fieldConfig.label"
       :placeholder="fieldConfig.placeholder"
       :required="fieldConfig.required"
@@ -74,14 +73,14 @@ const updateNestedField = (parentField, field, value) => {
           v-for="option in group.options"
           :key="option.field"
           :modelValue="modelValue[group.name]?.[option.field]"
-          @update:modelValue="value => updateNestedField(group.name, option.field, value)"
+          @update:modelValue="(value) => updateNestedField(group.name, option.field, value)"
           :label="option.label"
         />
       </div>
       <OCRCheckboxField
         v-else
         :modelValue="modelValue[group.name]"
-        @update:modelValue="value => updateField(group.name, value)"
+        @update:modelValue="(value) => updateField(group.name, value)"
         :label="group.singleLabel"
       />
     </div>

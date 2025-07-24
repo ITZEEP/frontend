@@ -1,10 +1,12 @@
 <script setup>
-import { defineProps } from 'vue'
-
 const props = defineProps({
   propertyInfo: {
     type: Object,
     required: true,
+    validator: (value) => {
+      const requiredFields = ['image', 'title', 'address', 'type', 'transactionType', 'price']
+      return requiredFields.every((field) => field in value)
+    },
   },
 })
 </script>
@@ -14,7 +16,7 @@ const props = defineProps({
     <div class="flex gap-6">
       <img
         :src="propertyInfo.image"
-        alt="매물 이미지"
+        alt="`${propertyInfo.title} 매물 이미지`"
         class="w-48 h-48 rounded-xl object-cover"
       />
       <div class="flex-1">

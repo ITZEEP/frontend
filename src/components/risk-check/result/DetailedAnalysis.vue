@@ -1,5 +1,4 @@
 <script setup>
-import { defineProps } from 'vue'
 import IconCheckCircle from '@/components/icons/IconCheckCircle.vue'
 import IconQuestionCircle from '@/components/icons/IconQuestionCircle.vue'
 import IconWarningTriangle from '@/components/icons/IconWarningTriangle.vue'
@@ -10,6 +9,14 @@ const props = defineProps({
     required: true,
   },
 })
+
+// 섹션 정의 배열
+const sections = [
+  { key: 'basicInfo', title: '기본 정보' },
+  { key: 'legalSafety', title: '법적 안전성' },
+  { key: 'buildingSafety', title: '건물 안전성' },
+  { key: 'financialSafety', title: '금융 안전성' }
+]
 
 const getStatusIcon = (status) => {
   switch (status) {
@@ -39,99 +46,18 @@ const getIconClass = (status) => {
     <h3 class="text-xl font-semibold text-gray-warm-700 mb-6">상세 분석 결과</h3>
 
     <div class="space-y-8">
-      <!-- 기본 정보 -->
-      <div>
-        <h4
-          class="text-lg font-semibold text-gray-warm-700 pb-2.5 border-b border-gray-300 mb-4"
-        >
-          기본 정보
+      <div v-for="section in sections" :key="section.key">
+        <h4 class="text-lg font-semibold text-gray-warm-700 pb-2.5 border-b border-gray-300 mb-4">
+          {{ section.title }}
         </h4>
         <div class="grid grid-cols-2 gap-4">
           <div
-            v-for="item in analysisData.basicInfo"
+            v-for="item in analysisData[section.key]"
             :key="item.name"
             class="p-4 bg-gray-100 rounded-xl"
           >
             <div class="flex items-center gap-2 mb-2">
-              <component
-                :is="getStatusIcon(item.status)"
-                :class="getIconClass(item.status)"
-              />
-              <span class="text-sm font-medium text-gray-warm-700">{{ item.name }}</span>
-            </div>
-            <p class="text-base text-gray-warm-500">{{ item.description }}</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- 법적 안전성 -->
-      <div>
-        <h4
-          class="text-lg font-semibold text-gray-warm-700 pb-2.5 border-b border-gray-300 mb-4"
-        >
-          법적 안전성
-        </h4>
-        <div class="grid grid-cols-2 gap-4">
-          <div
-            v-for="item in analysisData.legalSafety"
-            :key="item.name"
-            class="p-4 bg-gray-100 rounded-xl"
-          >
-            <div class="flex items-center gap-2 mb-2">
-              <component
-                :is="getStatusIcon(item.status)"
-                :class="getIconClass(item.status)"
-              />
-              <span class="text-sm font-medium text-gray-warm-700">{{ item.name }}</span>
-            </div>
-            <p class="text-base text-gray-warm-500">{{ item.description }}</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- 건물 안전성 -->
-      <div>
-        <h4
-          class="text-lg font-semibold text-gray-warm-700 pb-2.5 border-b border-gray-300 mb-4"
-        >
-          건물 안전성
-        </h4>
-        <div class="grid grid-cols-2 gap-4">
-          <div
-            v-for="item in analysisData.buildingSafety"
-            :key="item.name"
-            class="p-4 bg-gray-100 rounded-xl"
-          >
-            <div class="flex items-center gap-2 mb-2">
-              <component
-                :is="getStatusIcon(item.status)"
-                :class="getIconClass(item.status)"
-              />
-              <span class="text-sm font-medium text-gray-warm-700">{{ item.name }}</span>
-            </div>
-            <p class="text-base text-gray-warm-500">{{ item.description }}</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- 금융 안전성 -->
-      <div>
-        <h4
-          class="text-lg font-semibold text-gray-warm-700 pb-2.5 border-b border-gray-300 mb-4"
-        >
-          금융 안전성
-        </h4>
-        <div class="grid grid-cols-2 gap-4">
-          <div
-            v-for="item in analysisData.financialSafety"
-            :key="item.name"
-            class="p-4 bg-gray-100 rounded-xl"
-          >
-            <div class="flex items-center gap-2 mb-2">
-              <component
-                :is="getStatusIcon(item.status)"
-                :class="getIconClass(item.status)"
-              />
+              <component :is="getStatusIcon(item.status)" :class="getIconClass(item.status)" />
               <span class="text-sm font-medium text-gray-warm-700">{{ item.name }}</span>
             </div>
             <p class="text-base text-gray-warm-500">{{ item.description }}</p>
