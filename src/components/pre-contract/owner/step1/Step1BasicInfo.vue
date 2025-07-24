@@ -15,11 +15,24 @@
 </template>
 
 <script setup>
+import { onMounted } from 'vue'
+import { usePreContractStore } from '@/stores/ownerPreContractStore'
 import HomeInfoMain from './HomeInfoMain.vue'
 import HomeInfoDashboard from './HomeInfoDashboard.vue'
 import HomePhotos from './HomePhotos.vue'
 import HomeConfirm from './HomeConfirm.vue'
 import HOME_DATA from '@/mocks/home.json'
+
+const store = usePreContractStore()
+
+onMounted(() => {
+  const leaseType = HOME_DATA[0].home.lease_type
+  if (leaseType) {
+    store.setContractType(leaseType)
+  }
+})
+
+console.log(store.rent_type)
 </script>
 
 <style scoped></style>
