@@ -1,13 +1,14 @@
 import { ref } from 'vue'
-import websocketService from '@/components/chat/services/websocket'
+import websocketService from '@/components/chat/apis/websocket'
 
 export function useWebSocket() {
   const isConnected = ref(false)
   const connectionStatus = ref('disconnected') // 'connecting', 'connected', 'disconnected'
 
-  const connect = () => {
+  const connect = async () => {
     connectionStatus.value = 'connecting'
-    websocketService.connect()
+    await websocketService.connect() // 연결 완료까지 기다림
+    connectionStatus.value = 'connected'
   }
 
   const disconnect = () => {
