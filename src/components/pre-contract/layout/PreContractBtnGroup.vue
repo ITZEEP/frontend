@@ -1,6 +1,6 @@
 <template>
   <div class="w-full max-w-[640px] flex justify-between mt-6 px-2">
-    <BaseButton v-if="step > 1" size="md" variant="outline" @click="goToStep(step - 1)">
+    <BaseButton v-if="step > 1" size="md" variant="outline" @click="handlePrevClick">
       <span class="mr-1">←</span> 이전
     </BaseButton>
 
@@ -11,38 +11,64 @@
       :class="step === 1 ? 'ml-auto' : ''"
     >
       <template v-if="step === maxStep"> 계약서 작성하러 가기 </template>
-      <template v-else> 다음 <span class="ml-1">→</span> </template>
+      <template v-else-if="hasSubStep && !isLastSubStep"> 다음 </template>
+      <template v-else> 다음 단계 <span class="ml-1">→</span> </template>
     </BaseButton>
   </div>
 </template>
 
 <script setup>
 import { useRoute, useRouter } from 'vue-router'
-import { computed } from 'vue'
 import BaseButton from '@/components/common/BaseButton.vue'
+import { computed } from 'vue'
 
-const maxStep = 6
+const props = defineProps({
+  step: Number,
+  subStep: Number,
+  role: String,
+})
+
+const emit = defineEmits(['next-sub-step', 'prev-sub-step'])
 
 const route = useRoute()
 const router = useRouter()
 
-const step = computed(() => Number(route.query.step) || 1)
+const maxStep = 6
 
-// 다음 버튼 클릭 시 처리
+const subStepCountMap = {
+  'owner-3': 2,
+}
+
+const subStepKey = computed(() => `${props.role}-${String(props.step)}`)
+const maxSubStep = computed(() => subStepCountMap[subStepKey.value])
+const hasSubStep = computed(() => !!maxSubStep.value)
+
+const currentSubStep = computed(() => Number(props.subStep))
+const isLastSubStep = computed(() => currentSubStep.value === maxSubStep.value)
+
 const handleNextClick = () => {
-  if (step.value >= maxStep) {
-    // step=6일 때는 계약서 작성 페이지로 이동
-    const contractId = route.params.id
-    router.push(`/contract/${contractId}`)
+  if (maxSubStep.value) {
+    if (currentSubStep.value < maxSubStep.value) {
+      emit('next-sub-step')
+    } else {
+      goToStep(props.step + 1)
+    }
   } else {
-    // 다음 step으로 쿼리 갱신
-    goToStep(step.value + 1)
+    goToStep(props.step + 1)
+  }
+}
+
+const handlePrevClick = () => {
+  if (maxSubStep.value && currentSubStep.value > 1) {
+    emit('prev-sub-step')
+  } else if (props.step > 1) {
+    goToStep(props.step - 1)
   }
 }
 
 const goToStep = (newStep) => {
-  router.push({ query: { ...route.query, step: newStep } })
+  if (newStep <= maxStep) {
+    router.push({ query: { ...route.query, step: newStep } })
+  }
 }
 </script>
-
-<style scoped></style>
