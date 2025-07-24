@@ -22,10 +22,10 @@ const insuranceFeatures = [
 </script>
 
 <template>
-  <div class="bg-white rounded-2xl shadow-sm border border-gray-300 p-8">
+  <section class="bg-white rounded-2xl shadow-sm border border-gray-300 p-8">
     <h2 class="text-2xl font-bold text-gray-warm-700 mb-6">전세보증보험이란?</h2>
     <div class="grid grid-cols-3 gap-6">
-      <div
+      <article
         v-for="feature in insuranceFeatures"
         :key="feature.title"
         class="bg-gray-100 rounded-xl p-6 hover:bg-gray-200 transition-colors duration-200"
@@ -36,7 +36,7 @@ const insuranceFeatures = [
           <h3 class="font-semibold text-gray-warm-700">{{ feature.title }}</h3>
         </div>
         <p class="text-gray-warm-500">{{ feature.description }}</p>
-      </div>
+      </article>
     </div>
-  </div>
+  </section>
 </template>

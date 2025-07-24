@@ -81,7 +81,14 @@ onMounted(() => {
 </template>
 
 <style scoped>
-/* 스크롤바 스타일링 */
+/* 스크롤바 스타일링 - 크로스브라우저 지원 */
+.scrollbar-thin {
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db #f3f4f6;
+}
+
+/* WebKit 기반 브라우저 (Chrome, Safari, Edge) */
 .scrollbar-thin::-webkit-scrollbar {
   width: 6px;
 }
@@ -98,5 +105,10 @@ onMounted(() => {
 
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
   background: #9ca3af;
+}
+
+/* IE/Edge 레거시 지원 */
+.scrollbar-thin {
+  -ms-overflow-style: -ms-autohiding-scrollbar;
 }
 </style>

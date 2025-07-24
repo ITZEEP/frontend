@@ -34,9 +34,7 @@ const validateRouteParams = () => {
 }
 
 // 파라미터 검증 실패 시 리다이렉트
-if (!validateRouteParams()) {
-  throw new Error('Invalid route parameters')
-}
+validateRouteParams()
 
 // 데이터 검색 로직을 별도 함수로 분리
 function findAnalysisData(analysisId, propertyId) {

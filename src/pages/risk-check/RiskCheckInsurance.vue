@@ -1,5 +1,4 @@
 <script setup>
-import { onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import IconChevronLeft from '@/components/icons/IconChevronLeft.vue'
 import HeroSection from '@/components/risk-check/insurance/HeroSection.vue'
@@ -12,19 +11,10 @@ const router = useRouter()
 const goBack = () => {
   router.back()
 }
-
-onMounted(() => {
-  document.body.style.backgroundColor = '#F7F7F8'
-  window.scrollTo(0, 0)
-})
-
-onUnmounted(() => {
-  document.body.style.backgroundColor = ''
-})
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-100 -my-5 -mx-16">
+  <div class="min-h-screen bg-gray-100">
     <!-- 헤더 -->
     <nav class="bg-white border-b border-gray-300 shadow-sm">
       <div class="max-w-[1280px] mx-auto px-8">
