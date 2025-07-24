@@ -1,13 +1,15 @@
+// defineProps 사용하지 않아도 된다면 이 부분은 삭제
+
 <template>
   <svg
-    :width="width"
-    :height="height"
-    viewBox="0 0 24 24"
+    :width="props.width"
+    :height="props.height"
+    viewBox="0 0  24 24"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
   >
     <path
-      fill="#FFBC00"
+      fill="currentColor"
       d="M11.5 2.84375H12.5V3.84375H11.5V2.84375ZM11 1.34375C10.7083 1.34375 10.4688
     1.4375 10.2812 1.625C10.0938 1.8125 10 2.05208 10 2.34375H4C4 2.05208 3.90625 1.8125 3.71875
     1.625C3.53125 1.4375 3.29167 1.34375 3 1.34375H1C0.708333 1.34375 0.46875 1.4375 0.28125

@@ -33,7 +33,6 @@ const id = Number(route.params.id)
 const listing = ref(null)
 const images = ref([])
 
-// 예시 매물 데이터
 const listings = [
   {
     id: 1,
@@ -71,9 +70,15 @@ const listings = [
 
 onMounted(() => {
   listing.value = listings.find((item) => item.id === id)
-
   if (listing.value) {
-    images.value = [listing.value.image, listing.value.image + '&2', listing.value.image + '&3']
+    const baseUrl = listing.value.image
+    if (baseUrl.includes('?')) {
+      images.value = [baseUrl, baseUrl + '&2', baseUrl + '&3']
+    } else {
+      images.value = [baseUrl, baseUrl + '?2', baseUrl + '?3']
+    }
+  } else {
+    images.value = []
   }
 })
 </script>

@@ -1,26 +1,31 @@
 <template>
   <router-link :to="`/details/${listing.id}`" class="block">
-    <div class="border rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
-      <img :src="listing.image" class="w-full h-48 object-cover" />
+    <div
+      class="border rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-200"
+      role="article"
+      aria-label="매물 카드"
+    >
+      <img :src="listing.image" alt="매물 사진" class="w-full h-48 object-cover" />
 
       <div class="p-4 space-y-2">
         <div class="text-yellow-500 font-semibold">{{ listing.type }}</div>
         <div class="text-lg font-bold">
-          월세 {{ listing.deposit.toLocaleString() }} / {{ listing.monthly.toLocaleString() }}
+          월세
+          {{ formatNumber(listing.deposit) }} / {{ formatNumber(listing.monthly) }}
         </div>
         <div class="text-sm text-gray-600">
           {{ listing.gu }} {{ listing.dong }} · {{ listing.area }}평 · {{ listing.floor }}층
         </div>
 
-        <div class="flex justify-between text-xs mt-2 text-gray-500">
-          <div>❤️ {{ listing.likes }}</div>
-          <div>👁️ {{ listing.views }}</div>
-          <div>💬 {{ listing.chats }}</div>
+        <div class="flex justify-between text-xs mt-2 text-gray-500 select-none">
+          <div>❤️ {{ listing.likes ?? 0 }}</div>
+          <div>👁️ {{ listing.views ?? 0 }}</div>
+          <div>💬 {{ listing.chats ?? 0 }}</div>
         </div>
 
         <div class="text-right">
           <span
-            class="text-xs font-semibold px-2 py-1 rounded-full"
+            class="text-xs font-semibold px-2 py-1 rounded-full inline-block"
             :class="listing.verified ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'"
           >
             {{ listing.verified ? '실명인증' : '미인증' }}
@@ -32,7 +37,19 @@
 </template>
 
 <script setup>
+
 defineProps({
-  listing: Object
+  listing: {
+    type: Object,
+    required: true,
+  },
 })
+
+function formatNumber(value) {
+  if (typeof value === 'number') {
+    return value.toLocaleString()
+  }
+  // 숫자가 아니면 그대로 출력하거나 '0' 처리
+  return value ?? '0'
+}
 </script>

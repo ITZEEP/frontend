@@ -5,7 +5,7 @@
       <h2 class="font-bold text-lg mb-4 border-b border-gray-300 pb-2">매물 정보</h2>
       <div class="grid grid-cols-2 md:grid-cols-3 gap-6 text-sm">
         <div>
-          <div class="flex items-center">
+          <div class="flex items-center gap-1">
             <NetAreaIcon class="text-yellow-primary" />
             전용면적
           </div>
@@ -13,7 +13,7 @@
         </div>
 
         <div>
-          <div class="flex items-center">
+          <div class="flex items-center gap-1">
             <GrossAreaIcon class="text-yellow-primary" />
             공급면적
           </div>
@@ -21,7 +21,7 @@
         </div>
 
         <div>
-          <div class="flex items-center">
+          <div class="flex items-center gap-1">
             <FloorIcon class="text-yellow-primary" />
             현재층 / 총층
           </div>
@@ -29,7 +29,7 @@
         </div>
 
         <div>
-          <div class="flex items-center">
+          <div class="flex items-center gap-1">
             <CalendarIcon class="text-yellow-primary" />
             사용승인일 / 입주가능일
           </div>
@@ -37,7 +37,7 @@
         </div>
 
         <div>
-          <div class="flex items-center">
+          <div class="flex items-center gap-1">
             <DirectionIcon class="text-yellow-primary" />
             방향
           </div>
@@ -45,7 +45,7 @@
         </div>
 
         <div>
-          <div class="flex items-center">
+          <div class="flex items-center gap-1">
             <RoomIcon class="text-yellow-primary" />
             방 / 욕실 수
           </div>
@@ -60,7 +60,7 @@
       <div class="space-y-3 text-sm">
         <div class="flex justify-between items-center">
           <div class="font-semibold">월 관리비</div>
-          <div class="text-yellow-500 font-bold text-lg">6만원</div>
+          <div class="text-yellow-primary font-bold text-lg">6만원</div>
         </div>
 
         <div>
@@ -100,7 +100,7 @@
           </div>
 
           <div class="flex flex-col items-center">
-            <ParkingIcon class="text-yellow-primary yw-4 h-4" />
+            <ParkingIcon class="text-yellow-primary w-4 h-4" />
             주차가능
           </div>
         </div>
