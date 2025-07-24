@@ -1,7 +1,18 @@
 <template>
-  <div>임대인 계약 전 사전 조사 step 3</div>
+  <div class="flex flex-col items-center justify-center gap-8">
+    <div class="flex flex-col items-center justify-center gap-2">
+      <h1 class="text-gray-warm-700 font-bold text-xl">계약 조건 설정</h1>
+      <p class="text-gray-500">계약 조건 및 책임관계를 설정해주세요.</p>
+    </div>
+
+    <component :is="subStep === 1 ? ContractForm : RestorationForm" />
+  </div>
 </template>
 
-<script setup></script>
+<script setup>
+import { defineProps } from 'vue'
+import ContractForm from './SubStep1ContractForm.vue'
+import RestorationForm from './SubStep2RestorationForm.vue'
 
-<style scoped></style>
+defineProps({ subStep: Number })
+</script>
