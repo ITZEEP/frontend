@@ -68,6 +68,8 @@ export const usePreContractStore = defineStore('ownerPreContract', {
     step6: {
       isConfirmed: false,
     },
+
+    triggerStepSubmit: false,
   }),
 
   actions: {
@@ -79,6 +81,13 @@ export const usePreContractStore = defineStore('ownerPreContract', {
     },
     resetAll() {
       this.$reset()
+    },
+
+    triggerSubmit() {
+      this.triggerStepSubmit = true
+    },
+    clearTrigger() {
+      this.triggerStepSubmit = false
     },
   },
 })

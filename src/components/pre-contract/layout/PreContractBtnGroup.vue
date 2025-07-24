@@ -21,6 +21,9 @@
 import { useRoute, useRouter } from 'vue-router'
 import BaseButton from '@/components/common/BaseButton.vue'
 import { computed } from 'vue'
+import { usePreContractStore } from '@/stores/ownerPreContractStore'
+
+const store = usePreContractStore()
 
 const props = defineProps({
   step: Number,
@@ -69,6 +72,7 @@ const handlePrevClick = () => {
 const goToStep = (newStep) => {
   if (newStep <= maxStep) {
     router.push({ query: { ...route.query, step: newStep } })
+    store.triggerSubmit()
   }
 }
 </script>

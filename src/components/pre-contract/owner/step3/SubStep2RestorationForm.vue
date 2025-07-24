@@ -62,22 +62,43 @@
 
 <script setup>
 import ToggleRadio from '@/components/common/ToggleRadio.vue'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { usePreContractStore } from '@/stores/ownerPreContractStore'
 
 const store = usePreContractStore()
 const rentType = computed(() => store.rent_type)
 
-const restoreCategory = ref('')
-const hasConditionLog = ref(null)
-const hasPenalty = ref(null)
-const hasPriorityExtension = ref(null)
-const hasAutoPriceAdjustment = ref(null)
-const allowJeonseRight = ref(null)
+// ⬇ 초기값을 store에서 불러오기
+const restoreCategory = ref(store.step3.restore_category_id ?? '')
+const hasConditionLog = ref(store.step3.has_condition_log ?? null)
+const hasPenalty = ref(store.step3.has_penalty ?? null)
+const hasPriorityExtension = ref(store.step3.has_priority_for_extension ?? null)
+const hasAutoPriceAdjustment = ref(store.step3.has_auto_price_adjustment ?? null)
+const allowJeonseRight = ref(store.step3.allow_jeonse_right_registration ?? null)
 
 const autoAdjustmentLabel = computed(() =>
   rentType.value === 'JEONSE'
     ? '계약 갱신 시 보증금이 자동으로 조정되나요?'
     : '계약 갱신 시 보증금 또는 월세가 자동으로 조정되나요?',
+)
+
+// 제출 트리거 시 저장
+watch(
+  () => store.triggerStepSubmit,
+  (triggered) => {
+    if (triggered) {
+      store.setStepData(3, {
+        restore_category_id: restoreCategory.value,
+        restore_category_name: restoreCategory.value,
+        has_condition_log: hasConditionLog.value,
+        has_penalty: hasPenalty.value,
+        has_priority_for_extension: hasPriorityExtension.value,
+        has_auto_price_adjustment: hasAutoPriceAdjustment.value,
+        allow_jeonse_right_registration:
+          rentType.value === 'JEONSE' ? allowJeonseRight.value : null,
+      })
+      store.clearTrigger()
+    }
+  },
 )
 </script>

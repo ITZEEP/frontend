@@ -42,10 +42,29 @@
 
 <script setup>
 import ToggleRadio from '@/components/common/ToggleRadio.vue'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
+import { usePreContractStore } from '@/stores/ownerPreContractStore'
 
-const isMortgaged = ref(null)
-const contractDuration = ref('')
-const renewalIntent = ref('')
-const repairingFixtures = ref('')
+const store = usePreContractStore()
+
+const isMortgaged = ref(store.step3.is_mortgaged ?? null)
+const contractDuration = ref(store.step3.contract_duration ?? '')
+const renewalIntent = ref(store.step3.renewal_intent ?? '')
+const repairingFixtures = ref(store.step3.response_repairing_fixtures ?? '')
+
+// 제출 트리거 시 저장
+watch(
+  () => store.triggerStepSubmit,
+  (triggered) => {
+    if (triggered) {
+      store.setStepData(3, {
+        is_mortgaged: isMortgaged.value,
+        contract_duration: contractDuration.value,
+        renewal_intent: renewalIntent.value,
+        response_repairing_fixtures: repairingFixtures.value,
+      })
+      store.clearTrigger()
+    }
+  },
+)
 </script>
