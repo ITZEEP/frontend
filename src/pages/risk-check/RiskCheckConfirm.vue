@@ -27,7 +27,9 @@ const validateRouteParams = () => {
 }
 
 // 파라미터 검증 실패 시 리다이렉트
-validateRouteParams()
+if (!validateRouteParams()) {
+  return
+}
 
 const isAnalyzing = ref(false)
 const errors = ref({})
