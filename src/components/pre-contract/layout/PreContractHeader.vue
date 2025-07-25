@@ -49,7 +49,7 @@ const currentStep = computed(() => Number(route.query.step || 1))
 
 onMounted(() => {
   if (!route.query.step || !route.params.role) {
-    router.replace('/404')
+    console.log('단계 혹은 역할이 잘못됐습니다.')
   }
 })
 
