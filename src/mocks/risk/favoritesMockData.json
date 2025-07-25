@@ -1,0 +1,50 @@
+{
+  "favorites": [
+    {
+      "id": 1,
+      "name": "강남구 신사동 오피스텔",
+      "address": "서울시 강남구 신사동 123-45",
+      "price": "전세 5억원",
+      "transactionType": "전세",
+      "priceAmount": 500000000,
+      "image": "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&auto=format&fit=crop&q=60"
+    },
+    {
+      "id": 2,
+      "name": "서초구 방배동 아파트",
+      "address": "서울시 서초구 방배동 456-78",
+      "price": "매매 12억원",
+      "transactionType": "매매",
+      "priceAmount": 1200000000,
+      "image": "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&auto=format&fit=crop&q=60"
+    },
+    {
+      "id": 3,
+      "name": "용산구 이태원동 빌라",
+      "address": "서울시 용산구 이태원동 789-01",
+      "price": "월세 2천/120",
+      "transactionType": "월세",
+      "deposit": 20000000,
+      "monthlyRent": 1200000,
+      "image": "https://images.unsplash.com/photo-1516156008625-3a9d6067fab5?w=400&auto=format&fit=crop&q=60"
+    },
+    {
+      "id": 4,
+      "name": "마포구 상수동 원룸",
+      "address": "서울시 마포구 상수동 234-56",
+      "price": "전세 2억원",
+      "transactionType": "전세",
+      "priceAmount": 200000000,
+      "image": "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&auto=format&fit=crop&q=60"
+    },
+    {
+      "id": 5,
+      "name": "강동구 천호동 상가",
+      "address": "서울시 강동구 천호동 345-67",
+      "price": "매매 15억원",
+      "transactionType": "매매",
+      "priceAmount": 1500000000,
+      "image": "https://images.unsplash.com/photo-1524813686514-a57563d77965?w=400&auto=format&fit=crop&q=60"
+    }
+  ]
+}
