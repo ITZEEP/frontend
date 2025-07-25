@@ -6,11 +6,11 @@
         class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
         @click.self="onMaskClick"
       >
-        <div :class="['bg-white rounded-xl w-full p-6 relative', props.maxWidth]">
+        <div class="bg-white rounded-xl w-full max-w-[640px] p-6 relative">
           <button
             v-if="closable"
             class="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-            @click="handleClose"
+            @click="modalStore.close"
           >
             <span class="text-xl">&times;</span>
           </button>
@@ -23,6 +23,7 @@
 </template>
 
 <script setup>
+import { defineProps } from 'vue'
 import { useModalStore } from '@/stores/modal'
 
 const modalStore = useModalStore()
@@ -36,20 +37,10 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
-  maxWidth: {
-    type: String,
-    default: 'max-w-[640px]',
-  },
 })
 
-function handleClose() {
-  modalStore.close()
-}
-
 function onMaskClick() {
-  if (props.maskCloseable) {
-    handleClose()
-  }
+  if (props.maskCloseable) modalStore.close()
 }
 </script>
 
