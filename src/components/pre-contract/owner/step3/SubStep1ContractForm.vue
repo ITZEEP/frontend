@@ -47,7 +47,7 @@ import { usePreContractStore } from '@/stores/ownerPreContractStore'
 
 const store = usePreContractStore()
 
-const isMortgaged = ref(store.step3.is_mortgaged ?? null)
+const isMortgaged = ref(store.step3.is_mortgaged ?? '')
 const contractDuration = ref(store.step3.contract_duration ?? '')
 const renewalIntent = ref(store.step3.renewal_intent ?? '')
 const repairingFixtures = ref(store.step3.response_repairing_fixtures ?? '')
