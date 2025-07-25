@@ -36,7 +36,15 @@ const route = useRoute()
 const router = useRouter()
 
 // 1. URL 쿼리에서 step 값을 가져옴
-const role = computed(() => route.params.role || 'buyer')
+const role = computed(() => {
+  const paramRole = route.params.role
+  const validRoles = ['buyer', 'owner']
+  if (!validRoles.includes(paramRole)) {
+    console.log('buyer/owner 외의 다른 값이 입력됐습니다.')
+  }
+  return paramRole
+})
+
 const currentStep = computed(() => Number(route.query.step || 1))
 
 onMounted(() => {
