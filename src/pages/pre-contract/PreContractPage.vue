@@ -1,5 +1,5 @@
 <script setup>
-import { computed, h } from 'vue'
+import { computed, h, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 
 // 레이아웃 공통
@@ -20,11 +20,23 @@ import OwnerStep3 from '@/components/pre-contract/owner/step3/Step3ContractTerms
 import OwnerStep4 from '@/components/pre-contract/owner/step4/Step4LivingConditions.vue'
 import OwnerStep5 from '@/components/pre-contract/owner/step5/Step5UploadTerms.vue'
 import OwnerStep6 from '@/components/pre-contract/owner/step6/Step6Confirm.vue'
+import { usePreContractStore } from '@/stores/ownerPreContractStore'
 
-// 라우터 정보 가져오기
+// 스토어 불러오기
+const store = usePreContractStore()
+
+// 라우터 정보
 const route = useRoute()
 const role = computed(() => route.params.role)
 const step = computed(() => Number(route.query.step) || 1)
+const contractId = computed(() => route.params.id)
+
+onMounted(() => {
+  if (store.lastInitializedContractId !== contractId.value) {
+    store.resetAll()
+    store.lastInitializedContractId = contractId.value
+  }
+})
 
 // 각 role별 단계별 컴포넌트 매핑
 const stepComponentsMap = {

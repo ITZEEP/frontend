@@ -70,6 +70,7 @@ export const usePreContractStore = defineStore('ownerPreContract', {
     },
 
     triggerStepSubmit: false,
+    lastInitializedContractId: null,
   }),
 
   actions: {
@@ -78,9 +79,11 @@ export const usePreContractStore = defineStore('ownerPreContract', {
     },
     setStepData(step, data) {
       this[`step${step}`] = { ...this[`step${step}`], ...data }
+      console.log('내용 저장')
     },
     resetAll() {
       this.$reset()
+      console.log('초기화')
     },
 
     triggerSubmit() {
