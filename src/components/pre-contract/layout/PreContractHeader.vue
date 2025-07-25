@@ -40,7 +40,7 @@ const role = computed(() => {
   const paramRole = route.params.role
   const validRoles = ['buyer', 'owner']
   if (!validRoles.includes(paramRole)) {
-    console.log('buyer/owner 외의 다른 값이 입력됐습니다.')
+    console.error('buyer/owner 외의 다른 값이 입력됐습니다.')
   }
   return paramRole
 })
@@ -49,7 +49,7 @@ const currentStep = computed(() => Number(route.query.step || 1))
 
 onMounted(() => {
   if (!route.query.step || !route.params.role) {
-    console.log('단계 혹은 역할이 잘못됐습니다.')
+    console.error('단계 혹은 역할이 잘못됐습니다.')
   }
 })
 
