@@ -73,7 +73,7 @@
 
 <script setup>
 import { ref, onMounted, watch } from 'vue'
-import { getChatRoomInfo } from '@/components/chat/apis/chatApi'
+import { getChatRoomInfo } from '@/apis/chatApi'
 
 const props = defineProps({
   room: {
