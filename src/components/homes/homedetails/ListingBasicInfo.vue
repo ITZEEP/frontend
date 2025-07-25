@@ -18,16 +18,6 @@ defineProps({
   listing: {
     type: Object,
     required: true,
-    validator: (value) =>
-      value &&
-      typeof value.type === 'string' &&
-      typeof value.deposit === 'number' &&
-      typeof value.monthly === 'number' &&
-      ('maintenance' in value
-        ? typeof value.maintenance === 'number' ||
-          value.maintenance === null ||
-          value.maintenance === undefined
-        : true),
   },
 })
 </script>

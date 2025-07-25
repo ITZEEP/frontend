@@ -1,5 +1,5 @@
 <template>
-  <router-link :to="`/details/${listing.id}`" class="block">
+  <router-link :to="`/homes/${listing.id}`" class="block">
     <div
       class="border rounded-lg shadow-md overflow-hidden hover:shadow-lg transition duration-200"
       role="article"

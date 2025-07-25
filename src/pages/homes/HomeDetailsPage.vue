@@ -6,7 +6,7 @@
     <!-- 상세 정보 -->
     <div v-if="listing" class="mt-6 space-y-10">
       <ListingBasicInfo :listing="listing" />
-      <RoomDetails />
+      <RoomDetails :listing="listing" />
       <div class="w-full flex gap-4">
         <BaseButton class="w-full" variant="outline" size="lg" @click="goRiskCheck">
           사기 위험도 측정
@@ -17,7 +17,6 @@
       </div>
     </div>
 
-    <!-- 매물 없음 안내 -->
     <div v-else class="text-center text-gray-400 mt-10">매물을 찾을 수 없습니다.</div>
   </div>
 </template>
@@ -33,11 +32,12 @@ import BaseButton from '@/components/common/BaseButton.vue'
 
 const route = useRoute()
 const router = useRouter()
-const id = Number(route.params.id)
+const id = Number(route.params.no) // route param 이름이 'no'여야 합니다
 
 const listing = ref(null)
 const images = ref([])
 
+// 같은 mock 데이터 (실제는 API 사용 권장)
 const listings = [
   {
     id: 1,
@@ -87,12 +87,10 @@ onMounted(() => {
   }
 })
 
-// 사기 위험도 측정 페이지로 이동
 function goRiskCheck() {
   router.push('/risk-check')
 }
 
-// 채팅 페이지로 이동
 function goChat() {
   router.push('/chat')
 }
