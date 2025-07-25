@@ -5,7 +5,7 @@
 
     <!-- 메인 채팅 영역 -->
     <div class="flex-1">
-      <slot :selected-room="selectedRoom" />
+      <slot :selectedRoom="selectedRoom" />
     </div>
   </div>
 </template>
@@ -17,7 +17,7 @@ import { ref } from 'vue'
 const selectedRoom = ref(null)
 
 function selectRoom(room) {
-  if (selectedRoom.value?.id === room.id) {
+  if (selectedRoom.value?.chatRoomId === room.chatRoomId) {
     selectedRoom.value = null // 같은 방을 클릭하면 해제
   } else {
     selectedRoom.value = room
