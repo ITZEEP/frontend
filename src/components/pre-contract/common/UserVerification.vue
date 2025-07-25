@@ -11,7 +11,7 @@
       <BaseInput v-model="username" label="이름" placeholder="이름을 입력하세요" />
 
       <div class="w-full">
-        <label :for="id" class="block mb-1 text-sm font-medium text-gray-600"> 주소 </label>
+        <label for="address" class="block mb-1 text-sm font-medium text-gray-600"> 주소 </label>
         <div class="w-full flex gap-2">
           <input
             class="w-full rounded-md border border-gray-300 px-4 py-2 text-sm"

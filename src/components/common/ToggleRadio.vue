@@ -26,7 +26,10 @@
 import { defineProps, defineEmits } from 'vue'
 
 const { modelValue, label, options } = defineProps({
-  modelValue: String,
+  modelValue: {
+    type: [String, Boolean, Number],
+    required: true,
+  },
   options: {
     type: Array,
     required: true,
