@@ -14,7 +14,7 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['select-tab'])
+const emit = defineEmits(['select-tab', 'select-property'])
 
 const LOADING_DELAY = 800
 const SCROLL_DELAY_CHECK = 150
@@ -60,6 +60,7 @@ const selectTab = (tab) => {
 
 const selectProperty = (propertyId) => {
   selectedPropertyId.value = propertyId
+  emit('select-property', propertyId)
   if (scrollContainer.value) {
     scrollContainer.value.scrollTop = 0
   }
@@ -95,6 +96,8 @@ const handleScroll = () => {
 }
 
 onMounted(() => {
+  selectedPropertyId.value = null
+  emit('select-property', null)
   setTimeout(() => {
     isLoading.value = false
     nextTick(() => {

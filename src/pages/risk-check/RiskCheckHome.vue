@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import BaseButton from '@/components/common/BaseButton.vue'
 import LoadingOverlay from '@/components/common/LoadingOverlay.vue'
@@ -9,6 +9,9 @@ import PropertyTypeSelector from '@/components/risk-check/PropertyTypeSelector.v
 import PropertyCard from '@/components/risk-check/PropertyCard.vue'
 import DocumentUpload from '@/components/risk-check/DocumentUpload.vue'
 import RiskCheckHistoryModal from '@/components/risk-check/RiskCheckHistoryModal.vue'
+import FileUploadWarningModal from '@/components/risk-check/FileUploadWarningModal.vue'
+import PropertyTypeWarningModal from '@/components/risk-check/PropertyTypeWarningModal.vue'
+import PropertySelectionWarningModal from '@/components/risk-check/PropertySelectionWarningModal.vue'
 
 import IconClock from '@/components/icons/IconClock.vue'
 import IconSearch from '@/components/icons/IconSearch.vue'
@@ -17,13 +20,21 @@ const router = useRouter()
 const modalStore = useModalStore()
 
 const showHistoryModal = ref(false)
+const showFileWarningModal = ref(false)
+const showPropertyTypeWarningModal = ref(false)
+const showPropertySelectionWarningModal = ref(false)
+const missingFiles = ref([])
 const selectedPropertyType = ref(null)
 const selectedTab = ref('favorite')
+const selectedPropertyId = ref(null)
 const uploadedFiles = ref({
   등기부등본: null,
   건축물대장: null,
 })
 const isAnalyzing = ref(false)
+const propertyTypeSelectorRef = ref(null)
+const propertyCardRef = ref(null)
+const documentUploadRef = ref(null)
 
 onMounted(() => {
   document.body.style.backgroundColor = '#F7F7F8'
@@ -35,6 +46,7 @@ onUnmounted(() => {
 
 const handlePropertyTypeSelect = (type) => {
   selectedPropertyType.value = type
+  selectedPropertyId.value = null // 매물 유형 변경 시 선택된 매물 초기화
   if (type === 'unregistered') {
     uploadedFiles.value.등기부등본 = null
     uploadedFiles.value.건축물대장 = null
@@ -43,6 +55,11 @@ const handlePropertyTypeSelect = (type) => {
 
 const handleTabSelect = (tab) => {
   selectedTab.value = tab
+  selectedPropertyId.value = null // 탭 변경 시 선택 초기화
+}
+
+const handlePropertySelect = (propertyId) => {
+  selectedPropertyId.value = propertyId
 }
 
 const handleFileUpdate = (fileType, file) => {
@@ -50,9 +67,33 @@ const handleFileUpdate = (fileType, file) => {
 }
 
 const startRiskAnalysis = async () => {
+  // 매물 유형 선택 검증
+  if (!selectedPropertyType.value) {
+    showPropertyTypeWarningModal.value = true
+    modalStore.open()
+    return
+  }
+
+  // 등록된 매물인 경우 매물 선택 검증
+  if (selectedPropertyType.value === 'registered' && !selectedPropertyId.value) {
+    showPropertySelectionWarningModal.value = true
+    modalStore.open()
+    return
+  }
+
   // 파일 업로드 검증
-  if (!uploadedFiles.value || uploadedFiles.value.length === 0) {
-    alert('분석할 파일을 업로드해주세요.')
+  const missing = []
+  if (!uploadedFiles.value.등기부등본) {
+    missing.push('등기부등본')
+  }
+  if (!uploadedFiles.value.건축물대장) {
+    missing.push('건축물대장')
+  }
+
+  if (missing.length > 0) {
+    missingFiles.value = missing
+    showFileWarningModal.value = true
+    modalStore.open()
     return
   }
 
@@ -84,6 +125,50 @@ const closeHistoryModal = () => {
 const handleSelectHistory = (history) => {
   router.push(`/risk-check/result/${history.analysisId}`)
 }
+
+const closeFileWarningModal = () => {
+  showFileWarningModal.value = false
+  modalStore.close()
+}
+
+const confirmFileWarning = () => {
+  showFileWarningModal.value = false
+  modalStore.close()
+  scrollToElement(documentUploadRef.value)
+}
+
+const closePropertyTypeWarningModal = () => {
+  showPropertyTypeWarningModal.value = false
+  modalStore.close()
+}
+
+const confirmPropertyTypeWarning = () => {
+  showPropertyTypeWarningModal.value = false
+  modalStore.close()
+  scrollToElement(propertyTypeSelectorRef.value)
+}
+
+const closePropertySelectionWarningModal = () => {
+  showPropertySelectionWarningModal.value = false
+  modalStore.close()
+}
+
+const confirmPropertySelectionWarning = () => {
+  showPropertySelectionWarningModal.value = false
+  modalStore.close()
+  scrollToElement(propertyCardRef.value)
+}
+
+const scrollToElement = async (element) => {
+  if (element) {
+    await nextTick()
+    element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    element.classList.add('highlight-warning')
+    setTimeout(() => {
+      element.classList.remove('highlight-warning')
+    }, 3000)
+  }
+}
 </script>
 
 <template>
@@ -99,28 +184,30 @@ const handleSelectHistory = (history) => {
       </BaseButton>
     </div>
 
-    <div class="mb-8">
+    <div ref="propertyTypeSelectorRef" class="mb-8">
       <PropertyTypeSelector
         :selected-type="selectedPropertyType"
         @select-type="handlePropertyTypeSelect"
       />
     </div>
 
-    <div v-if="selectedPropertyType === 'registered'" class="mb-8">
-      <PropertyCard :selected-tab="selectedTab" @select-tab="handleTabSelect" />
+    <div v-if="selectedPropertyType === 'registered'" ref="propertyCardRef" class="mb-8">
+      <PropertyCard 
+        :selected-tab="selectedTab" 
+        @select-tab="handleTabSelect"
+        @select-property="handlePropertySelect"
+      />
     </div>
 
     <div
       v-if="selectedPropertyType === 'registered' || selectedPropertyType === 'unregistered'"
+      ref="documentUploadRef"
       class="mb-8"
     >
       <DocumentUpload :uploaded-files="uploadedFiles" @update-files="handleFileUpdate" />
     </div>
 
-    <div
-      v-if="selectedPropertyType === 'registered' || selectedPropertyType === 'unregistered'"
-      class="flex justify-center"
-    >
+    <div v-if="selectedPropertyType" class="flex justify-center">
       <BaseButton
         size="lg"
         variant="primary"
@@ -156,6 +243,25 @@ const handleSelectHistory = (history) => {
     @close="closeHistoryModal"
     @select-history="handleSelectHistory"
   />
+
+  <FileUploadWarningModal
+    :is-open="showFileWarningModal"
+    :missing-files="missingFiles"
+    @close="closeFileWarningModal"
+    @confirm="confirmFileWarning"
+  />
+
+  <PropertyTypeWarningModal
+    :is-open="showPropertyTypeWarningModal"
+    @close="closePropertyTypeWarningModal"
+    @confirm="confirmPropertyTypeWarning"
+  />
+
+  <PropertySelectionWarningModal
+    :is-open="showPropertySelectionWarningModal"
+    @close="closePropertySelectionWarningModal"
+    @confirm="confirmPropertySelectionWarning"
+  />
 </template>
 
 <style scoped>
@@ -167,5 +273,41 @@ const handleSelectHistory = (history) => {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+:deep(.highlight-warning) {
+  animation: highlight 3s ease-out;
+  border-radius: 1rem;
+  position: relative;
+}
+
+@keyframes highlight {
+  0% {
+    box-shadow: 
+      0 0 0 0 rgba(251, 191, 36, 0.8),
+      0 2px 10px 0 rgba(251, 191, 36, 0.4),
+      0 4px 20px 0 rgba(251, 191, 36, 0.3),
+      inset 0 0 0 1px rgba(251, 191, 36, 0.8);
+    border: 1px solid rgba(251, 191, 36, 0.9);
+    transform: scale(1.02);
+  }
+  50% {
+    box-shadow: 
+      0 0 15px 5px rgba(251, 191, 36, 0.2),
+      0 2px 15px 2.5px rgba(251, 191, 36, 0.3),
+      0 4px 25px 5px rgba(251, 191, 36, 0.2),
+      inset 0 0 0 1px rgba(251, 191, 36, 0.8);
+    border: 1px solid rgba(251, 191, 36, 0.9);
+    transform: scale(1.01);
+  }
+  100% {
+    box-shadow: 
+      0 0 0 0 rgba(251, 191, 36, 0),
+      0 4px 6px -1px rgba(0, 0, 0, 0.1),
+      0 2px 4px -1px rgba(0, 0, 0, 0.06),
+      inset 0 0 0 0 rgba(251, 191, 36, 0);
+    border: 1px solid rgba(251, 191, 36, 0);
+    transform: scale(1);
+  }
 }
 </style>
