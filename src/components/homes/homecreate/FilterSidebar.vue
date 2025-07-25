@@ -31,7 +31,9 @@
           :key="type"
           :class="[
             'px-3 py-1 border rounded-full text-sm',
-            filters.propertyType === type ? 'bg-yellow-400 text-white' : 'bg-white text-gray-700',
+            filters.propertyType === type
+              ? 'bg-yellow-primary text-white'
+              : 'bg-white text-gray-700',
           ]"
           @click="setPropertyType(type)"
           type="button"
@@ -50,7 +52,7 @@
           :key="deal"
           :class="[
             'px-3 py-1 border rounded-full text-sm',
-            filters.dealType === deal ? 'bg-yellow-400 text-white' : 'bg-white text-gray-700',
+            filters.dealType === deal ? 'bg-yellow-primary text-white' : 'bg-white text-gray-700',
           ]"
           @click="setDealType(deal)"
           type="button"
@@ -68,7 +70,7 @@
           min="0"
           max="200000"
           step="100"
-          class="w-full accent-yellow-400"
+          class="w-full custom-range"
         />
         <div class="text-xs text-gray-500">최대: {{ filters.depositRange }}만원</div>
 
@@ -79,7 +81,7 @@
           min="0"
           max="5000"
           step="10"
-          class="w-full accent-yellow-400"
+          class="w-full custom-range"
         />
         <div class="text-xs text-gray-500">최대: {{ filters.monthlyRange }}만원</div>
       </div>
@@ -93,7 +95,7 @@
           min="0"
           max="200000"
           step="100"
-          class="w-full accent-yellow-400"
+          class="w-full custom-range"
         />
         <div class="text-xs text-gray-500">최대: {{ filters.leaseRange }}만원</div>
       </div>
@@ -108,7 +110,7 @@
         min="0"
         max="70"
         step="1"
-        class="w-full accent-yellow-400"
+        class="w-full custom-range"
       />
       <div class="text-xs text-gray-500">최대: {{ filters.sizeRange }}평</div>
     </div>
@@ -123,7 +125,7 @@
           :class="[
             'px-3 py-1 border rounded-full text-sm',
             filters.directions.includes(dir)
-              ? 'bg-yellow-400 text-white'
+              ? 'bg-yellow-primary text-white'
               : 'bg-white text-gray-700',
           ]"
           @click="toggleDirection(dir)"
@@ -143,7 +145,9 @@
           :key="floor"
           :class="[
             'px-3 py-1 border rounded-full text-sm',
-            filters.floors.includes(floor) ? 'bg-yellow-400 text-white' : 'bg-white text-gray-700',
+            filters.floors.includes(floor)
+              ? 'bg-yellow-primary text-white'
+              : 'bg-white text-gray-700',
           ]"
           @click="toggleFloor(floor)"
           type="button"
@@ -167,7 +171,7 @@
     <!-- 버튼 -->
     <div class="pt-4 space-y-2">
       <button
-        class="w-full bg-yellow-400 hover:bg-yellow-500 text-white py-2 rounded font-bold"
+        class="w-full bg-yellow-primary hover:bg-yellow-500 text-white py-2 rounded font-bold"
         type="button"
         @click="emitFilterChange"
       >
@@ -186,7 +190,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { guToDong } from './gu-to-dong'
+import { guToDong } from './gu-to-dong' // guToDong: { 구: [동, ...], ... }
 
 const emit = defineEmits(['filter-change'])
 
@@ -235,7 +239,7 @@ function resetFilters() {
     district: '전체',
     propertyType: '전체',
     dealType: '월세',
-    depositRange: 500, // 수정: 초기값과 일치시킴
+    depositRange: 500,
     monthlyRange: 50,
     leaseRange: 10000,
     sizeRange: 30,
@@ -259,26 +263,47 @@ function emitFilterChange() {
   emit('filter-change', filters.value)
 }
 
-// filters 객체 변경시 자동 emit (선택적)
-// watch(filters, (newVal) => {
-//   emit('filter-change', newVal)
-// }, { deep: true })
-
 const directions = ['남향', '동향', '서향', '북향', '남동향', '남서향', '북동향', '북서향']
 const floors = ['반지하', '1층', '2~5층', '6~9층', '10층 이상']
 const conditions = ['주차 가능', '반려동물 가능', '대출 가능', '엘리베이터', '옥탑', '복층', '신축']
 </script>
 
 <style>
-input[type='range'].accent-yellow-400::-webkit-slider-thumb {
-  background-color: #facc15;
+/* 슬라이더 스타일 */
+input[type='range'].custom-range {
+  appearance: none;
+  height: 4px;
+  background: #e5e7eb; /* gray-200 */
+  border-radius: 9999px;
+  overflow: hidden;
+  position: relative;
 }
 
-input[type='range'].accent-yellow-400::-moz-range-thumb {
-  background-color: #facc15;
+input[type='range'].custom-range::-webkit-slider-thumb {
+  appearance: none;
+  height: 16px;
+  width: 16px;
+  background: #ffd600; /* primary yellow */
+  border-radius: 50%;
+  box-shadow: -1000px 0 0 1000px #ffd600; /* fill bar */
+  cursor: pointer;
 }
 
-input[type='range'].accent-yellow-400::-ms-thumb {
-  background-color: #facc15;
+input[type='range'].custom-range::-moz-range-thumb {
+  height: 16px;
+  width: 16px;
+  background: #ffd600;
+  border: none;
+  border-radius: 50%;
+  box-shadow: -1000px 0 0 1000px #ffd600;
+  cursor: pointer;
+}
+
+input[type='range'].custom-range::-ms-thumb {
+  height: 16px;
+  width: 16px;
+  background: #ffd600;
+  border-radius: 50%;
+  cursor: pointer;
 }
 </style>

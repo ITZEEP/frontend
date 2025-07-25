@@ -8,8 +8,12 @@
       <ListingBasicInfo :listing="listing" />
       <RoomDetails />
       <div class="w-full flex gap-4">
-        <BaseButton class="w-full" variant="outline" size="lg">사기 위험도 측정</BaseButton>
-        <BaseButton class="w-full" variant="primary" size="lg">연락하기</BaseButton>
+        <BaseButton class="w-full" variant="outline" size="lg" @click="goRiskCheck">
+          사기 위험도 측정
+        </BaseButton>
+        <BaseButton class="w-full" variant="primary" size="lg" @click="goChat">
+          연락하기
+        </BaseButton>
       </div>
     </div>
 
@@ -20,7 +24,7 @@
 
 <script setup>
 import { onMounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 import ImageGallery from '@/components/homes/homedetails/ImageGallery.vue'
 import ListingBasicInfo from '@/components/homes/homedetails/ListingBasicInfo.vue'
@@ -28,6 +32,7 @@ import RoomDetails from '@/components/homes/homedetails/RoomDetails.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 
 const route = useRoute()
+const router = useRouter()
 const id = Number(route.params.id)
 
 const listing = ref(null)
@@ -81,4 +86,14 @@ onMounted(() => {
     images.value = []
   }
 })
+
+// 사기 위험도 측정 페이지로 이동
+function goRiskCheck() {
+  router.push('/risk-check')
+}
+
+// 채팅 페이지로 이동
+function goChat() {
+  router.push('/chat')
+}
 </script>

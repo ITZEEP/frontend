@@ -34,15 +34,17 @@
     <div class="flex justify-end gap-2 mt-2">
       <button
         @click="report"
-        class="bg-white text-red-500 border border-red-300 text-sm px-3 py-1 rounded"
+        class="bg-white text-red-500 border border-red-300 text-sm px-3 py-1 rounded h-8"
       >
         🚨 신고
       </button>
       <button
         @click="toggleFavorite"
         :class="[
-          'text-sm px-3 py-1 rounded border',
-          isFavorite ? 'bg-yellow-400 text-white' : 'bg-white text-yellow-500 border-yellow-300',
+          'text-sm px-3 rounded border w-[100px] h-8 flex items-center justify-center whitespace-nowrap',
+          isFavorite
+            ? 'bg-yellow-400 text-white border-yellow-400'
+            : 'bg-white text-yellow-500 border-yellow-300',
         ]"
       >
         {{ isFavorite ? '★ 찜함' : '☆ 찜하기' }}
@@ -78,11 +80,10 @@ const prevImage = () => {
 }
 
 const handleImageError = (event) => {
-  event.target.src = '/fallback-image.png' // 적절한 대체 이미지 경로 지정
+  event.target.src = '/fallback-image.png' // 대체 이미지 경로
 }
 
 const report = () => {
-  // alert 대신 이벤트 emit
   emit('report-submitted')
 }
 

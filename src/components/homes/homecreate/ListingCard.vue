@@ -10,14 +10,13 @@
       <div class="p-4 space-y-2">
         <div class="text-yellow-500 font-semibold">{{ listing.type }}</div>
         <div class="text-lg font-bold">
-          월세
-          {{ formatNumber(listing.deposit) }} / {{ formatNumber(listing.monthly) }}
+          월세 {{ formatNumber(listing.deposit) }} / {{ formatNumber(listing.monthly) }}
         </div>
         <div class="text-sm text-gray-600">
           {{ listing.gu }} {{ listing.dong }} · {{ listing.area }}평 · {{ listing.floor }}층
         </div>
 
-        <div class="flex justify-between text-xs mt-2 text-gray-500 select-none">
+        <div class="flex gap-2 text-xs mt-2 text-gray-500 select-none">
           <div>❤️ {{ listing.likes ?? 0 }}</div>
           <div>👁️ {{ listing.views ?? 0 }}</div>
           <div>💬 {{ listing.chats ?? 0 }}</div>
@@ -37,7 +36,6 @@
 </template>
 
 <script setup>
-
 defineProps({
   listing: {
     type: Object,
@@ -49,7 +47,6 @@ function formatNumber(value) {
   if (typeof value === 'number') {
     return value.toLocaleString()
   }
-  // 숫자가 아니면 그대로 출력하거나 '0' 처리
   return value ?? '0'
 }
 </script>
