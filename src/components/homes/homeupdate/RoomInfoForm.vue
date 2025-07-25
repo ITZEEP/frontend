@@ -14,7 +14,7 @@
           :class="[
             'px-4 py-2 rounded border',
             selectedRooms === num
-              ? 'bg-yellow-500 text-white border-yellow-500'
+              ? 'bg-yellow-primary text-white border-yellow-primary'
               : 'bg-white border-gray-300',
           ]"
         >
@@ -35,7 +35,7 @@
           :class="[
             'px-4 py-2 rounded border',
             selectedBathrooms === num
-              ? 'bg-yellow-500 text-white border-yellow-500'
+              ? 'bg-yellow-primary text-white border-yellow-primary'
               : 'bg-white border-gray-300',
           ]"
         >
@@ -56,7 +56,7 @@
           :class="[
             'px-4 py-2 rounded border',
             selectedDirection === dir
-              ? 'bg-yellow-500 text-white border-yellow-500'
+              ? 'bg-yellow-primary text-white border-yellow-primary'
               : 'bg-white border-gray-300',
           ]"
         >
