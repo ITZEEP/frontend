@@ -58,6 +58,7 @@ const currentStepComponent = computed(() => {
   const roleSteps = stepComponentsMap[role.value]
   return roleSteps ? roleSteps[step.value] : null
 })
+// fighting!
 </script>
 
 <style scoped></style>
