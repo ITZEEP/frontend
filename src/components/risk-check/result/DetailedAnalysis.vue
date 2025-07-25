@@ -6,7 +6,11 @@ import IconWarningTriangle from '@/components/icons/IconWarningTriangle.vue'
 const props = defineProps({
   analysisData: {
     type: Object,
-    required: true,
+    required: false,
+  },
+  detailGroups: {
+    type: Array,
+    required: false,
   },
 })
 
@@ -45,7 +49,30 @@ const getIconClass = (status) => {
   <div class="bg-white rounded-2xl shadow-sm border border-gray-300 p-8">
     <h3 class="text-xl font-semibold text-gray-warm-700 mb-6">상세 분석 결과</h3>
 
-    <div class="space-y-8">
+    <!-- detailGroups 배열이 있을 때 표시 -->
+    <div v-if="detailGroups && detailGroups.length > 0" class="space-y-8">
+      <div v-for="(group, groupIndex) in detailGroups" :key="groupIndex">
+        <h4 class="text-lg font-semibold text-gray-warm-700 pb-2.5 border-b border-gray-300 mb-4">
+          {{ group.title }}
+        </h4>
+        <div class="space-y-4">
+          <div
+            v-for="(item, itemIndex) in group.items"
+            :key="itemIndex"
+            class="p-4 bg-gray-100 rounded-xl"
+          >
+            <div class="flex items-center gap-2 mb-2">
+              <IconCheckCircle class="text-yellow-primary" />
+              <span class="text-sm font-medium text-gray-warm-700">{{ item.title }}</span>
+            </div>
+            <p class="text-base text-gray-warm-500">{{ item.content }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 기존 detailedAnalysis 방식 (fallback) -->
+    <div v-else-if="analysisData" class="space-y-8">
       <div v-for="section in sections" :key="section.key">
         <h4 class="text-lg font-semibold text-gray-warm-700 pb-2.5 border-b border-gray-300 mb-4">
           {{ section.title }}
