@@ -74,7 +74,7 @@ const hasConditionLog = ref(store.step3.has_condition_log ?? null)
 const hasPenalty = ref(store.step3.has_penalty ?? null)
 const hasPriorityExtension = ref(store.step3.has_priority_for_extension ?? null)
 const hasAutoPriceAdjustment = ref(store.step3.has_auto_price_adjustment ?? null)
-const allowJeonseRight = ref(store.step3.allow_jeonse_right_registration ?? null)
+const allowJeonseRight = ref(store.step3.allow_jeonse_right_registration ?? '')
 
 const autoAdjustmentLabel = computed(() =>
   rentType.value === 'JEONSE'

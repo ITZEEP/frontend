@@ -40,6 +40,7 @@ const maxStep = 6
 
 const subStepCountMap = {
   'owner-3': 2,
+  'owner-4': 2,
 }
 
 const subStepKey = computed(() => `${props.role}-${String(props.step)}`)

@@ -35,6 +35,7 @@ const subStep = ref(1)
 // 서브스텝 개수 맵
 const subStepCountMap = {
   'owner-3': 2,
+  'owner-4': 2,
 }
 
 const subStepKey = computed(() => `${props.role}-${props.currentStep}`)
