@@ -45,8 +45,8 @@
 
     <div v-else class="divide-y divide-gray-100">
       <ChatItem
-        v-for="(room, index) in filteredRooms"
-        :key="`room-${room.chatRoomId}-${index}-${updateTrigger}-${room.lastMessage ? JSON.stringify(room.lastMessage).slice(0, 10) : 'none'}`"
+        v-for="room in filteredRooms"
+        :key="`room-${room.chatRoomId}-${room._lastUpdated || 0}`"
         :room="room"
         @click="selectRoom(room)"
       />
@@ -55,7 +55,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, watch, provide } from 'vue'
 import ChatItem from './ChatItem.vue'
 import { getOwnerChatRooms, getBuyerChatRooms } from '@/components/chat/apis/chatApi'
 
@@ -69,6 +69,12 @@ const error = ref(null)
 const currentUserId = ref(null)
 const updateTrigger = ref(0)
 
+// 현재 선택된 채팅방 ID 추적
+const currentChatRoomId = ref(null)
+
+// 자식 컴포넌트(ChatItem)에 현재 채팅방 ID 제공
+provide('currentChatRoomId', currentChatRoomId)
+
 // 중복 메시지 처리 방지
 const processedMessages = new Set()
 
@@ -78,23 +84,12 @@ const filteredRooms = computed(() => {
 
   const rooms = selectedTab.value === 'owner' ? ownerRooms.value : buyerRooms.value
   const filtered = rooms.filter((room) => room && room.chatRoomId)
-
-  console.log('🔍 filteredRooms 재계산:', {
-    tab: selectedTab.value,
-    totalRooms: rooms.length,
-    filteredRooms: filtered.length,
-    trigger: updateTrigger.value,
-  })
-
   return filtered
 })
 
-// 강제 업데이트 트리거 (더 강력한 버전)
+// 강제 업데이트 트리거
 function triggerUpdate() {
   updateTrigger.value = Date.now()
-  console.log('🔄 업데이트 트리거:', updateTrigger.value)
-
-  // Vue.js의 다음 틱에서 한 번 더 트리거
   nextTick(() => {
     updateTrigger.value = Date.now() + 1
   })
@@ -115,7 +110,6 @@ async function loadOwnerRooms() {
   try {
     const response = await getOwnerChatRooms()
     ownerRooms.value = sortRoomsByTime(response.data || [])
-    console.log('임대인 채팅방 로드:', ownerRooms.value.length, '개')
   } catch (err) {
     console.error('임대인 채팅방 로드 오류:', err)
   }
@@ -125,7 +119,6 @@ async function loadBuyerRooms() {
   try {
     const response = await getBuyerChatRooms()
     buyerRooms.value = sortRoomsByTime(response.data || [])
-    console.log('임차인 채팅방 로드:', buyerRooms.value.length, '개')
   } catch (err) {
     console.error('임차인 채팅방 로드 오류:', err)
   }
@@ -158,15 +151,16 @@ function sortRoomsByTime(rooms) {
     })
 }
 
-// 방 선택 (중복 읽음 처리 제거)
+// 방 선택 (현재 채팅방 ID 업데이트)
 function selectRoom(room) {
   if (!room || !room.chatRoomId) {
     console.error('유효하지 않은 채팅방:', room)
     return
   }
 
-  // ❌ 자동 읽음 처리 제거 - ChatRoom에서 사용자가 실제로 메시지를 확인했을 때만 처리
-  console.log('🏠 채팅방 선택:', room.chatRoomId)
+  // 현재 선택된 채팅방 ID 업데이트
+  currentChatRoomId.value = room.chatRoomId
+
   emit('selectRoom', room)
 }
 
@@ -175,18 +169,16 @@ function retryLoad() {
   loadChatRooms()
 }
 
-// 새 메시지로 채팅방 업데이트 (중복 방지 강화)
+// 핵심 수정: 직접 객체 속성 변경으로 반응성 보장
 function updateRoomLastMessage(chatRoomId, message, timestamp, senderId, unreadCountFromBackend) {
   const roomIdStr = String(chatRoomId)
 
-  // 중복 메시지 체크 (메시지 내용 + 시간 + 보낸이로 중복 판별)
-  const messageKey = `${roomIdStr}-${message}-${timestamp}-${senderId}`
+  // 중복 메시지 체크
+  const messageKey = `${roomIdStr}-${message}-${timestamp}`
   if (processedMessages.has(messageKey)) {
-    console.log('⚠️ 중복 메시지 무시:', messageKey)
     return
   }
 
-  // 중복 방지를 위해 키 저장 (최근 100개만 유지)
   processedMessages.add(messageKey)
   if (processedMessages.size > 100) {
     const firstKey = processedMessages.values().next().value
@@ -194,175 +186,156 @@ function updateRoomLastMessage(chatRoomId, message, timestamp, senderId, unreadC
   }
 
   let wasUpdated = false
+  const currentTime = Date.now()
 
-  const updateRoomList = (roomListRef) => {
-    const index = roomListRef.value.findIndex((room) => String(room.chatRoomId) === roomIdStr)
-    if (index === -1) return false
-
-    const currentRoom = roomListRef.value[index]
-
-    // 같은 메시지인지 체크 (타임스탬프와 내용 비교)
-    if (currentRoom.lastMessage === message && currentRoom.lastMessageAt === timestamp) {
-      console.log('⚠️ 동일한 메시지, 업데이트 건너뜀')
+  // 핵심 수정: 직접 객체 속성 변경 + 정렬
+  const updateRoomList = (roomListRef, listName) => {
+    const roomIndex = roomListRef.value.findIndex((room) => String(room.chatRoomId) === roomIdStr)
+    if (roomIndex === -1) {
       return false
     }
 
-    const updatedRoom = {
-      ...currentRoom,
-      lastMessage: message,
-      lastMessageAt: timestamp || new Date().toISOString(),
-      unreadMessageCount:
-        unreadCountFromBackend !== undefined
-          ? unreadCountFromBackend
-          : currentRoom.unreadMessageCount || 0,
-      _lastUpdated: Date.now(),
+    const targetRoom = roomListRef.value[roomIndex]
+
+    // 같은 메시지인지 체크
+    if (targetRoom.lastMessage === message && targetRoom.lastMessageAt === timestamp) {
+      return false
     }
 
-    const newList = roomListRef.value.filter((room) => String(room.chatRoomId) !== roomIdStr)
-    newList.unshift(updatedRoom)
-    roomListRef.value = newList
+    // 직접 속성 변경 (Vue 반응성 시스템이 감지)
+    targetRoom.lastMessage = message
+    targetRoom.lastMessageAt = timestamp || new Date().toISOString()
+    targetRoom.unreadMessageCount =
+      unreadCountFromBackend !== undefined
+        ? unreadCountFromBackend
+        : targetRoom.unreadMessageCount || 0
+    targetRoom._lastUpdated = currentTime
+
+    // 최신 메시지를 맨 위로 이동 (시간 순 정렬 유지)
+    if (roomIndex !== 0) {
+      const updatedRoom = roomListRef.value.splice(roomIndex, 1)[0]
+      roomListRef.value.unshift(updatedRoom)
+    }
+
+    console.log(`${listName} 업데이트 완료:`, targetRoom.lastMessage)
     return true
   }
 
-  if (updateRoomList(ownerRooms)) {
+  // 두 목록 모두 업데이트 시도
+  if (updateRoomList(ownerRooms, '임대인')) {
     wasUpdated = true
-    console.log('✅ 임대인 방 업데이트 완료:', message)
   }
 
-  if (updateRoomList(buyerRooms)) {
+  if (updateRoomList(buyerRooms, '임차인')) {
     wasUpdated = true
-    console.log('✅ 임차인 방 업데이트 완료:', message)
   }
 
   if (wasUpdated) {
+    console.log('업데이트 완료, 반응성 트리거')
     triggerUpdate()
-    nextTick(() => {
-      console.log('🎯 DOM 업데이트 완료, filteredRooms:', filteredRooms.value.length)
-    })
   } else {
-    console.warn('⚠️ 해당 채팅방 없음 또는 중복 메시지')
+    console.warn('해당 채팅방 없음 또는 중복 메시지')
   }
 }
 
-// 읽지 않은 메시지 수 초기화 (외부에서 명시적 호출시에만)
+// 읽지 않은 메시지 수 초기화
 function markRoomAsRead(chatRoomId) {
-  console.log('📖 명시적 읽음 처리:', chatRoomId)
-
   let wasMarked = false
+  const currentTime = Date.now()
 
-  // 임대인 방에서 찾기
-  const ownerRoomIndex = ownerRooms.value.findIndex((room) => room.chatRoomId === chatRoomId)
-  if (ownerRoomIndex !== -1 && ownerRooms.value[ownerRoomIndex].unreadMessageCount > 0) {
-    const newOwnerRooms = [...ownerRooms.value]
-    newOwnerRooms[ownerRoomIndex] = {
-      ...newOwnerRooms[ownerRoomIndex],
-      unreadMessageCount: 0,
-      _lastUpdated: Date.now(),
-    }
-    ownerRooms.value = newOwnerRooms
+  // 직접 속성 변경으로 반응성 보장
+  const ownerRoom = ownerRooms.value.find((room) => room.chatRoomId === chatRoomId)
+  if (ownerRoom && ownerRoom.unreadMessageCount > 0) {
+    ownerRoom.unreadMessageCount = 0
+    ownerRoom._lastUpdated = currentTime
     wasMarked = true
   }
 
-  // 임차인 방에서 찾기
-  const buyerRoomIndex = buyerRooms.value.findIndex((room) => room.chatRoomId === chatRoomId)
-  if (buyerRoomIndex !== -1 && buyerRooms.value[buyerRoomIndex].unreadMessageCount > 0) {
-    const newBuyerRooms = [...buyerRooms.value]
-    newBuyerRooms[buyerRoomIndex] = {
-      ...newBuyerRooms[buyerRoomIndex],
-      unreadMessageCount: 0,
-      _lastUpdated: Date.now(),
-    }
-    buyerRooms.value = newBuyerRooms
+  const buyerRoom = buyerRooms.value.find((room) => room.chatRoomId === chatRoomId)
+  if (buyerRoom && buyerRoom.unreadMessageCount > 0) {
+    buyerRoom.unreadMessageCount = 0
+    buyerRoom._lastUpdated = currentTime
     wasMarked = true
   }
 
   if (wasMarked) {
     triggerUpdate()
-    console.log('✅ 읽음 처리 완료')
   }
 
   return wasMarked
 }
 
-// 웹소켓 메시지 핸들러 (STOMP 메시지 처리용) - 개선된 버전
+// 웹소켓 메시지 핸들러
 function handleWebSocketMessage(message) {
-  console.log('🌐 STOMP 메시지 수신:', message)
-
   try {
     let data
 
-    // STOMP 메시지 처리
     if (message && message.body) {
       data = JSON.parse(message.body)
-      console.log('📨 STOMP body 파싱:', data)
     } else if (typeof message === 'string') {
       data = JSON.parse(message)
-      console.log('📨 문자열 파싱:', data)
     } else if (typeof message.data === 'string') {
       data = JSON.parse(message.data)
-      console.log('📨 이벤트 데이터 파싱:', data)
     } else if (typeof message === 'object') {
       data = message
-      console.log('📨 객체 직접 사용:', data)
     } else {
-      console.warn('❌ 알 수 없는 메시지 형태:', message)
+      console.warn('알 수 없는 메시지 형태:', message)
       return
     }
 
-    console.log('📨 최종 파싱된 메시지:', data)
-
-    // 메시지 타입별 처리
-    if (data.type === 'CHAT_MESSAGE' && data.chatRoomId && data.content) {
-      console.log('💬 채팅 메시지로 인식, 목록 업데이트 시작')
-
+    // ChatRoomUpdateDto 구조 확인
+    if (data.roomId !== undefined && data.lastMessage !== undefined) {
+      updateRoomLastMessage(
+        data.roomId,
+        data.lastMessage,
+        data.timestamp,
+        data.senderId,
+        data.unreadCount,
+      )
+    }
+    // 일반 채팅 메시지 처리
+    else if (data.chatRoomId && data.content) {
       updateRoomLastMessage(
         data.chatRoomId,
         data.content,
         data.sendTime,
         data.senderId,
-        data.unreadMessageCount,
+        data.unreadCount,
       )
-    } else if (data.type === 'READ_STATUS' && data.chatRoomId) {
-      // 읽음 상태 업데이트 메시지
-      console.log('📖 읽음 상태 업데이트:', data)
+    }
+    // 읽음 상태 업데이트 처리
+    else if (data.type === 'READ_STATUS' && data.chatRoomId) {
       markRoomAsRead(data.chatRoomId)
-    } else if (data.chatRoomId && data.content) {
-      // 타입이 없어도 기본 채팅 메시지로 처리
-      console.log('💬 기본 채팅 메시지로 처리')
-      updateRoomLastMessage(
-        data.chatRoomId,
-        data.content,
-        data.sendTime,
-        data.senderId,
-        data.unreadMessageCount,
-      )
     } else {
-      console.log('ℹ️ 기타 메시지 타입 또는 불완전한 데이터:', data)
+      console.log('ℹ기타 메시지 타입:', data)
     }
   } catch (err) {
-    console.error('❌ 메시지 파싱 오류:', err)
-    console.error('❌ 원본 메시지:', message)
+    console.error('메시지 파싱 오류:', err)
   }
 }
 
-// 현재 사용자 ID 설정
-function setCurrentUserId() {
+// 현재 사용자 ID 설정 (API 호출로 변경)
+async function setCurrentUserId() {
   try {
+    // 먼저 localStorage에서 시도
     const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
-    currentUserId.value = userInfo.userId || userInfo.id
-    console.log('👤 현재 사용자 ID 설정:', currentUserId.value)
+    if (userInfo.userId || userInfo.id) {
+      currentUserId.value = userInfo.userId || userInfo.id
+      return
+    }
+
+    // localStorage에 없으면 API 호출
+    const { getCurrentUser } = await import('@/components/chat/apis/chatApi')
+    const response = await getCurrentUser()
+
+    if (response.success && response.data.userId) {
+      currentUserId.value = response.data.userId
+      console.log('API에서 사용자 ID 설정:', currentUserId.value)
+    } else {
+      console.error('API에서 사용자 정보 로드 실패')
+    }
   } catch (err) {
-    console.error('❌ 사용자 정보 로드 실패:', err)
-  }
-}
-
-// 주기적 새로고침 (백업용)
-let refreshInterval = null
-
-function stopPeriodicRefresh() {
-  if (refreshInterval) {
-    clearInterval(refreshInterval)
-    refreshInterval = null
+    console.error('사용자 정보 로드 실패:', err)
   }
 }
 
@@ -380,96 +353,70 @@ defineExpose({
   updateRoomLastMessage,
   markRoomAsRead,
   refreshRooms: loadChatRooms,
-})
-
-onMounted(async () => {
-  console.log('🚀 ChatRoomList 마운트됨')
-
-  setCurrentUserId()
-  loadChatRooms()
-
-  // STOMP 웹소켓 구독을 위한 설정
-  if (currentUserId.value) {
-    await setupWebSocketSubscriptions()
-  }
+  setCurrentChatRoom: (roomId) => {
+    currentChatRoomId.value = roomId
+  },
 })
 
 // 웹소켓 구독 설정
 async function setupWebSocketSubscriptions() {
   try {
-    // websocketService import 확인
     const { default: websocketService } = await import('@/components/chat/apis/websocket')
-
-    console.log('🔌 websocketService를 사용한 구독 설정')
-
-    // 연결 확인 및 대기
     if (!websocketService.getConnectionStatus()) {
-      console.log('🔄 웹소켓 연결 대기 중...')
       await websocketService.connect()
     }
 
     // 사용자별 채팅방 목록 업데이트 토픽 구독
     const userTopic = `/topic/user/${currentUserId.value}/chatrooms`
-    console.log('📡 사용자 토픽 구독:', userTopic)
+    console.log('사용자 구독:', userTopic)
 
     websocketService.onMessage(userTopic, (message) => {
-      console.log('📨 사용자 토픽에서 메시지 수신:', message)
-      handleWebSocketMessage({ body: JSON.stringify(message) })
-    })
+      console.log('사용자 토픽에서 메시지 수신:', message)
 
-    // 전역 메시지 핸들러 등록 (모든 채팅방 메시지 수신)
-    websocketService.onGlobalMessage((message) => {
-      console.log('📨 전역 핸들러에서 메시지 수신:', message)
-      // ChatMessageDocument 형태 확인
-      if (message.chatRoomId && message.content && message.senderId) {
-        console.log('💬 전역에서 채팅 메시지 감지, 목록 업데이트')
+      // ChatRoomUpdateDto 구조에 맞게 직접 처리
+      if (message.roomId !== undefined && message.lastMessage !== undefined) {
         updateRoomLastMessage(
-          message.chatRoomId,
-          message.content,
-          message.sendTime,
+          message.roomId,
+          message.lastMessage,
+          message.timestamp,
           message.senderId,
+          message.unreadCount,
         )
+      } else {
+        handleWebSocketMessage({ body: JSON.stringify(message) })
       }
     })
-
-    console.log('✅ 웹소켓 구독 설정 완료')
   } catch (error) {
-    console.error('❌ websocketService 로드 실패:', error)
-    console.log('🔄 대체 방법 시도...')
-
-    // 대체 방법: ChatRoom에서 메시지 전송 시 부모에게 알리기
+    console.error('websocketService 로드 실패:', error)
     setupFallbackMethod()
   }
 }
 
-// 대체 방법: 부모 컴포넌트에서 직접 호출
+// 대체 방법: 전역 함수 등록
 function setupFallbackMethod() {
-  console.log('🔄 대체 방법: 부모 컴포넌트 연동')
-
-  // 부모 컴포넌트에서 직접 호출할 수 있도록 전역에 등록
   if (window) {
-    // 채팅방 목록 업데이트
-    window.updateChatRoomList = (chatRoomId, message, timestamp, senderId) => {
-      console.log('🌍 전역 함수를 통한 채팅방 업데이트:', { chatRoomId, message, senderId })
-      updateRoomLastMessage(chatRoomId, message, timestamp, senderId)
+    window.updateChatRoomList = (chatRoomId, message, timestamp, senderId, unreadCount) => {
+      updateRoomLastMessage(chatRoomId, message, timestamp, senderId, unreadCount)
     }
 
-    // 읽음 처리 (명시적 호출시에만)
     window.markChatRoomAsRead = (chatRoomId) => {
-      console.log('🌍 전역 함수를 통한 읽음 처리:', chatRoomId)
       return markRoomAsRead(chatRoomId)
     }
-
-    console.log('✅ 전역 업데이트 함수 등록 완료')
   }
 }
 
+onMounted(async () => {
+  await setCurrentUserId() // await 추가
+  await loadChatRooms() // await 추가
+
+  if (currentUserId.value) {
+    await setupWebSocketSubscriptions()
+  } else {
+    console.error('사용자 ID가 없어서 WebSocket 구독 불가')
+  }
+})
+
 onUnmounted(() => {
-  console.log('🧹 ChatRoomList 언마운트됨')
-
-  stopPeriodicRefresh()
-
-  // 전역 함수 정리
   if (window) {
     if (window.updateChatRoomList) {
       delete window.updateChatRoomList
@@ -477,7 +424,6 @@ onUnmounted(() => {
     if (window.markChatRoomAsRead) {
       delete window.markChatRoomAsRead
     }
-    console.log('🧹 전역 함수들 제거 완료')
   }
 })
 </script>
