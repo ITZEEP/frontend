@@ -34,11 +34,12 @@
           <span class="text-xs text-gray-400">
             {{ timeDisplay }}
           </span>
+          <!-- ✅ 핵심 수정: getDisplayUnreadCount 함수 사용 -->
           <span
-            v-if="room?.unreadMessageCount > 0"
+            v-if="getDisplayUnreadCount() > 0"
             class="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center animate-pulse"
           >
-            {{ room.unreadMessageCount > 99 ? '99+' : room.unreadMessageCount }}
+            {{ getDisplayUnreadCount() > 99 ? '99+' : getDisplayUnreadCount() }}
           </span>
         </div>
       </div>
@@ -47,7 +48,7 @@
 </template>
 
 <script setup>
-import { computed, watch } from 'vue'
+import { computed, watch, inject } from 'vue'
 
 const props = defineProps({
   room: {
@@ -56,15 +57,28 @@ const props = defineProps({
     default: () => ({}),
   },
 })
+
+// 부모 컴포넌트에서 현재 채팅방 ID 주입받기
+const currentChatRoomId = inject('currentChatRoomId', { value: null })
+
 watch(
   () => props.room?.lastMessage,
   (newVal, oldVal) => {
-    console.log('🟢 lastMessage 변경 감지:', { oldVal, newVal })
+    console.log('lastMessage 변경 감지:', { oldVal, newVal })
   },
   { immediate: true },
 )
 
 defineEmits(['click'])
+
+// 읽지 않은 수 표시 함수 추가
+const getDisplayUnreadCount = () => {
+  // 현재 열려있는 채팅방이면 0으로 표시
+  if (props.room?.chatRoomId === currentChatRoomId.value) {
+    return 0
+  }
+  return props.room?.unreadMessageCount || 0
+}
 
 // 닉네임 첫 글자 가져오기 (프로필 이미지 대체)
 function getInitial(nickname) {
