@@ -22,7 +22,7 @@
           <div
             class="inline-block max-w-xs lg:max-w-md px-4 py-2 rounded-lg"
             :class="{
-              'bg-blue-500 text-white': isMyMessage(message),
+              'bg-yellow-primary text-white': isMyMessage(message),
               'bg-white text-gray-800 border': !isMyMessage(message),
             }"
           >
@@ -72,7 +72,9 @@
 
             <div class="text-xs mt-1 opacity-70 flex justify-between items-center">
               <span>{{ formatMessageTime(message.sendTime) }}</span>
-              <span v-if="isMyMessage(message) && message.isRead" class="text-blue-300">읽음</span>
+              <span v-if="isMyMessage(message) && message.isRead" class="text-white ml-2"
+                >읽음</span
+              >
             </div>
           </div>
         </div>
@@ -87,7 +89,7 @@
           <div
             class="inline-block max-w-xs lg:max-w-md px-4 py-2 rounded-lg"
             :class="{
-              'bg-blue-500 text-white': isMyMessage(message),
+              'bg-yellow-primary text-white': isMyMessage(message),
               'bg-white text-gray-800 border': !isMyMessage(message),
             }"
           >
@@ -189,8 +191,8 @@
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import RoomNav from './RoomNav.vue'
 import ChatInput from './ChatInput.vue'
-import { getChatMessages, getCurrentUser, markChatRoomAsRead } from '@/components/chat/apis/chatApi'
-import websocketService from '../apis/websocket'
+import { getChatMessages, getCurrentUser, markChatRoomAsRead } from '@/apis/chatApi'
+import websocketService from '../../../apis/websocket'
 
 const props = defineProps({
   room: {
