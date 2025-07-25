@@ -19,6 +19,8 @@
         </div>
       </div>
       <div class="flex items-center space-x-2">
+        <!-- 계약 작성 전으로 가기 -->
+        <BaseButton @click="handleClickGoToContract" variant="gray">계약서 작성하기</BaseButton>
         <!-- 추가 기능 버튼들 -->
         <button class="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-full">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -74,6 +76,8 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { getChatRoomInfo } from '@/apis/chatApi'
+import BaseButton from '@/components/common/BaseButton.vue'
+import { useRouter } from 'vue-router'
 
 const props = defineProps({
   room: {
@@ -85,6 +89,17 @@ const props = defineProps({
 // 매물 정보 상태
 const propertyInfo = ref(null)
 const loadingProperty = ref(false)
+
+const router = useRouter()
+// 계약서 작성하러 가기
+const handleClickGoToContract = () => {
+  if (!props.room?.chatRoomId) return
+
+  router.push({
+    path: `/pre-contract/${props.room.chatRoomId}/owner`,
+    query: { step: 1 },
+  })
+}
 
 // 매물 정보 API 호출
 const fetchPropertyInfo = async () => {
