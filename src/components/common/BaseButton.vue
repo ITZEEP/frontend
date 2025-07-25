@@ -5,7 +5,7 @@
       sizeClasses,
       variantClasses,
     ]"
-    @click="$emit('click', $event)"
+    @click="onClick"
   >
     <slot />
   </button>
@@ -13,6 +13,13 @@
 
 <script setup>
 import { computed } from 'vue'
+
+const emit = defineEmits(['click'])
+
+const onClick = (event) => {
+  event.stopPropagation()
+  emit('click', event)
+}
 
 const props = defineProps({
   variant: {
