@@ -11,7 +11,7 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 
 // 레이아웃 공통
-import PreContractLayout from '@/components/pre-contract/PreContractLayout.vue'
+import PreContractLayout from '@/components/pre-contract/layout/PreContractLayout.vue'
 
 // buyer 컴포넌트
 import BuyerStep1 from '@/components/pre-contract/buyer/Step1SelectHome.vue'
@@ -58,7 +58,6 @@ const currentStepComponent = computed(() => {
   const roleSteps = stepComponentsMap[role.value]
   return roleSteps ? roleSteps[step.value] : null
 })
-// fighting!
 </script>
 
 <style scoped></style>
