@@ -23,9 +23,9 @@
 
     <!-- 보증금, 월세, 관리비 -->
     <div class="grid grid-cols-2 gap-4 mb-4">
-      <BaseInput label="보증금" placeholder="예: 1000" />
-      <BaseInput label="월세" placeholder="예: 100" />
-      <BaseInput label="관리비" placeholder="예: 10" />
+      <BaseInput v-model="보증금" label="보증금" placeholder="예: 1000" type="number" min="0" />
+      <BaseInput v-model="월세" label="월세" placeholder="예: 100" type="number" min="0" />
+      <BaseInput v-model="관리비" label="관리비" placeholder="예: 10" type="number" min="0" />
     </div>
 
     <!-- 관리비 포함 항목 -->
@@ -36,7 +36,8 @@
           v-for="item in ['전기료', '수도료', '인터넷', '케이블 TV', '가스료', '난방비']"
           :key="item"
         >
-          <input type="checkbox" /> {{ item }}
+          <input type="checkbox" v-model="관리비포함항목" :value="item" />
+          {{ item }}
         </label>
       </div>
     </div>
@@ -61,5 +62,9 @@ import { ref } from 'vue'
 import BaseInput from '@/components/common/BaseInput.vue'
 
 const 거래유형 = ref('월세')
+const 보증금 = ref(null)
+const 월세 = ref(null)
+const 관리비 = ref(null)
+const 관리비포함항목 = ref([])
 const 입주가능일 = ref('')
 </script>

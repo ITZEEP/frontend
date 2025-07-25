@@ -10,9 +10,9 @@
       <h1 class="text-xl font-semibold">매물 정보 수정</h1>
     </div>
 
-    <!-- 기본 정보 -->
+    <!-- 기본 정보 (읽기 전용) -->
     <section class="bg-white rounded-xl shadow-md p-6">
-      <BasicInfoForm :listing="listing" />
+      <BasicInfoForm :listing="listing" readonly />
     </section>
 
     <!-- 가격 정보 -->
@@ -36,10 +36,15 @@
       <p class="text-sm text-gray-500 mt-2">※ 최대 10장까지 업로드 가능합니다.</p>
     </section>
 
+    <!-- 에러 메시지 -->
+    <div v-if="error" class="text-red-500 font-semibold">{{ error }}</div>
+
     <!-- 저장 및 취소 버튼 -->
     <div class="grid grid-cols-2 gap-4 h-12">
-      <BaseButton variant="outline" @click="cancelUpdate">취소</BaseButton>
-      <BaseButton variant="primary" @click="updateListing">저장하기</BaseButton>
+      <BaseButton variant="outline" @click="cancelUpdate" :disabled="isLoading">취소</BaseButton>
+      <BaseButton variant="primary" @click="updateListing" :disabled="isLoading">
+        {{ isLoading ? '저장 중...' : '저장하기' }}
+      </BaseButton>
     </div>
   </div>
 </template>
@@ -62,11 +67,14 @@ const route = useRoute()
 const router = useRouter()
 const listingId = route.params.id
 
-// 매물 상태
 const listing = ref({})
+const originalListing = ref({}) // 원본 데이터 복사본
 
-// 예시 데이터 로드
+const isLoading = ref(false)
+const error = ref(null)
+
 onMounted(() => {
+  // 예시 데이터 로드 (실제 API 호출로 변경 필요)
   listing.value = {
     id: listingId,
     address: '서울시 강남구 테헤란로 123',
@@ -88,16 +96,37 @@ onMounted(() => {
       'https://source.unsplash.com/featured/?apartment',
     ],
   }
+  // 원본 복사본 저장 (딥카피)
+  originalListing.value = JSON.parse(JSON.stringify(listing.value))
 })
 
-// 저장 버튼 클릭
-const updateListing = () => {
-  console.log('저장된 매물:', listing.value)
-  // API 호출 후 이동 로직 작성 가능
+const updateListing = async () => {
+  try {
+    isLoading.value = true
+    error.value = null
+
+    console.log('저장된 매물:', listing.value)
+    // TODO: 실제 API 호출 구현
+    // await updateListingAPI(listing.value)
+
+    // 성공 시 목록 페이지로 이동
+    router.push('/homes')
+  } catch (err) {
+    error.value = '저장 중 오류가 발생했습니다.'
+    console.error('저장 실패:', err)
+  } finally {
+    isLoading.value = false
+  }
 }
 
-// 취소 버튼 클릭
 const cancelUpdate = () => {
+  const hasChanges = JSON.stringify(listing.value) !== JSON.stringify(originalListing.value)
+
+  if (hasChanges) {
+    const confirmed = confirm('작업 중인 내용이 있습니다. 정말 취소하시겠습니까?')
+    if (!confirmed) return
+  }
+
   router.push('/homes')
 }
 </script>
