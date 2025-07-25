@@ -1,0 +1,50 @@
+{
+  "properties": [
+    {
+      "id": 1,
+      "title": "강남구 테헤란로 아파트",
+      "address": "서울특별시 강남구 테헤란로 123",
+      "detailAddress": "101동 1503호",
+      "type": "아파트",
+      "transactionType": "전세",
+      "price": 500000000,
+      "priceDisplay": "5억원",
+      "image": "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&auto=format&fit=crop&q=60"
+    },
+    {
+      "id": 2,
+      "title": "강남구 신사동 오피스텔",
+      "address": "서울시 강남구 신사동 123-45",
+      "detailAddress": "B동 1012호",
+      "type": "오피스텔",
+      "transactionType": "전세",
+      "price": 350000000,
+      "priceDisplay": "3.5억원",
+      "image": "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&auto=format&fit=crop&q=60"
+    },
+    {
+      "id": 3,
+      "title": "서초구 방배동 빌라",
+      "address": "서울특별시 서초구 방배동 456-78",
+      "detailAddress": "2층",
+      "type": "빌라",
+      "transactionType": "월세",
+      "price": 30000000,
+      "priceDisplay": "보증금 3천만원/월 100만원",
+      "monthlyRent": 1000000,
+      "image": "https://images.unsplash.com/photo-1516156008625-3a9d6067fab5?w=800&auto=format&fit=crop&q=60"
+    },
+    {
+      "id": 4,
+      "title": "송파구 잠실 원룸",
+      "address": "서울특별시 송파구 잠실동 789-12",
+      "detailAddress": "301호",
+      "type": "원룸",
+      "transactionType": "월세",
+      "price": 10000000,
+      "priceDisplay": "보증금 1천만원/월 60만원",
+      "monthlyRent": 600000,
+      "image": "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&auto=format&fit=crop&q=60"
+    }
+  ]
+}
