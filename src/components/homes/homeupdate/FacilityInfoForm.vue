@@ -32,7 +32,7 @@
           :class="[
             'px-4 py-2 rounded border',
             selectedHeating === option
-              ? 'bg-yellow-500 text-white border-yellow-500'
+              ? 'bg-yellow-primary text-white border-yellow-primary'
               : 'bg-white border-gray-300',
           ]"
         >
@@ -53,7 +53,7 @@
           :class="[
             'px-4 py-2 rounded border',
             selectedCooling === option
-              ? 'bg-yellow-500 text-white border-yellow-500'
+              ? 'bg-yellow-primary text-white border-yellow-primary'
               : 'bg-white border-gray-300',
           ]"
         >

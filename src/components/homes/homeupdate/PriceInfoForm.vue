@@ -21,10 +21,20 @@
       </div>
     </div>
 
-    <!-- 보증금, 월세, 관리비 -->
+    <!-- 보증금 및 월세/관리비 -->
     <div class="grid grid-cols-2 gap-4 mb-4">
       <BaseInput v-model="보증금" label="보증금" placeholder="예: 1000" type="number" min="0" />
-      <BaseInput v-model="월세" label="월세" placeholder="예: 100" type="number" min="0" />
+
+      <!-- 월세는 거래 유형이 '월세'일 때만 표시 -->
+      <BaseInput
+        v-if="거래유형 === '월세'"
+        v-model="월세"
+        label="월세"
+        placeholder="예: 100"
+        type="number"
+        min="0"
+      />
+
       <BaseInput v-model="관리비" label="관리비" placeholder="예: 10" type="number" min="0" />
     </div>
 
@@ -35,6 +45,7 @@
         <label
           v-for="item in ['전기료', '수도료', '인터넷', '케이블 TV', '가스료', '난방비']"
           :key="item"
+          class="flex items-center gap-1"
         >
           <input type="checkbox" v-model="관리비포함항목" :value="item" />
           {{ item }}
