@@ -6,13 +6,11 @@
         class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
         @click.self="onMaskClick"
       >
-        <div
-          class="bg-white rounded-xl w-full max-w-[640px] p-6 relative max-h-[80vh] overflow-y-auto"
-        >
+        <div :class="['bg-white rounded-xl w-full p-6 relative', props.maxWidth]">
           <button
             v-if="closable"
             class="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-            @click="modalStore.close"
+            @click="handleClose"
           >
             <span class="text-xl">&times;</span>
           </button>
@@ -39,10 +37,20 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
+  maxWidth: {
+    type: String,
+    default: 'max-w-[640px]',
+  },
 })
 
+function handleClose() {
+  modalStore.close()
+}
+
 function onMaskClick() {
-  if (props.maskCloseable) modalStore.close()
+  if (props.maskCloseable) {
+    handleClose()
+  }
 }
 
 watch(
