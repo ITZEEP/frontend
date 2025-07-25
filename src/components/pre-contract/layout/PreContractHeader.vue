@@ -70,6 +70,10 @@ const steps = computed(() => stepsByRole[role.value] || [])
 
 // 3. 진행률 퍼센트 계산
 const progressPercent = computed(() => {
+  if (steps.value.length === 0 || currentStep.value < 1 || currentStep.value > steps.value.length) {
+    console.error('진행바의 조건이 이상합니다.')
+    return
+  }
   const percent = ((currentStep.value - 1) / (steps.value.length - 1)) * 100
   return Math.max(percent, 2)
 })
