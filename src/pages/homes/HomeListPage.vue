@@ -22,7 +22,6 @@
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <!-- 클릭 시 상세 페이지로 이동하도록 @click 처리 -->
         <ListingCard
           v-for="listing in filteredListings"
           :key="listing.id"
@@ -38,8 +37,9 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import FilterSidebar from '@/components/homes/homecreate/FilterSidebar.vue'
-import ListingCard from '@/components/homes/homecreate/ListingCard.vue'
+// 경로를 홈리스트 폴더에 맞춰서 임포트
+import FilterSidebar from '@/components/homes/homelist/FilterSidebar.vue'
+import ListingCard from '@/components/homes/homelist/ListingCard.vue'
 
 const router = useRouter()
 
@@ -88,7 +88,7 @@ const listings = ref([
     floorRange: '1~3층',
     conditions: ['엘리베이터'],
   },
-  // ... 추가 매물 ...
+  // 추가 매물 ...
 ])
 
 const filters = ref({
@@ -113,6 +113,7 @@ const filteredListings = computed(() => {
       if (listing.deposit > filters.value.depositRange) return false
       if (listing.monthly > filters.value.monthlyRange) return false
     }
+
     if (listing.area > filters.value.sizeRange) return false
     if (
       filters.value.directions.length > 0 &&

@@ -14,7 +14,7 @@ const router = createRouter({
     { path: '/', name: 'home', component: HomePage },
     ...authRoutes,
     ...contractRoutes,
-    ...homesRoutes,
+    ...homesRoutes, // ← /home/create 포함됨
     ...riskCheckRoutes,
     ...chat,
   ],
