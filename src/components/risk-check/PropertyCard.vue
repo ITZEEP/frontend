@@ -3,6 +3,7 @@ import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import IconHeart from '@/components/icons/IconHeart.vue'
 import IconChat from '@/components/icons/IconChat.vue'
 import PropertyItem from '@/components/common/PropertyItem.vue'
+import { fraudApi } from '@/api/fraud'
 
 import favoritesMockData from '@/mocks/risk/favoritesMockData.json'
 import chatPropertiesMockData from '@/mocks/risk/chatPropertiesMockData.json'
@@ -25,20 +26,8 @@ const showTopFade = ref(false)
 const showBottomFade = ref(false)
 const selectedPropertyId = ref(null)
 const properties = ref({
-  favorite: favoritesMockData.favorites.map((item) => ({
-    id: item.id,
-    name: item.name,
-    address: item.address,
-    price: item.price,
-    image: item.image,
-  })),
-  chat: chatPropertiesMockData.chatProperties.map((item) => ({
-    id: item.id,
-    name: item.name,
-    address: item.address,
-    price: item.price,
-    image: item.image,
-  })),
+  favorite: [],
+  chat: [],
 })
 
 const currentProperties = computed(() => properties.value[props.selectedTab])
@@ -58,9 +47,9 @@ const selectTab = (tab) => {
   emit('select-tab', tab)
 }
 
-const selectProperty = (propertyId) => {
-  selectedPropertyId.value = propertyId
-  emit('select-property', propertyId)
+const selectProperty = (property) => {
+  selectedPropertyId.value = property.id
+  emit('select-property', property.id)
   if (scrollContainer.value) {
     scrollContainer.value.scrollTop = 0
   }
@@ -95,9 +84,93 @@ const handleScroll = () => {
   checkScroll()
 }
 
-onMounted(() => {
+// 가격 표시 포맷팅 헬퍼 함수
+const formatPrice = (item) => {
+  let priceDisplay = ''
+  if (item.leaseType === 'WOLSE' && item.monthlyRent) {
+    // 월세인 경우
+    priceDisplay = `월세 ${(item.depositPrice / 10000).toLocaleString()}/${(item.monthlyRent / 10000).toLocaleString()}만원`
+  } else if (item.depositPrice) {
+    // 전세 또는 매매인 경우
+    const priceInManwon = item.depositPrice / 10000
+    if (priceInManwon >= 10000) {
+      const billion = Math.floor(priceInManwon / 10000)
+      const remainder = priceInManwon % 10000
+      priceDisplay = remainder > 0 ? `${billion}억 ${remainder.toLocaleString()}만원` : `${billion}억원`
+    } else {
+      priceDisplay = `${priceInManwon.toLocaleString()}만원`
+    }
+  }
+  return priceDisplay
+}
+
+// 찜한 매물 목록 조회
+const fetchLikedHomes = async () => {
+  try {
+    const response = await fraudApi.getLikedHomes()
+    if (response.success && response.data) {
+      properties.value.favorite = response.data.map(item => ({
+        id: item.homeId,
+        name: item.residenceType,
+        address: item.address,
+        detailAddress: item.detailAddress,
+        price: formatPrice(item),
+        image: item.imageUrl,
+        leaseType: item.leaseType,
+        depositPrice: item.depositPrice,
+        monthlyRent: item.monthlyRent
+      }))
+    }
+  } catch (error) {
+    console.error('찜한 매물 조회 실패:', error)
+    // 에러 시 Mock 데이터 사용
+    properties.value.favorite = favoritesMockData.favorites.map((item) => ({
+      id: item.id,
+      name: item.name,
+      address: item.address,
+      price: item.price,
+      image: item.image,
+    }))
+  }
+}
+
+// 채팅 중인 매물 목록 조회
+const fetchChattingHomes = async () => {
+  try {
+    const response = await fraudApi.getChattingHomes(1, 50) // 처음 50개 조회
+    if (response.content) {
+      properties.value.chat = response.content.map(item => ({
+        id: item.homeId,
+        name: item.residenceType,
+        address: item.address,
+        detailAddress: item.detailAddress,
+        price: formatPrice(item),
+        image: item.imageUrl,
+        leaseType: item.leaseType,
+        depositPrice: item.depositPrice,
+        monthlyRent: item.monthlyRent
+      }))
+    }
+  } catch (error) {
+    console.error('채팅 중인 매물 조회 실패:', error)
+    // 에러 시 Mock 데이터 사용
+    properties.value.chat = chatPropertiesMockData.chatProperties.map((item) => ({
+      id: item.id,
+      name: item.name,
+      address: item.address,
+      price: item.price,
+      image: item.image,
+    }))
+  }
+}
+
+onMounted(async () => {
   selectedPropertyId.value = null
   emit('select-property', null)
+  
+  // 찜한 매물 목록 조회
+  await fetchLikedHomes()
+  
   setTimeout(() => {
     isLoading.value = false
     nextTick(() => {
@@ -108,10 +181,22 @@ onMounted(() => {
 
 watch(
   () => props.selectedTab,
-  () => {
+  async () => {
     showTopFade.value = false
     showBottomFade.value = false
     selectedPropertyId.value = null
+    isLoading.value = true
+
+    // 탭 변경 시 해당 매물 목록 조회
+    if (props.selectedTab === 'favorite') {
+      await fetchLikedHomes()
+    } else if (props.selectedTab === 'chat') {
+      await fetchChattingHomes()
+    }
+
+    setTimeout(() => {
+      isLoading.value = false
+    }, LOADING_DELAY)
 
     nextTick(() => {
       if (scrollContainer.value) {
@@ -217,11 +302,16 @@ watch(isLoading, (newValue) => {
                 </div>
                 <PropertyItem
                   :property="{
-                    ...property,
+                    id: property.id,
                     title: property.name,
+                    address: property.address,
+                    detailAddress: property.detailAddress,
+                    type: property.name,
+                    imageUrl: property.image,
+                    price: property.price
                   }"
                   :selected="selectedPropertyId === property.id"
-                  @click="selectProperty(property.id)"
+                  @click="selectProperty(property)"
                 />
               </div>
             </template>

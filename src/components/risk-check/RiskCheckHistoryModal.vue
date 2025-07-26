@@ -1,11 +1,10 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import BaseModal from '@/components/common/BaseModal.vue'
 import IconClose from '@/components/icons/IconClose.vue'
 import IconChevronRight from '@/components/icons/IconChevronRight.vue'
 import PropertyItem from '@/components/common/PropertyItem.vue'
-
-import analysisHistoryMockData from '@/mocks/risk/analysisHistoryMockData.json'
+import { fraudApi } from '@/api/fraud'
 
 const props = defineProps({
   isOpen: {
@@ -17,18 +16,57 @@ const props = defineProps({
 const emit = defineEmits(['close', 'select-history'])
 
 const isLoading = ref(true)
-
-const analysisHistory = ref(analysisHistoryMockData.analysisHistory)
+const analysisHistory = ref([])
+const error = ref(null)
 
 const handleSelectHistory = (history) => {
   emit('select-history', history)
   emit('close')
 }
 
-onMounted(() => {
-  setTimeout(() => {
+// 실제 API에서 분석 기록 조회
+const fetchAnalysisHistory = async () => {
+  try {
+    isLoading.value = true
+    error.value = null
+    
+    console.log('분석 기록 조회 시작...')
+    const response = await fraudApi.getRiskCheckList(1, 20) // 첫 페이지, 20개 조회
+    console.log('분석 기록 API 응답:', response)
+    
+    if (response && response.content) {
+      // PageResponse의 content 직접 사용
+      
+      // API 응답 데이터를 PropertyItem에 맞는 형식으로 변환
+      analysisHistory.value = response.content.map(item => ({
+        id: item.riskCheckId,
+        title: item.residenceType || '매물',
+        address: item.address || '',
+        detailAddress: item.detailAddress || '',
+        type: item.residenceType || '매물',
+        imageUrl: item.imageUrl || '',
+        checkedAt: item.checkedAt,
+        riskCheckId: item.riskCheckId
+      }))
+      console.log('변환된 분석 기록:', analysisHistory.value)
+    } else {
+      analysisHistory.value = []
+      console.log('분석 기록이 없습니다.')
+    }
+  } catch (err) {
+    console.error('분석 기록 조회 실패:', err)
+    error.value = err.message || '분석 기록을 불러오는데 실패했습니다.'
+    analysisHistory.value = []
+  } finally {
     isLoading.value = false
-  }, 800)
+  }
+}
+
+// 모달이 열릴 때마다 데이터 새로고침
+watch(() => props.isOpen, (newValue) => {
+  if (newValue) {
+    fetchAnalysisHistory()
+  }
 })
 </script>
 
@@ -71,8 +109,33 @@ onMounted(() => {
             />
           </div>
 
-          <div v-if="!isLoading && analysisHistory.length === 0" class="text-center py-12">
-            <p class="text-gray-600">분석 기록이 없습니다.</p>
+          <!-- 에러 상태 -->
+          <div v-if="error && !isLoading" class="text-center py-12">
+            <div class="text-red-500 mb-2">
+              <svg class="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <p class="text-gray-600 mb-4">{{ error }}</p>
+            <button 
+              @click="fetchAnalysisHistory" 
+              class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+            >
+              다시 시도
+            </button>
+          </div>
+
+          <!-- 데이터 없음 상태 -->
+          <div v-else-if="!isLoading && analysisHistory.length === 0" class="text-center py-12">
+            <div class="text-gray-400 mb-4">
+              <svg class="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+            </div>
+            <p class="text-gray-600">아직 분석 기록이 없습니다.</p>
+            <p class="text-gray-500 text-sm mt-2">위험도 분석을 진행하면 기록이 여기에 표시됩니다.</p>
           </div>
         </div>
       </div>
