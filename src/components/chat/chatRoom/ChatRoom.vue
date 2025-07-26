@@ -20,14 +20,14 @@
           :class="{ 'text-right': isMyMessage(message) }"
         >
           <div
-            class="inline-block max-w-xs lg:max-w-md px-4 py-2 rounded-lg"
+            class="inline-block max-w-xs lg:max-w-md px-4 py-2 rounded-lg break-words"
             :class="{
               'bg-yellow-primary text-white': isMyMessage(message),
               'bg-white text-gray-800 border': !isMyMessage(message),
             }"
           >
             <!-- 텍스트 메시지 -->
-            <div v-if="message.type === 'TEXT'">
+            <div v-if="message.type === 'TEXT'" class="break-words">
               {{ message.content }}
             </div>
 
@@ -87,14 +87,14 @@
           :class="{ 'text-right': isMyMessage(message) }"
         >
           <div
-            class="inline-block max-w-xs lg:max-w-md px-4 py-2 rounded-lg"
+            class="inline-block max-w-xs lg:max-w-md px-4 py-2 rounded-lg break-words"
             :class="{
               'bg-yellow-primary text-white': isMyMessage(message),
               'bg-white text-gray-800 border': !isMyMessage(message),
             }"
           >
             <!-- 텍스트 메시지 -->
-            <div v-if="message.type === 'TEXT'">
+            <div v-if="message.type === 'TEXT'" class="break-words">
               {{ message.content }}
             </div>
 
@@ -465,13 +465,21 @@ function scrollToBottom(force = false) {
   }
 }
 
-// 강제 스크롤
+// 강제 스크롤 - 더 강력하게 개선
 function forceScrollToBottom() {
   if (!messagesContainer.value) return
 
   const container = messagesContainer.value
+  
+  // 즉시 스크롤
   container.scrollTop = container.scrollHeight
+  
+  // Vue의 다음 렌더링 사이클 후 스크롤
+  nextTick(() => {
+    container.scrollTop = container.scrollHeight
+  })
 
+  // 여러 타이밍에 스크롤 시도
   setTimeout(() => {
     container.scrollTop = container.scrollHeight
   }, 10)
@@ -479,6 +487,15 @@ function forceScrollToBottom() {
   setTimeout(() => {
     container.scrollTop = container.scrollHeight
   }, 50)
+  
+  setTimeout(() => {
+    container.scrollTop = container.scrollHeight
+  }, 100)
+  
+  // 애니메이션 프레임 사용
+  requestAnimationFrame(() => {
+    container.scrollTop = container.scrollHeight
+  })
 }
 
 // WebSocket 메시지 핸들러 개선 (자동 부모 업데이트 포함)
@@ -498,6 +515,11 @@ const directMessageHandler = async (message) => {
 
   webSocketMessages.value.push(message)
   console.log('직접 추가 후 배열:', webSocketMessages.value)
+  
+  // 새 메시지가 추가되면 즉시 스크롤
+  nextTick(() => {
+    forceScrollToBottom()
+  })
 
   // 새 메시지가 오면 무조건 부모 컴포넌트에 알림 (자동 업데이트 핵심!)
   if (window.updateChatRoomList) {
@@ -560,7 +582,10 @@ async function sendMessage(content) {
 
     if (success) {
       shouldScrollToBottom.value = true
-      nextTick(() => scrollToBottom(true))
+      // 메시지 전송 후 강제 스크롤
+      nextTick(() => {
+        forceScrollToBottom()
+      })
     }
   } catch (error) {
     console.error('메시지 전송 중 오류:', error)
@@ -728,11 +753,9 @@ watch(
     console.log('현재 메시지 수:', newMessages?.length || 0)
 
     if (newMessages.length > (oldMessages?.length || 0)) {
+      // 새 메시지가 추가되면 무조건 스크롤
       nextTick(() => {
-        if (shouldScrollToBottom.value) {
-          // scrollToBottom(true)
-          forceScrollToBottom()
-        }
+        forceScrollToBottom()
       })
     }
   },
@@ -800,5 +823,13 @@ onUnmounted(() => {
 
 .overflow-y-auto::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
+}
+
+/* 긴 텍스트 줄바꿈 처리 */
+.break-words {
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 </style>
