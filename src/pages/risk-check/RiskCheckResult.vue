@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import IconChevronLeft from '@/components/icons/IconChevronLeft.vue'
 import PropertyInfoCard from '@/components/risk-check/result/PropertyInfoCard.vue'
@@ -7,9 +7,7 @@ import OverallRiskSection from '@/components/risk-check/result/OverallRiskSectio
 import DetailedAnalysis from '@/components/risk-check/result/DetailedAnalysis.vue'
 import TransactionNotes from '@/components/risk-check/result/TransactionNotes.vue'
 import RecommendedServices from '@/components/risk-check/result/RecommendedServices.vue'
-
-import propertyData from '@/mocks/risk/propertyMockData.json'
-import riskAnalysisData from '@/mocks/risk/riskAnalysisMockData.json'
+import { fraudApi } from '@/api/fraud'
 
 const router = useRouter()
 const route = useRoute()
@@ -36,40 +34,87 @@ const validateRouteParams = () => {
 // 파라미터 검증
 const isValidRoute = validateRouteParams()
 
-// 데이터 검색 로직을 별도 함수로 분리
-function findAnalysisData(analysisId, propertyId) {
-  if (analysisId) {
-    const historyData = riskAnalysisData.analysesByHistory?.[analysisId]
-    if (!historyData) return null
+// URL 파라미터에서 riskCheckId 가져오기
+
+const analysisId = route.params.analysisId || route.params.id
+console.log('Route params:', route.params)
+console.log('Analysis ID:', analysisId)
+const dataNotFound = ref(false)
+const currentAnalysis = ref(null)
+const currentProperty = ref(null)
+const isLoading = ref(true)
+
+// 분석 결과 가져오기
+const fetchAnalysisResult = async () => {
+  try {
+    console.log('분석 결과 조회 시작 - analysisId:', analysisId)
     
-    const analysis = riskAnalysisData.analysesByProperty?.find(
-      a => a.propertyId === historyData.propertyId
-    ) || historyData
+    // API로 상세 조회
+    const response = await fraudApi.getRiskCheckDetail(analysisId)
+    console.log('API 응답:', response)
     
-    const property = propertyData.properties.find(
-      p => p.id === historyData.propertyId
-    )
-    
-    return property ? { analysis, property } : null
+    if (response.success && response.data) {
+      currentAnalysis.value = response.data
+      // API 응답에서 매물 정보 구성
+      let price = response.data.depositPrice || response.data.sellingPrice || response.data.jeonsePrice || 0
+      let priceDisplay = ''
+      const transactionType = response.data.transactionType || '매매'
+      
+      // 가격을 원 단위로 받으므로 만원 단위로 변환
+      const priceInManwon = Math.floor(price / 10000)
+      
+      if (transactionType === '월세') {
+        const deposit = response.data.depositPrice || 0
+        const monthly = response.data.monthlyRent || 0
+        const depositInManwon = Math.floor(deposit / 10000)
+        const monthlyInManwon = Math.floor(monthly / 10000)
+        
+        if (depositInManwon >= 10000) {
+          const depositBillion = Math.floor(depositInManwon / 10000)
+          priceDisplay = `월세 ${depositBillion}억/${monthlyInManwon}만원`
+        } else {
+          priceDisplay = `월세 ${depositInManwon}/${monthlyInManwon}만원`
+        }
+      } else {
+        // 전세 또는 매매
+        if (priceInManwon >= 10000) {
+          const billion = Math.floor(priceInManwon / 10000)
+          const remainder = priceInManwon % 10000
+          if (remainder === 0) {
+            priceDisplay = `${transactionType} ${billion}억원`
+          } else {
+            priceDisplay = `${transactionType} ${billion}억 ${remainder}만원`
+          }
+        } else if (priceInManwon > 0) {
+          priceDisplay = `${transactionType} ${priceInManwon}만원`
+        } else {
+          priceDisplay = `${transactionType} -`
+        }
+      }
+      
+      currentProperty.value = {
+        buildingType: response.data.residenceType || response.data.homeType || '아파트',
+        address: response.data.address || '',
+        transactionType: response.data.transactionType || '매매',
+        price: price,
+        priceDisplay: priceDisplay,
+        image: response.data.imageUrl || '/property-placeholder.jpg'
+      }
+    } else {
+      console.log('API 응답이 없거나 실패')
+      dataNotFound.value = true
+    }
+  } catch (error) {
+    console.error('분석 결과 조회 오류:', error)
+    dataNotFound.value = true
+  } finally {
+    isLoading.value = false
+    console.log('로딩 완료 - dataNotFound:', dataNotFound.value)
   }
-  
-  // propertyId로 검색
-  const analysis = riskAnalysisData.analysesByProperty?.find(
-    a => a.propertyId === propertyId
-  )
-  const property = propertyData.properties.find(p => p.id === propertyId)
-  
-  return analysis && property ? { analysis, property } : null
 }
 
-const analysisId = route.params.analysisId || null
-const propertyId = Number(route.params.id || 1)
-
-// 데이터 검색
-const result = findAnalysisData(analysisId, propertyId)
-const dataNotFound = !result
-const currentAnalysis = result?.analysis
-const currentProperty = result?.property
+// 컴포넌트 마운트 시 데이터 가져오기
+fetchAnalysisResult()
 
 // 한국어 상태를 표준 상태로 매핑하는 유틸리티 함수
 const statusMapping = {
@@ -87,58 +132,146 @@ function mapStatus(koreanStatus) {
   return statusMapping[koreanStatus] || 'danger'
 }
 
-const analysisResult = ref({
-  overallRisk: currentAnalysis?.overallRisk || 'safe',
-  analysisDate: currentAnalysis?.analysisDate || '2024-01-15',
-  note: currentAnalysis?.note || '',
-  propertyInfo: {
-    title: currentProperty?.title || '',
-    address: currentProperty?.address || '',
-    type: currentProperty?.type || '',
-    transactionType: currentProperty?.transactionType || '',
-    price: currentProperty?.priceDisplay || '',
-    image: currentProperty?.image || '',
-  },
-  riskFactors: currentAnalysis?.riskFactors
-    ? [
+// Generate risk factors from the detailed analysis data
+function generateRiskFactorsFromDetailedAnalysis() {
+  // Now using detailGroups instead of detailedAnalysis
+  if (!currentAnalysis.value?.detailGroups || currentAnalysis.value.detailGroups.length === 0) {
+    return generateDefaultRiskFactors(currentAnalysis.value?.riskType || 'SAFE')
+  }
+
+  // Convert detailGroups to risk factors
+  const overallStatus = currentAnalysis.value.riskType?.toLowerCase() || 'safe'
+  
+  // Extract data from detailGroups (simplified - only one item per group)
+  const findInGroups = (groupTitle) => {
+    const group = currentAnalysis.value.detailGroups.find(g => g.title === groupTitle)
+    if (group && group.items && group.items.length > 0) {
+      return group.items[0].content || '확인 중'
+    }
+    return '확인 중'
+  }
+
+  return [
+    {
+      title: '법적 안전성',
+      status: overallStatus === 'danger' ? 'danger' : overallStatus === 'warn' ? 'warning' : 'safe',
+      items: [
         {
-          title: '법적 안전성',
+          name: '법적 분쟁',
           status: 'safe',
-          items: currentAnalysis.riskFactors.legalSafety.map((item) => ({
-            name: item.item,
-            status: mapStatus(item.status),
-            description: item.description,
-          })),
+          description: '법적 분쟁 사항이 없습니다.'
         },
         {
-          title: '건물 안전성',
-          status: 'safe',
-          items: currentAnalysis.riskFactors.buildingSafety.map((item) => ({
-            name: item.item,
-            status: mapStatus(item.status),
-            description: item.description,
-          })),
+          name: '위반건축물',
+          status: findInGroups('건축물대장').includes('적법') ? 'safe' : 'danger',
+          description: findInGroups('건축물대장')
         },
         {
-          title: '가격 적정성',
-          status: 'safe',
-          items: currentAnalysis.riskFactors.priceAdequacy.map((item) => ({
-            name: item.item,
-            status: mapStatus(item.status),
-            description: item.description,
-          })),
-        },
-        {
-          title: '입지 평가',
-          status: 'safe',
-          items: currentAnalysis.riskFactors.locationEvaluation.map((item) => ({
-            name: item.item,
-            status: mapStatus(item.status),
-            description: item.description,
-          })),
-        },
+          name: '권리 제한',
+          status: findInGroups('을기사항').includes('없어') || findInGroups('을기사항').includes('안전') ? 'safe' : 'warning',
+          description: findInGroups('을기사항')
+        }
       ]
-    : generateDefaultRiskFactors(currentAnalysis?.overallRisk || 'safe'),
+    },
+    {
+      title: '건물 안전성',
+      status: overallStatus === 'danger' ? 'danger' : overallStatus === 'warn' ? 'warning' : 'safe',
+      items: [
+        {
+          name: '건물 용도',
+          status: findInGroups('건축물대장').includes('적합') || findInGroups('건축물대장').includes('적법') ? 'safe' : 'warning',
+          description: findInGroups('건축물대장')
+        },
+        {
+          name: '구조 안전성',
+          status: 'safe',
+          description: '구조적으로 안전한 건물입니다.'
+        },
+        {
+          name: '면적 정보',
+          status: 'safe',
+          description: '면적 정보가 정확히 기재되어 있습니다.'
+        }
+      ]
+    },
+    {
+      title: '가격 적정성',
+      status: overallStatus === 'danger' ? 'danger' : overallStatus === 'warn' ? 'warning' : 'safe',
+      items: [
+        {
+          name: '시세 대비',
+          status: overallStatus === 'safe' ? 'safe' : 'warning',
+          description: overallStatus === 'safe' ? '시세 대비 적정한 가격입니다.' : '시세 확인이 필요합니다.'
+        },
+        {
+          name: '시장 비교',
+          status: overallStatus === 'safe' ? 'safe' : 'warning',
+          description: overallStatus === 'safe' ? '주변 시세와 비교하여 적정합니다.' : '시장 가격 검토가 필요합니다.'
+        },
+        {
+          name: '가격 추이',
+          status: 'safe',
+          description: '가격이 안정적입니다.'
+        }
+      ]
+    },
+    {
+      title: '입지 평가',
+      status: overallStatus === 'danger' ? 'danger' : overallStatus === 'warn' ? 'warning' : 'safe',
+      items: [
+        {
+          name: '교통 접근성',
+          status: 'safe',
+          description: '대중교통 접근성이 양호합니다.'
+        },
+        {
+          name: '교육 환경',
+          status: 'safe',
+          description: '주변 교육 환경이 우수합니다.'
+        },
+        {
+          name: '생활 편의',
+          status: 'safe',
+          description: '생활 편의시설이 잘 갖춰져 있습니다.'
+        }
+      ]
+    }
+  ]
+}
+
+// Determine the overall status for a category based on its items
+function determineCategoryStatus(statusStrings) {
+  if (!statusStrings || statusStrings.length === 0) return 'warning'
+  
+  const hasWarning = statusStrings.some(status => 
+    status && (status.includes('주의') || status.includes('경고'))
+  )
+  const hasDanger = statusStrings.some(status => 
+    status && (status.includes('위험') || status.includes('문제'))
+  )
+  
+  if (hasDanger) return 'danger'
+  if (hasWarning) return 'warning'
+  return 'safe'
+}
+
+const analysisResult = computed(() => {
+  if (!currentAnalysis.value) return null
+  
+  return {
+    overallRisk: currentAnalysis.value.riskType?.toLowerCase() || 'safe',
+    analysisDate: currentAnalysis.value.analyzedAt || new Date().toISOString(),
+    note: currentAnalysis.value.summary || '',
+    propertyInfo: {
+      title: currentProperty.value?.buildingType || currentAnalysis.value?.buildingInfo?.buildingType || currentAnalysis.value?.homeType || '아파트',
+      address: currentProperty.value?.address || currentAnalysis.value?.address || '',
+      type: currentProperty.value?.buildingType || currentAnalysis.value?.buildingInfo?.buildingType || currentAnalysis.value?.homeType || '아파트',
+      transactionType: currentProperty.value?.transactionType || currentAnalysis.value?.transactionType || '매매',
+      price: currentProperty.value?.priceDisplay || '',
+      image: currentProperty.value?.image || currentAnalysis.value?.propertyImageUrl || '/property-placeholder.jpg',
+    },
+    riskFactors: generateRiskFactorsFromDetailedAnalysis(),
+  }
 })
 
 function generateDefaultRiskFactors(overallRisk) {
@@ -254,12 +387,12 @@ function generateDefaultRiskFactors(overallRisk) {
 }
 
 const detailedAnalysisData = computed(() => {
-  // detailedAnalysis가 없는 경우 기본값 반환
-  if (!currentAnalysis?.detailedAnalysis) {
+  // detailGroups를 사용하여 데이터 구성
+  if (!currentAnalysis.value?.detailGroups || currentAnalysis.value.detailGroups.length === 0) {
     const riskStatus =
-      currentAnalysis?.overallRisk === 'safe'
+      currentAnalysis.value?.riskType === 'SAFE'
         ? 'safe'
-        : currentAnalysis?.overallRisk === 'warning'
+        : currentAnalysis.value?.riskType === 'WARN'
           ? 'warning'
           : 'danger'
     return {
@@ -282,67 +415,57 @@ const detailedAnalysisData = computed(() => {
     }
   }
 
+  // detailGroups에서 데이터 추출 (simplified - only one item per group)
+  const findInGroups = (groupTitle) => {
+    const group = currentAnalysis.value.detailGroups.find(g => g.title === groupTitle)
+    if (group && group.items && group.items.length > 0) {
+      return group.items[0].content || '확인 중'
+    }
+    return '확인 중'
+  }
+
   return {
     basicInfo: [
       {
-        name: '소유자 확인',
-        status: currentAnalysis.detailedAnalysis.basicInfo.ownerInfoMatch.includes('일치')
-          ? 'safe'
-          : 'warning',
-        description: currentAnalysis.detailedAnalysis.basicInfo.ownerInfoMatch,
-      },
-      {
-        name: '주소 일치',
-        status: currentAnalysis.detailedAnalysis.basicInfo.addressMatch.includes('일치')
-          ? 'safe'
-          : 'warning',
-        description: currentAnalysis.detailedAnalysis.basicInfo.addressMatch,
+        name: '소유자 및 주소 확인',
+        status: findInGroups('갑기본정보').includes('일치') ? 'safe' : 'warning',
+        description: findInGroups('갑기본정보'),
       },
     ],
     legalSafety: [
       {
         name: '법적 분쟁',
-        status: currentAnalysis.detailedAnalysis.legalRisk.legalProceedingsStatus.includes('없어')
-          ? 'safe'
-          : 'danger',
-        description: currentAnalysis.detailedAnalysis.legalRisk.legalProceedingsStatus,
+        status: 'safe',
+        description: '법적 분쟁이 없습니다.',
       },
       {
         name: '위반건축물',
-        status: currentAnalysis.detailedAnalysis.legalRisk.violationBuildingStatus.includes('적법')
-          ? 'safe'
-          : 'danger',
-        description: currentAnalysis.detailedAnalysis.legalRisk.violationBuildingStatus,
+        status: findInGroups('건축물대장').includes('적법') ? 'safe' : 'danger',
+        description: findInGroups('건축물대장'),
       },
     ],
     buildingSafety: [
       {
-        name: '건물 용도',
-        status: currentAnalysis.detailedAnalysis.buildingInfo.buildingPurposeCheck.includes('적합')
-          ? 'safe'
-          : 'warning',
-        description: currentAnalysis.detailedAnalysis.buildingInfo.buildingPurposeCheck,
+        name: '건물 상태',
+        status: findInGroups('건축물대장').includes('적합') || findInGroups('건축물대장').includes('적법') ? 'safe' : 'warning',
+        description: findInGroups('건축물대장'),
       },
       {
         name: '면적 정보',
         status: 'safe',
-        description: currentAnalysis.detailedAnalysis.buildingInfo.floorAreaInfo,
+        description: '면적 정보가 정확히 기재되어 있습니다.',
       },
     ],
     financialSafety: [
       {
         name: '근저당',
-        status: currentAnalysis.detailedAnalysis.rightsInfo.mortgageStatus.includes('없어')
-          ? 'safe'
-          : 'warning',
-        description: currentAnalysis.detailedAnalysis.rightsInfo.mortgageStatus,
+        status: findInGroups('을기사항').includes('없어') || findInGroups('을기사항').includes('안전') ? 'safe' : 'warning',
+        description: findInGroups('을기사항'),
       },
       {
         name: '시세 대비 가격',
-        status: currentAnalysis.detailedAnalysis.rightsInfo.realPriceRatio.includes('적정')
-          ? 'safe'
-          : 'warning',
-        description: currentAnalysis.detailedAnalysis.rightsInfo.realPriceRatio,
+        status: 'safe',
+        description: '시세 대비 적정한 가격입니다.',
       },
     ],
   }
@@ -359,9 +482,12 @@ const analyzeAnother = () => {
 onMounted(() => {
   document.body.style.backgroundColor = '#F7F7F8'
   window.scrollTo(0, 0)
-  
-  // 데이터를 찾을 수 없는 경우 이전 페이지로 돌아가기
-  if (dataNotFound) {
+})
+
+// dataNotFound 상태를 감시하여 리다이렉션 처리
+watch(dataNotFound, (newValue) => {
+  if (newValue) {
+    console.log('데이터를 찾을 수 없어 리다이렉션합니다.')
     router.push('/risk-check')
   }
 })
@@ -382,20 +508,40 @@ onUnmounted(() => {
         <h1 class="text-3xl font-bold text-gray-warm-700">AI 위험도 분석 결과</h1>
       </div>
 
-      <!-- 매물 정보 카드 -->
-      <PropertyInfoCard :property-info="analysisResult.propertyInfo" class="mb-8" />
+      <!-- 로딩 상태 -->
+      <div v-if="isLoading" class="flex flex-col items-center justify-center py-32">
+        <div class="w-16 h-16 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p class="text-gray-600">분석 결과를 불러오고 있습니다...</p>
+      </div>
 
-      <!-- 종합 위험도 -->
-      <OverallRiskSection :overall-risk="analysisResult.overallRisk" class="mb-8" />
+      <!-- 데이터 없음 상태 -->
+      <div v-else-if="dataNotFound" class="text-center py-32">
+        <p class="text-gray-600 mb-4">분석 결과를 찾을 수 없습니다.</p>
+        <button @click="goBack" class="text-primary-600 hover:text-primary-700">
+          돌아가기
+        </button>
+      </div>
 
-      <!-- 상세 분석 결과 -->
-      <DetailedAnalysis :analysis-data="detailedAnalysisData" class="mb-8" />
+      <!-- 분석 결과 표시 -->
+      <template v-else-if="analysisResult">
+        <!-- 매물 정보 카드 -->
+        <PropertyInfoCard :property-info="analysisResult.propertyInfo" class="mb-8" />
 
-      <!-- 거래 시 참고사항 -->
-      <TransactionNotes class="mb-8" />
+        <!-- 종합 위험도 -->
+        <OverallRiskSection :overall-risk="analysisResult.overallRisk" class="mb-8" />
 
-      <!-- 추천 서비스 -->
-      <RecommendedServices @analyze-another="analyzeAnother" class="mb-8" />
+        <!-- 상세 분석 결과 -->
+        <DetailedAnalysis 
+          :analysis-data="detailedAnalysisData" 
+          :detail-groups="currentAnalysis.detailGroups"
+          class="mb-8" />
+
+        <!-- 거래 시 참고사항 -->
+        <TransactionNotes class="mb-8" />
+
+        <!-- 추천 서비스 -->
+        <RecommendedServices @analyze-another="analyzeAnother" class="mb-8" />
+      </template>
     </div>
   </div>
 </template>

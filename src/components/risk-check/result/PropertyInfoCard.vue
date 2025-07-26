@@ -1,4 +1,6 @@
 <script setup>
+import PropertyImage from '@/components/common/PropertyImage.vue'
+
 const props = defineProps({
   propertyInfo: {
     type: Object,
@@ -14,10 +16,13 @@ const props = defineProps({
 <template>
   <div class="bg-white rounded-2xl shadow-sm border border-gray-300 p-8">
     <div class="flex gap-6">
-      <img
+      <!-- 매물 이미지 -->
+      <PropertyImage
         :src="propertyInfo.image"
-        alt="`${propertyInfo.title} 매물 이미지`"
-        class="w-48 h-48 rounded-xl object-cover"
+        :alt="`${propertyInfo.title} 매물 이미지`"
+        :property-type="propertyInfo.type"
+        size="large"
+        rounded="xl"
       />
       <div class="flex-1">
         <h2 class="text-2xl font-bold text-gray-warm-700 mb-2">
