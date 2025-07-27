@@ -1,5 +1,5 @@
 <template>
-  <div class="-mx-16 -mt-5 -my-5 w-screen min-h-screen bg-yellow-50">
+  <div class="w-screen min-h-screen bg-yellow-50">
     <PreContractHeader />
     <div class="flex flex-col items-center justify-center px-4 py-10">
       <div class="w-full max-w-[880px]">
