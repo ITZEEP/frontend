@@ -2,7 +2,7 @@
   <div class="flex flex-col items-center justify-center gap-8 w-full">
     <!-- 안내문구 -->
     <div class="flex flex-col items-center justify-center gap-2">
-      <h1 class="text-gray-warm-700 font-bold text-xl">특약 사항 업로드</h1>
+      <h1 class="text-gray-warm-700 font-bold text-xl">계약서 업로드</h1>
       <p class="text-gray-500">미리 작성된 계약서를 업로드하여 기존 특약을 추가하세요.</p>
     </div>
 
@@ -16,11 +16,26 @@
       </ul>
     </div>
 
-    <!-- 파일 업로드 컴포넌트 -->
-    <UploadContractBox v-model="uploadedFile" />
+    <!-- 파일 업로드 및 버튼 -->
+    <div v-if="!isConfirmed" class="w-full flex flex-col items-center gap-4">
+      <UploadContractBox v-model="uploadedFile" />
+      <BaseButton :disabled="isButtonDisabled" variant="primary" @click="extractSpecialTerms">
+        특약 내용 추출하기
+      </BaseButton>
+    </div>
 
-    <!-- ocr 추출하기 버튼 -->
-    <BaseButton :disabled="isButtonDisabled" variant="primary">특약 내용 추출하기</BaseButton>
+    <!-- 확정된 특약 조항 목록 -->
+    <div v-else class="w-full max-w-xl space-y-2">
+      <p class="text-gray-700 font-semibold">확정된 특약사항</p>
+      <ul class="list-disc list-inside text-sm text-gray-600 space-y-1">
+        <li v-for="(term, index) in confirmedTerms" :key="index">{{ term }}</li>
+      </ul>
+    </div>
+
+    <LoadingOverlay :loading="isLoading" message="특약 내용 추출 중입니다" />
+
+    <!-- 특약 확인 모달 -->
+    <TermsConfirmModal :extractedTerms="extractedTerms" @confirm="handleConfirm" />
   </div>
 </template>
 
@@ -28,8 +43,36 @@
 import { ref, computed } from 'vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import UploadContractBox from './UploadContractBox.vue'
+import LoadingOverlay from '@/components/common/LoadingOverlay.vue'
+import TermsConfirmModal from './TermsConfirmModal.vue'
+import { useModalStore } from '@/stores/modal'
 
 const uploadedFile = ref(null)
+const isLoading = ref(false)
+const extractedTerms = ref([])
+const confirmedTerms = ref([])
+const isConfirmed = ref(false)
+
+const modalStore = useModalStore()
 
 const isButtonDisabled = computed(() => !uploadedFile.value)
+
+const extractSpecialTerms = async () => {
+  if (!uploadedFile.value) return
+
+  isLoading.value = true
+  try {
+    await new Promise((resolve) => setTimeout(resolve, 2000))
+    extractedTerms.value = ['반려동물 금지', '조기 퇴거 시 위약금 발생']
+    modalStore.open()
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const handleConfirm = (terms) => {
+  confirmedTerms.value = [...terms]
+  isConfirmed.value = true
+  modalStore.close()
+}
 </script>
