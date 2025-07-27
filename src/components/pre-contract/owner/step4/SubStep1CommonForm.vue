@@ -38,10 +38,13 @@
 </template>
 
 <script setup>
-import { reactive, watch } from 'vue'
+import { reactive, watch, onMounted } from 'vue'
 import ToggleRadio from '@/components/common/ToggleRadio.vue'
+import { usePreContractStore } from '@/stores/preContract'
 
+const store = usePreContractStore()
 const model = defineModel()
+
 const form = reactive({
   mandatoryInsurance: '',
   insurancePayer: '',
@@ -50,4 +53,17 @@ const form = reactive({
 })
 
 watch(form, () => (model.value = form), { deep: true })
+
+watch(
+  () => Object.values(form),
+  (values) => {
+    const isValid = values.every((v) => v !== '')
+    store.setCanProceed(isValid)
+  },
+  { deep: true },
+)
+
+onMounted(() => {
+  store.setCanProceed(false)
+})
 </script>
