@@ -19,12 +19,17 @@
 
 <script setup>
 import InfoIcon from '@/assets/icons/InfoIcon.vue'
-import { defineModel, watch } from 'vue'
+import { defineModel, onMounted, watch } from 'vue'
 import { usePreContractStore } from '@/stores/preContract'
 
 const store = usePreContractStore()
 const checked = defineModel('checked', { type: Boolean, default: false })
+
 watch(checked, (newVal) => {
   store.setCanProceed(newVal)
+})
+
+onMounted(() => {
+  store.canProceed = false
 })
 </script>
