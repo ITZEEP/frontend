@@ -61,20 +61,12 @@
 </template>
 
 <script setup>
+import { computed, ref, watch, onMounted } from 'vue'
 import ToggleRadio from '@/components/common/ToggleRadio.vue'
-import { ref, computed, watch } from 'vue'
-import { usePreContractStore } from '@/stores/ownerPreContractStore'
+import { usePreContractStore } from '@/stores/preContract'
 
 const store = usePreContractStore()
-const rentType = computed(() => store.rent_type)
-
-// ⬇ 초기값을 store에서 불러오기
-const restoreCategory = ref(store.step3.restore_category_id ?? '')
-const hasConditionLog = ref(store.step3.has_condition_log ?? null)
-const hasPenalty = ref(store.step3.has_penalty ?? null)
-const hasPriorityExtension = ref(store.step3.has_priority_for_extension ?? null)
-const hasAutoPriceAdjustment = ref(store.step3.has_auto_price_adjustment ?? null)
-const allowJeonseRight = ref(store.step3.allow_jeonse_right_registration ?? '')
+const rentType = computed(() => store.leaseType)
 
 const autoAdjustmentLabel = computed(() =>
   rentType.value === 'JEONSE'
@@ -82,23 +74,38 @@ const autoAdjustmentLabel = computed(() =>
     : '계약 갱신 시 보증금 또는 월세가 자동으로 조정되나요?',
 )
 
-// 제출 트리거 시 저장
+const restoreCategory = ref('')
+const hasConditionLog = ref(false)
+const hasPenalty = ref(false)
+const hasPriorityExtension = ref(false)
+const hasAutoPriceAdjustment = ref(false)
+const allowJeonseRight = ref(false)
+
 watch(
-  () => store.triggerStepSubmit,
-  (triggered) => {
-    if (triggered) {
-      store.setStepData(3, {
-        restore_category_id: restoreCategory.value,
-        restore_category_name: restoreCategory.value,
-        has_condition_log: hasConditionLog.value,
-        has_penalty: hasPenalty.value,
-        has_priority_for_extension: hasPriorityExtension.value,
-        has_auto_price_adjustment: hasAutoPriceAdjustment.value,
-        allow_jeonse_right_registration:
-          rentType.value === 'JEONSE' ? allowJeonseRight.value : null,
-      })
-      store.clearTrigger()
-    }
+  [
+    restoreCategory,
+    hasConditionLog,
+    hasPenalty,
+    hasPriorityExtension,
+    hasAutoPriceAdjustment,
+    allowJeonseRight,
+    rentType,
+  ],
+  ([restore, log, penalty, priority, auto, jeonse, lease]) => {
+    const commonValid =
+      restore !== '' &&
+      typeof log === 'boolean' &&
+      typeof penalty === 'boolean' &&
+      typeof priority === 'boolean' &&
+      typeof auto === 'boolean'
+
+    const isValid = lease === 'JEONSE' ? commonValid && typeof jeonse === 'boolean' : commonValid
+
+    store.setCanProceed(isValid)
   },
 )
+
+onMounted(() => {
+  store.setCanProceed(false)
+})
 </script>

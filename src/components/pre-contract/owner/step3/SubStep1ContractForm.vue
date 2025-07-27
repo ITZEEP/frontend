@@ -41,30 +41,27 @@
 </template>
 
 <script setup>
+import { onMounted, ref, watch } from 'vue'
 import ToggleRadio from '@/components/common/ToggleRadio.vue'
-import { ref, watch } from 'vue'
-import { usePreContractStore } from '@/stores/ownerPreContractStore'
+import { usePreContractStore } from '@/stores/preContract'
 
 const store = usePreContractStore()
 
-const isMortgaged = ref(store.step3.is_mortgaged ?? '')
-const contractDuration = ref(store.step3.contract_duration ?? '')
-const renewalIntent = ref(store.step3.renewal_intent ?? '')
-const repairingFixtures = ref(store.step3.response_repairing_fixtures ?? '')
+const isMortgaged = ref('')
+const contractDuration = ref('')
+const renewalIntent = ref('')
+const repairingFixtures = ref('')
 
-// 제출 트리거 시 저장
+// 모든 항목이 입력되었는지 감시
 watch(
-  () => store.triggerStepSubmit,
-  (triggered) => {
-    if (triggered) {
-      store.setStepData(3, {
-        is_mortgaged: isMortgaged.value,
-        contract_duration: contractDuration.value,
-        renewal_intent: renewalIntent.value,
-        response_repairing_fixtures: repairingFixtures.value,
-      })
-      store.clearTrigger()
-    }
+  [isMortgaged, contractDuration, renewalIntent, repairingFixtures],
+  ([mort, dur, renew, fix]) => {
+    const allFilled = mort !== null && dur !== '' && renew !== '' && fix !== ''
+    store.setCanProceed(allFilled)
   },
 )
+
+onMounted(() => {
+  store.canProceed = false
+})
 </script>
