@@ -21,6 +21,9 @@ import OwnerStep4 from '@/components/pre-contract/owner/step4/Step4LivingConditi
 import OwnerStep5 from '@/components/pre-contract/owner/step5/Step5UploadTerms.vue'
 import OwnerStep6 from '@/components/pre-contract/owner/step6/Step6Confirm.vue'
 
+import { usePreContractStore } from '@/stores/preContract'
+const store = usePreContractStore()
+
 // 라우터 정보
 const route = useRoute()
 const role = computed(() => route.params.role)
@@ -39,27 +42,23 @@ const stepComponentsMap = {
   owner: {
     1: OwnerStep1,
     2: OwnerStep2,
+    3: OwnerStep3,
+    4: OwnerStep4,
     5: OwnerStep5,
     6: OwnerStep6,
   },
 }
 
-// 서브스텝이 있는 step 목록
-const stepsWithSubStep = {
-  3: OwnerStep3,
-  4: OwnerStep4,
-}
-
-// 현재 렌더링할 컴포넌트 계산
 const currentStepComponent = (subStep) => {
   const roleSteps = stepComponentsMap[role.value]
-  const subStepComp = stepsWithSubStep[step.value]
-
-  if (role.value === 'owner' && subStepComp) {
-    return () => h(subStepComp, { subStep })
-  }
+  const stepKey = `${role.value}-${step.value}`
+  const hasSubStep = store.subSteps[stepKey] > 1
 
   const comp = roleSteps?.[step.value]
+  if (hasSubStep && comp) {
+    return () => h(comp, { subStep })
+  }
+
   return typeof comp === 'function' ? comp() : comp
 }
 </script>
