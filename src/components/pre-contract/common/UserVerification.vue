@@ -67,13 +67,27 @@
         @input="onPhoneInput"
       />
 
-      <BaseButton variant="primary" size="lg" class="mt-2">인증하기</BaseButton>
+      <BaseButton
+        variant="primary"
+        size="lg"
+        class="mt-2"
+        :disabled="!isFormValid"
+        @click="handleVerify"
+      >
+        인증하기
+      </BaseButton>
+
+      <LoadingOverlay
+        :loading="isLoading"
+        message="인증 중입니다"
+        subMessage="잠시만 기다려주세요"
+      />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import BaseInput from '@/components/common/BaseInput.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import SearchIcon from '@/assets/icons/SearchIcon.vue'
@@ -81,6 +95,9 @@ import SearchIcon from '@/assets/icons/SearchIcon.vue'
 import { useModalStore } from '@/stores/modal'
 import Modal from '@/components/common/BaseModal.vue'
 import SearchAddress from '@/components/common/SearchAddress.vue'
+
+import LoadingOverlay from '@/components/common/LoadingOverlay.vue'
+import { usePreContractStore } from '@/stores/preContract'
 
 const modalStore = useModalStore()
 
@@ -126,6 +143,32 @@ function onPhoneInput(e) {
 
   phone.value = formatted
 }
+
+const isFormValid = computed(() => {
+  return (
+    username.value.trim() &&
+    address.value.trim() &&
+    detailAddress.value.trim() &&
+    ssnFront.value.length === 6 &&
+    ssnBack.value.length === 7 &&
+    issueDate.value &&
+    phone.value.trim()
+  )
+})
+
+const store = usePreContractStore()
+const isLoading = ref(false)
+
+const handleVerify = async () => {
+  isLoading.value = true
+  await new Promise((resolve) => setTimeout(resolve, 2000)) // 예시: 2초 로딩
+  isLoading.value = false
+  store.setCanProceed(true)
+}
+
+onMounted(() => {
+  store.canProceed = false
+})
 </script>
 
 <style scoped></style>
