@@ -11,8 +11,8 @@
       :class="step === 1 ? 'ml-auto' : ''"
       :disabled="!canProceed"
     >
-      <template v-if="step === maxStep"> 계약서 작성하러 가기 </template>
-      <template v-else-if="hasSubStep && !isLastSubStep"> 다음 </template>
+      <template v-if="step === maxStep">계약서 작성하러 가기</template>
+      <template v-else-if="hasSubStep && !isLastSubStep">다음</template>
       <template v-else> 다음 단계 <span class="ml-1">→</span> </template>
     </BaseButton>
   </div>
@@ -42,6 +42,16 @@ const hasSubStep = computed(() => maxSubStep.value > 1)
 const isLastSubStep = computed(() => props.subStep === maxSubStep.value)
 
 const handleNextClick = () => {
+  if (props.step === maxStep) {
+    const id = route.params.id
+    if (id) {
+      router.push(`/contract/${id}`)
+    } else {
+      console.warn('params에서 id를 찾을 수 없습니다.')
+    }
+    return
+  }
+
   if (hasSubStep.value && !isLastSubStep.value) {
     store.nextSubStep(props.step, props.role)
   } else {
@@ -64,6 +74,4 @@ const goToStep = (newStep) => {
     store.triggerSubmit?.()
   }
 }
-
-console.log(canProceed)
 </script>
