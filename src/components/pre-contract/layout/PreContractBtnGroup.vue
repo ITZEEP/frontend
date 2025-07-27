@@ -9,6 +9,7 @@
       variant="primary"
       @click="handleNextClick"
       :class="step === 1 ? 'ml-auto' : ''"
+      :disabled="!canProceed"
     >
       <template v-if="step === maxStep"> 계약서 작성하러 가기 </template>
       <template v-else-if="hasSubStep && !isLastSubStep"> 다음 </template>
@@ -19,11 +20,9 @@
 
 <script setup>
 import { useRoute, useRouter } from 'vue-router'
-import BaseButton from '@/components/common/BaseButton.vue'
 import { computed } from 'vue'
-import { usePreContractStore } from '@/stores/ownerPreContractStore'
-
-const store = usePreContractStore()
+import BaseButton from '@/components/common/BaseButton.vue'
+import { usePreContractStore } from '@/stores/preContract'
 
 const props = defineProps({
   step: Number,
@@ -31,40 +30,29 @@ const props = defineProps({
   role: String,
 })
 
-const emit = defineEmits(['next-sub-step', 'prev-sub-step'])
-
 const route = useRoute()
 const router = useRouter()
-
+const store = usePreContractStore()
 const maxStep = 6
 
-const subStepCountMap = {
-  'owner-3': 2,
-  'owner-4': 2,
-}
-
-const subStepKey = computed(() => `${props.role}-${String(props.step)}`)
-const maxSubStep = computed(() => subStepCountMap[subStepKey.value])
-const hasSubStep = computed(() => !!maxSubStep.value)
-
-const currentSubStep = computed(() => Number(props.subStep))
-const isLastSubStep = computed(() => currentSubStep.value === maxSubStep.value)
+const canProceed = computed(() => store.canProceed)
+const subStepKey = computed(() => `${props.role}-${props.step}`)
+const maxSubStep = computed(() => store.subSteps[subStepKey.value] || 1)
+const hasSubStep = computed(() => maxSubStep.value > 1)
+const isLastSubStep = computed(() => props.subStep === maxSubStep.value)
 
 const handleNextClick = () => {
-  if (maxSubStep.value) {
-    if (currentSubStep.value < maxSubStep.value) {
-      emit('next-sub-step')
-    } else {
-      goToStep(props.step + 1)
-    }
+  if (hasSubStep.value && !isLastSubStep.value) {
+    store.nextSubStep(props.step, props.role)
   } else {
     goToStep(props.step + 1)
   }
 }
 
 const handlePrevClick = () => {
-  if (maxSubStep.value && currentSubStep.value > 1) {
-    emit('prev-sub-step')
+  if (hasSubStep.value && props.subStep > 1) {
+    const key = subStepKey.value
+    store.currentSubSteps[key] = props.subStep - 1
   } else if (props.step > 1) {
     goToStep(props.step - 1)
   }
@@ -73,7 +61,9 @@ const handlePrevClick = () => {
 const goToStep = (newStep) => {
   if (newStep <= maxStep) {
     router.push({ query: { ...route.query, step: newStep } })
-    store.triggerSubmit()
+    store.triggerSubmit?.()
   }
 }
+
+console.log(canProceed)
 </script>

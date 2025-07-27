@@ -1,5 +1,5 @@
 <template>
-  <div class="-mx-layout-x -mt-layout-y -my-layout-y w-screen min-h-screen bg-yellow-50">
+  <div class="-mx-16 -mt-5 -my-5 w-screen min-h-screen bg-yellow-50">
     <PreContractHeader />
     <div class="flex flex-col items-center justify-center px-4 py-10">
       <div class="w-full max-w-[880px]">
@@ -20,7 +20,8 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue'
+import { computed } from 'vue'
+import { usePreContractStore } from '@/stores/preContract'
 import PreContractHeader from '@/components/pre-contract/layout/PreContractHeader.vue'
 import PreContractBtnGroup from './PreContractBtnGroup.vue'
 
@@ -29,34 +30,19 @@ const props = defineProps({
   role: String,
 })
 
-// 서브스텝 상태
-const subStep = ref(1)
-
-// 서브스텝 개수 맵
-const subStepCountMap = {
-  'owner-3': 2,
-  'owner-4': 2,
-}
-
+const store = usePreContractStore()
 const subStepKey = computed(() => `${props.role}-${props.currentStep}`)
-const maxSubStep = computed(() => subStepCountMap[subStepKey.value] ?? 1)
-
-watch(
-  () => props.currentStep,
-  () => {
-    subStep.value = 1
-  },
-)
+const subStep = computed(() => store.currentSubSteps[subStepKey.value] || 1)
 
 const nextSubStep = () => {
-  if (subStep.value < maxSubStep.value) {
-    subStep.value++
-  }
+  store.nextSubStep(props.currentStep, props.role)
 }
 
 const prevSubStep = () => {
-  if (subStep.value > 1) {
-    subStep.value--
+  const key = subStepKey.value
+  const current = store.currentSubSteps[key] || 1
+  if (current > 1) {
+    store.currentSubSteps[key] = current - 1
   }
 }
 </script>
