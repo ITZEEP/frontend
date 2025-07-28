@@ -79,16 +79,11 @@
       </div>
     </div>
 
-    <!-- 인증 안내 -->
+    <!-- 인증 안내 및 모달 -->
     <div
       class="flex items-center gap-3 bg-yellow-100 border border-yellow-primary rounded p-3 text-yellow-800 text-sm"
       role="alert"
     >
-      <path
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        d="M13 16h-1v-4h-1m1-4h.01M12 9v2m0 4h.01"
-      />
       <p>매물 등록을 위해 실명 인증이 필요합니다.<br />본인 인증을 완료해주세요.</p>
       <button
         type="button"
@@ -102,88 +97,53 @@
     <!-- 본인 인증 모달 -->
     <div v-if="showModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div class="bg-white p-6 rounded-lg w-full max-w-md shadow-lg space-y-4">
-        <div class="flex flex-col items-center space-y-2">
-          <div class="bg-yellow-100 rounded-full p-3">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="w-8 h-8 text-yellow-primary"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-              />
-            </svg>
-          </div>
-          <h3 class="text-xl font-bold text-gray-800">본인 인증</h3>
-          <p class="text-sm text-gray-600">매물 등록을 위해 본인 인증이 필요합니다.</p>
-        </div>
+        <div class="w-full flex flex-col gap-3">
+          <BaseInput v-model="username" label="이름" placeholder="이름을 입력하세요" />
 
-        <!-- 인증 입력 항목 -->
-        <div class="space-y-4 pt-4">
-          <div>
-            <label for="name" class="block font-semibold mb-1">이름</label>
-            <input
-              id="name"
-              type="text"
-              v-model="auth.name"
-              placeholder="홍길동"
-              pattern="[ㄱ-ㅎ가-힣a-zA-Z\s]*"
-              @input="auth.name = auth.name.replace(/[^ㄱ-ㅎ가-힣a-zA-Z\s]/g, '')"
-              class="w-full border border-gray-300 p-3 rounded-md focus:outline-yellow-primary"
+          <div class="w-full flex gap-2">
+            <BaseInput
+              v-model="ssnFront"
+              label="주민번호 앞자리"
+              placeholder="앞 6자리"
+              id="ssnFront"
+              :inputClass="'[appearance:textfield]'"
+              @input="onFrontInput"
+            />
+            <BaseInput
+              v-model="ssnBack"
+              label="주민번호 뒷자리"
+              placeholder="뒤 7자리"
+              id="ssnBack"
+              @input="onBackInput"
             />
           </div>
 
-          <div>
-            <label class="block font-semibold mb-1">주민등록번호</label>
-            <div class="flex items-center gap-2">
-              <input
-                type="text"
-                v-model="auth.regFront"
-                placeholder="앞 6자리"
-                maxlength="6"
-                class="w-1/2 border border-gray-300 p-3 rounded-md focus:outline-yellow-primary"
-              />
-              <span>-</span>
-              <input
-                type="password"
-                v-model="auth.regBack"
-                placeholder="뒤 7자리"
-                maxlength="7"
-                class="w-1/2 border border-gray-300 p-3 rounded-md focus:outline-yellow-primary"
-              />
-            </div>
-          </div>
+          <BaseInput v-model="issueDate" label="주민등록증 발급일자" type="date" />
 
-          <div>
-            <label for="issue-date" class="block font-semibold mb-1">발급일자</label>
-            <input
-              id="issue-date"
-              v-model="auth.issueDate"
-              type="date"
-              class="w-full border border-gray-300 p-3 rounded-md focus:outline-yellow-primary"
-            />
-          </div>
-        </div>
+          <BaseInput
+            v-model="phone"
+            label="전화번호"
+            placeholder="010-1234-5678"
+            id="phone"
+            type="tel"
+            @input="onPhoneInput"
+          />
 
-        <!-- 버튼 -->
-        <div class="flex justify-end gap-2 pt-4">
-          <button
-            class="w-1/2 px-4 py-3 bg-gray-100 rounded-md text-gray-800 font-bold hover:bg-gray-200"
-            @click="showModal = false"
-          >
-            취소
-          </button>
-          <button
-            class="w-1/2 px-4 py-3 bg-yellow-primary text-yellow-900 font-bold rounded-md hover:bg-yellow-primary"
-            @click="verify"
+          <BaseButton
+            variant="primary"
+            size="lg"
+            class="mt-2"
+            :disabled="!isFormValid"
+            @click="handleVerify"
           >
             인증하기
-          </button>
+          </BaseButton>
+
+          <LoadingOverlay
+            :loading="isLoading"
+            message="인증 중입니다"
+            subMessage="잠시만 기다려주세요"
+          />
         </div>
       </div>
     </div>
@@ -191,7 +151,10 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
+import BaseInput from '@/components/common/BaseInput.vue'
+import BaseButton from '@/components/common/BaseButton.vue'
+import LoadingOverlay from '@/components/common/LoadingOverlay.vue'
 
 const files = ref([])
 const maxFiles = 5
@@ -201,13 +164,6 @@ const description = ref('')
 const showModal = ref(false)
 
 let idCounter = 0
-
-const auth = ref({
-  name: '',
-  regFront: '',
-  regBack: '',
-  issueDate: '',
-})
 
 function onFileChange(event) {
   const selectedFiles = event.target.files
@@ -244,13 +200,41 @@ function removeFile(index) {
   files.value.splice(index, 1)
 }
 
-function verify() {
-  const { name, regFront, regBack, issueDate } = auth.value
-  if (!name || !regFront || !regBack || !issueDate) {
-    alert('모든 항목을 입력해주세요.')
-    return
-  }
-  alert('인증이 완료되었습니다.')
-  showModal.value = false
+const username = ref('')
+const ssnFront = ref('')
+const ssnBack = ref('')
+const issueDate = ref('')
+const phone = ref('')
+const isLoading = ref(false)
+
+function onFrontInput(e) {
+  ssnFront.value = e.target.value.replace(/[^0-9]/g, '')
+}
+
+function onBackInput(e) {
+  ssnBack.value = e.target.value.replace(/[^0-9]/g, '')
+}
+
+function onPhoneInput(e) {
+  phone.value = e.target.value.replace(/[^0-9\-]/g, '')
+}
+
+const isFormValid = computed(() => {
+  return (
+    username.value.trim() !== '' &&
+    ssnFront.value.length === 6 &&
+    ssnBack.value.length === 7 &&
+    issueDate.value !== '' &&
+    phone.value.trim() !== ''
+  )
+})
+
+function handleVerify() {
+  isLoading.value = true
+  setTimeout(() => {
+    isLoading.value = false
+    alert('인증이 완료되었습니다.')
+    showModal.value = false
+  }, 2000)
 }
 </script>

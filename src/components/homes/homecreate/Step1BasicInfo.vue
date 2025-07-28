@@ -90,7 +90,9 @@ const onAddressSelect = (selectedAddress) => {
 
     <!-- 주소 입력 -->
     <div>
-      <label class="block mb-1 text-sm font-medium text-gray-600">주소</label>
+      <label class="block mb-1 text-sm font-medium text-gray-600"
+        >주소<span class="text-red-500">*</span></label
+      >
       <div class="flex gap-2">
         <input
           class="w-full rounded-md border border-gray-300 px-4 py-2 text-sm"

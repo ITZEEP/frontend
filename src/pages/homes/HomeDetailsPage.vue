@@ -3,10 +3,17 @@
     <!-- 이미지 갤러리 -->
     <ImageGallery :images="images" />
 
-    <!-- 상세 정보 -->
     <div v-if="listing" class="mt-6 space-y-10">
       <ListingBasicInfo :listing="listing" />
       <RoomDetails :listing="listing" />
+
+      <!-- TravelMap 컴포넌트 추가 -->
+      <TravelMap
+        :title="listing.type + ' 매물 위치'"
+        :address="listing.gu + ' ' + listing.dong"
+        class="rounded-md shadow-md"
+      />
+
       <div class="w-full flex gap-4">
         <BaseButton class="w-full" variant="outline" size="lg" @click="goRiskCheck">
           사기 위험도 측정
@@ -29,15 +36,15 @@ import ImageGallery from '@/components/homes/homedetails/ImageGallery.vue'
 import ListingBasicInfo from '@/components/homes/homedetails/ListingBasicInfo.vue'
 import RoomDetails from '@/components/homes/homedetails/RoomDetails.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
+import TravelMap from '@/components/travel/TravelMap.vue'
 
 const route = useRoute()
 const router = useRouter()
-const id = Number(route.params.no) // route param 이름이 'no'여야 합니다
+const id = Number(route.params.no)
 
 const listing = ref(null)
 const images = ref([])
 
-// 같은 mock 데이터 (실제는 API 사용 권장)
 const listings = [
   {
     id: 1,
