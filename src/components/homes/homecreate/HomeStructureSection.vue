@@ -11,11 +11,11 @@
         </label>
         <div class="relative">
           <input
-            id="yearsOfService"
+            id="exclusiveArea"
             type="number"
             min="0"
             class="border rounded p-2 pr-20 w-full no-spin"
-            v-model.number="form.yearsOfService"
+            v-model.number="form.exclusiveArea"
             required
             placeholder="0"
           />
@@ -191,8 +191,22 @@
 <script setup>
 import { reactive } from 'vue'
 
+const onSubmit = () => {
+  // 폼 제출 로직 구현 필요
+  console.log('Form submitted:', form)
+}
+
+const props = defineProps({
+  modelValue: {
+    type: Object,
+    default: () => ({}),
+  },
+})
+
+const emit = defineEmits(['update:modelValue'])
+
 const form = reactive({
-  yearsOfService: 0,
+  exclusiveArea: 0,
   supplyArea: 0,
   bedroomCount: 0,
   bathroomCount: 0,
@@ -202,8 +216,13 @@ const form = reactive({
   isRooftop: false,
   usageDate: '',
   orientation: '',
+  ...props.modelValue,
 })
 
+// 부모에게 변경사항 전달
+watchEffect(() => {
+  emit('update:modelValue', { ...form })
+})
 const orientationOptions = [
   { label: '남향', value: '남향' },
   { label: '동향', value: '동향' },

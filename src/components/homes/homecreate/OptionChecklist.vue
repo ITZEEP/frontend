@@ -177,10 +177,26 @@ const form = reactive({
   etc: [],
 })
 
-function onSubmit() {
-  console.log('제출된 데이터:', form)
-  alert('제출 완료')
+const props = defineProps({
+  modelValue: {
+    type: Object,
+    default: () => ({
+      appliances: [],
+      kitchen: [],
+      heatingCooling: [],
+      furniture: [],
+      bathroom: [],
+      security: [],
+      etc: [],
+    }),
+  },
+})
+
+function updateOptions() {
+  emit('update:modelValue', form)
 }
+
+const emit = defineEmits(['update:modelValue'])
 </script>
 
 <style scoped>

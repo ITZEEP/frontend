@@ -1,4 +1,6 @@
 <script setup>
+const emit = defineEmits(['update:form'])
+
 const props = defineProps({
   form: Object,
 })
@@ -9,24 +11,50 @@ function formatCurrency(value) {
   return number.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
 }
 
-// 인풋 이벤트 핸들러
+// 입력 핸들링 (숫자만, 포맷 적용, emit)
 function handleInput(field, event) {
   const raw = event.target.value.replace(/[^\d]/g, '')
-  props.form[field] = raw ? parseInt(raw) : 0
+  const parsed = raw ? parseInt(raw) : 0
+
+  emit('update:form', {
+    ...props.form,
+    [field]: parsed,
+  })
+
   const formatted = formatCurrency(raw || '0')
   event.target.value = formatted
 
-  // 커서를 맨 뒤로 이동
   requestAnimationFrame(() => {
     const len = formatted.length
     event.target.setSelectionRange(len, len)
   })
 }
 
-// 표시값 포맷 (0도 출력되게)
+// 표시값 출력
 function displayValue(field) {
   const value = props.form[field]
   return value === 0 || value ? formatCurrency(String(value)) : '0'
+}
+
+// 관리비 항목 체크 업데이트
+function updateUtility(key, checked) {
+  emit('update:form', {
+    ...props.form,
+    utilities: {
+      ...props.form.utilities,
+      [key]: checked,
+    },
+  })
+}
+
+// 관리비 항목 정의
+const utilityItems = {
+  electricity: '전기료',
+  gas: '가스료',
+  water: '수도료',
+  internet: '인터넷',
+  cableTV: '케이블TV',
+  heating: '난방비',
 }
 </script>
 
@@ -49,7 +77,7 @@ function displayValue(field) {
             type="text"
             :value="displayValue('deposit')"
             @input="handleInput('deposit', $event)"
-            class="w-full border rounded px-3 py-2 pr-12 text-right placeholder:text-gray-400 appearance-none"
+            class="w-full border rounded px-3 py-2 pr-12 text-right placeholder:text-gray-400"
           />
           <span class="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">만원</span>
         </div>
@@ -63,7 +91,7 @@ function displayValue(field) {
             type="text"
             :value="displayValue('maintenanceFee')"
             @input="handleInput('maintenanceFee', $event)"
-            class="w-full border rounded px-3 py-2 pr-12 text-right placeholder:text-gray-400 appearance-none"
+            class="w-full border rounded px-3 py-2 pr-12 text-right placeholder:text-gray-400"
           />
           <span class="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">만원</span>
         </div>
@@ -71,19 +99,13 @@ function displayValue(field) {
 
       <!-- 관리비 항목 -->
       <div class="grid grid-cols-2 gap-2">
-        <label
-          class="inline-flex items-center"
-          v-for="(label, key) in {
-            electricity: '전기료',
-            gas: '가스료',
-            water: '수도료',
-            internet: '인터넷',
-            cableTV: '케이블TV',
-            heating: '난방비',
-          }"
-          :key="key"
-        >
-          <input type="checkbox" v-model="form.utilities[key]" class="form-checkbox" />
+        <label v-for="(label, key) in utilityItems" :key="key" class="inline-flex items-center">
+          <input
+            type="checkbox"
+            :checked="form.utilities[key]"
+            @change="updateUtility(key, $event.target.checked)"
+            class="form-checkbox"
+          />
           <span class="ml-2">{{ label }}</span>
         </label>
       </div>
@@ -101,7 +123,7 @@ function displayValue(field) {
             type="text"
             :value="displayValue('deposit')"
             @input="handleInput('deposit', $event)"
-            class="w-full border rounded px-3 py-2 pr-12 text-right placeholder:text-gray-400 appearance-none"
+            class="w-full border rounded px-3 py-2 pr-12 text-right placeholder:text-gray-400"
           />
           <span class="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">만원</span>
         </div>
@@ -117,7 +139,7 @@ function displayValue(field) {
             type="text"
             :value="displayValue('monthlyRent')"
             @input="handleInput('monthlyRent', $event)"
-            class="w-full border rounded px-3 py-2 pr-12 text-right placeholder:text-gray-400 appearance-none"
+            class="w-full border rounded px-3 py-2 pr-12 text-right placeholder:text-gray-400"
           />
           <span class="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">만원</span>
         </div>
@@ -131,7 +153,7 @@ function displayValue(field) {
             type="text"
             :value="displayValue('maintenanceFee')"
             @input="handleInput('maintenanceFee', $event)"
-            class="w-full border rounded px-3 py-2 pr-12 text-right placeholder:text-gray-400 appearance-none"
+            class="w-full border rounded px-3 py-2 pr-12 text-right placeholder:text-gray-400"
           />
           <span class="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">만원</span>
         </div>
@@ -139,19 +161,13 @@ function displayValue(field) {
 
       <!-- 관리비 항목 -->
       <div class="grid grid-cols-2 gap-2">
-        <label
-          class="inline-flex items-center"
-          v-for="(label, key) in {
-            electricity: '전기료',
-            gas: '가스료',
-            water: '수도료',
-            internet: '인터넷',
-            cableTV: '케이블TV',
-            heating: '난방비',
-          }"
-          :key="key"
-        >
-          <input type="checkbox" v-model="form.utilities[key]" class="form-checkbox" />
+        <label v-for="(label, key) in utilityItems" :key="key" class="inline-flex items-center">
+          <input
+            type="checkbox"
+            :checked="form.utilities[key]"
+            @change="updateUtility(key, $event.target.checked)"
+            class="form-checkbox"
+          />
           <span class="ml-2">{{ label }}</span>
         </label>
       </div>

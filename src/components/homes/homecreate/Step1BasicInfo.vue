@@ -1,6 +1,12 @@
 <script setup>
 const props = defineProps({
-  form: Object,
+  form: {
+    type: Object,
+    required: true,
+    validator(value) {
+      return value && typeof value === 'object' && 'houseType' in value && 'dealType' in value
+    },
+  },
 })
 </script>
 

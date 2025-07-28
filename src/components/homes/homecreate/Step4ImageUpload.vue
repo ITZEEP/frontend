@@ -1,7 +1,9 @@
 <template>
   <div class="max-w-3xl mx-auto p-6 space-y-6">
     <!-- 제목 및 업로드 설명 -->
-    <h2 class="text-lg font-bold mb-2">사진 및 설명</h2>
+    <label for="description" class="block font-semibold mb-1">
+      사진 및 설명 <span class="text-red-600">*</span>
+    </label>
     <p class="text-sm text-gray-600 mb-4">
       최소 1장 이상, 최대 5장까지 업로드 가능합니다. (1장당 최대 10MB)
     </p>
