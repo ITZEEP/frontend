@@ -7,27 +7,20 @@ import IconChevronLeft from '@/components/icons/IconChevronLeft.vue'
 import IconCheck from '@/components/icons/IconCheck.vue'
 import PropertyRegistrationForm from '@/components/risk-check/confirm/PropertyRegistrationForm.vue'
 import BuildingRegistryForm from '@/components/risk-check/confirm/BuildingRegistryForm.vue'
-
-import documentsMockData from '@/mocks/risk/documentsMockData.json'
+import { fraudApi } from '@/api/fraud'
+import { useFraudStore } from '@/stores/fraud'
 
 const router = useRouter()
 const route = useRoute()
+const fraudStore = useFraudStore()
 
-// 라우트 파라미터 타입 검증
-const validateRouteParams = () => {
-  const { id } = route.params
-  
-  // id 검증 (숫자로 변환 가능한지 확인)
-  if (id && (isNaN(Number(id)) || Number(id) <= 0)) {
-    router.push('/risk-check')
-    return false
-  }
-  
-  return true
+// Store에서 분석 데이터 가져오기
+const analysisData = fraudStore.getDocumentAnalysisData()
+
+// 데이터가 없으면 메인 페이지로 리다이렉트
+if (!analysisData) {
+  router.push('/risk-check')
 }
-
-// 파라미터 검증 실패 시 리다이렉트
-const isValidRoute = validateRouteParams()
 
 const isAnalyzing = ref(false)
 const errors = ref({})
@@ -149,36 +142,38 @@ const focusFirstError = () => {
   })
 }
 
-const propertyId = Number(route.params.id || 1)
-const currentDocuments =
-  documentsMockData.documents.find((d) => d.propertyId === propertyId) ||
-  documentsMockData.documents[0]
+// Store에서 가져온 데이터 기반으로 초기값 설정
 const ocrData = reactive({
   등기부등본: {
-    지역관련주소: currentDocuments.등기부등본.지역관련주소,
-    도로명주소: currentDocuments.등기부등본.도로명주소,
-    소유자이름: currentDocuments.등기부등본.소유자이름,
-    소유자생년월일: currentDocuments.등기부등본.소유자생년월일,
-    채권최고액: currentDocuments.등기부등본.채권최고액,
-    채무자: currentDocuments.등기부등본.채무자,
-    근저당권자: currentDocuments.등기부등본.근저당권자,
+    지역관련주소: analysisData?.registryDocument?.regionAddress || '',
+    도로명주소: analysisData?.registryDocument?.roadAddress || '',
+    소유자이름: analysisData?.registryDocument?.ownerName || '',
+    소유자생년월일: analysisData?.registryDocument?.ownerBirthDate || '1980-01-01',
+    채권최고액: analysisData?.registryDocument?.maxClaimAmount || '',
+    채무자: analysisData?.registryDocument?.debtor || '',
+    근저당권자: analysisData?.registryDocument?.mortgagee || '',
     법적제한사항: {
-      가압류: currentDocuments.등기부등본.가압류 ? true : false,
-      경매: false,
-      소송: false,
-      압류: false,
+      가압류: analysisData?.registryDocument?.hasSeizure || false,
+      경매: analysisData?.registryDocument?.hasAuction || false,
+      소송: analysisData?.registryDocument?.hasLitigation || false,
+      압류: analysisData?.registryDocument?.hasAttachment || false,
     },
   },
   건축물대장: {
-    대지위치: currentDocuments.건축물대장.대지위치,
-    도로명주소: currentDocuments.건축물대장.도로명주소,
-    연면적: currentDocuments.건축물대장.연면적,
-    용도: currentDocuments.건축물대장.용도,
-    층수: currentDocuments.건축물대장.층수?.replace(/[^\d]/g, '') || '15',
-    사용승인일: currentDocuments.건축물대장.사용승인일,
-    위반건축물여부: currentDocuments.건축물대장.위반건축물여부 ? true : false,
+    대지위치: analysisData?.buildingDocument?.siteLocation || '',
+    도로명주소: analysisData?.buildingDocument?.roadAddress || '',
+    연면적: analysisData?.buildingDocument?.totalFloorArea || '',
+    용도: analysisData?.buildingDocument?.purpose || '',
+    층수: analysisData?.buildingDocument?.floorNumber || '1',
+    사용승인일: analysisData?.buildingDocument?.approvalDate || '2020-01-01',
+    위반건축물여부: analysisData?.buildingDocument?.isViolationBuilding || false,
   },
+  // API 호출에 필요한 추가 정보
+  homeId: analysisData?.homeId || 1,
+  registryFileUrl: analysisData?.registryFileUrl || '',
+  buildingFileUrl: analysisData?.buildingFileUrl || ''
 })
+
 
 // 이전 페이지로
 const goBack = () => {
@@ -195,15 +190,57 @@ const proceedAnalysis = async () => {
 
   isAnalyzing.value = true
   try {
-    // 실제 API 호출 시뮬레이션
-    // const response = await analyzeRiskAPI(ocrData)
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+    // 분석 요청 데이터 준비
+    const analysisData = {
+      homeId: ocrData.homeId,
+      registryDocument: {
+        regionAddress: ocrData.등기부등본.지역관련주소,
+        roadAddress: ocrData.등기부등본.도로명주소,
+        ownerName: ocrData.등기부등본.소유자이름,
+        ownerBirthDate: ocrData.등기부등본.소유자생년월일,
+        maxClaimAmount: ocrData.등기부등본.채권최고액,
+        debtor: ocrData.등기부등본.채무자,
+        mortgagee: ocrData.등기부등본.근저당권자,
+        hasSeizure: ocrData.등기부등본.법적제한사항.가압류,
+        hasAuction: ocrData.등기부등본.법적제한사항.경매,
+        hasLitigation: ocrData.등기부등본.법적제한사항.소송,
+        hasAttachment: ocrData.등기부등본.법적제한사항.압류
+      },
+      buildingDocument: {
+        siteLocation: ocrData.건축물대장.대지위치,
+        roadAddress: ocrData.건축물대장.도로명주소,
+        totalFloorArea: parseFloat(ocrData.건축물대장.연면적) || 0,
+        purpose: ocrData.건축물대장.용도,
+        floorNumber: parseInt(ocrData.건축물대장.층수) || 1,
+        approvalDate: ocrData.건축물대장.사용승인일,
+        isViolationBuilding: ocrData.건축물대장.위반건축물여부
+      },
+      registryFileUrl: ocrData.registryFileUrl,
+      buildingFileUrl: ocrData.buildingFileUrl
+    }
 
-    router.push(`/risk-check/result/${propertyId}`)
+    // API 호출
+    const response = await fraudApi.analyzeRisk(analysisData)
+    console.log('분석 API 응답:', response) // 디버깅용
+    
+    if (response.success && response.data) {
+      console.log('결과 페이지로 이동:', `/risk-check/result/${response.data.riskCheckId}`) // 디버깅용
+      // 성공 시 Store 데이터 삭제 (보안을 위해)
+      fraudStore.clearDocumentAnalysisData()
+      // 결과 페이지로 이동 (riskCheckId를 URL 파라미터로 전달)
+      router.push(`/risk-check/result/${response.data.riskCheckId}`)
+    } else {
+      throw new Error(response.message || '분석에 실패했습니다')
+    }
   } catch (error) {
     console.error('분석 중 오류:', error)
+    console.error('에러 응답:', error.response) // 디버깅용
     // 사용자에게 오류 메시지 표시
-    alert('분석 중 오류가 발생했습니다. 다시 시도해주세요.')
+    if (error.response?.data?.message) {
+      alert(`분석 중 오류가 발생했습니다: ${error.response.data.message}`)
+    } else {
+      alert('분석 중 오류가 발생했습니다. 다시 시도해주세요.')
+    }
   } finally {
     isAnalyzing.value = false
   }
@@ -215,6 +252,8 @@ onMounted(() => {
 
 onUnmounted(() => {
   document.body.style.backgroundColor = ''
+  // 민감한 데이터 보호를 위해 Store에서 데이터 삭제
+  fraudStore.clearDocumentAnalysisData()
 })
 </script>
 

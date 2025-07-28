@@ -4,6 +4,8 @@ import { useRouter } from 'vue-router'
 import BaseButton from '@/components/common/BaseButton.vue'
 import LoadingOverlay from '@/components/common/LoadingOverlay.vue'
 import { useModalStore } from '@/stores/modal'
+import { useFraudStore } from '@/stores/fraud'
+import { fraudApi } from '@/api/fraud'
 
 import PropertyTypeSelector from '@/components/risk-check/PropertyTypeSelector.vue'
 import PropertyCard from '@/components/risk-check/PropertyCard.vue'
@@ -18,6 +20,7 @@ import IconSearch from '@/components/icons/IconSearch.vue'
 
 const router = useRouter()
 const modalStore = useModalStore()
+const fraudStore = useFraudStore()
 
 const showHistoryModal = ref(false)
 const showFileWarningModal = ref(false)
@@ -100,12 +103,24 @@ const startRiskAnalysis = async () => {
   isAnalyzing.value = true
 
   try {
-    // OCR 처리 시뮬레이션
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    // 실제 API 호출
+    const response = await fraudApi.analyzeDocuments(
+      uploadedFiles.value['등기부등본'],
+      uploadedFiles.value['건축물대장'],
+      selectedPropertyId.value || 1 // 등록되지 않은 매물의 경우 임시 ID 사용
+    )
 
-    // OCR 확인 페이지로 이동
-    router.push('/risk-check/confirm')
+    if (response.success && response.data) {
+      // Store에 OCR 분석 결과 저장
+      fraudStore.setDocumentAnalysisData(response.data)
+      
+      // OCR 확인 페이지로 이동 (URL에는 민감한 정보 노출하지 않음)
+      router.push('/risk-check/confirm')
+    } else {
+      alert('문서 분석에 실패했습니다: ' + (response.message || '알 수 없는 오류'))
+    }
   } catch (error) {
+    console.error('OCR 분석 오류:', error)
     alert('분석 중 오류가 발생했습니다. 다시 시도해주세요.')
   } finally {
     isAnalyzing.value = false
@@ -123,7 +138,9 @@ const closeHistoryModal = () => {
 }
 
 const handleSelectHistory = (history) => {
-  router.push(`/risk-check/result/${history.analysisId}`)
+  console.log('선택된 분석 기록:', history)
+  // riskCheckId를 사용해서 결과 페이지로 이동
+  router.push(`/risk-check/result/${history.riskCheckId || history.id}`)
 }
 
 const closeFileWarningModal = () => {

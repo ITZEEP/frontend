@@ -1,16 +1,79 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { authAPI, tokenUtils, userUtils } from '@/utils/auth'
 
 export const useAuthStore = defineStore('auth', () => {
-  const isLoggedIn = ref(false)
+  const user = ref(null)
+  const accessToken = ref(null)
+  const isLoading = ref(false)
 
-  function login() {
-    isLoggedIn.value = true
+  // 초기화
+  const initialize = () => {
+    accessToken.value = tokenUtils.getToken()
+    user.value = userUtils.getUser()
   }
 
-  function logout() {
-    isLoggedIn.value = false
+  // computed
+  const isLoggedIn = computed(() => !!accessToken.value)
+  const username = computed(() => user.value?.name || user.value?.username || '')
+
+  // 카카오 로그인 URL 가져오기
+  const getKakaoLoginUrl = async () => {
+    try {
+      const response = await authAPI.getKakaoLoginUrl()
+      return response.data.data.loginUrl
+    } catch (error) {
+      console.error('Failed to get Kakao login URL:', error)
+      throw error
+    }
   }
 
-  return { isLoggedIn, login, logout }
+  // 토큰과 사용자 정보로 로그인 처리
+  const loginWithToken = async (token, userInfo) => {
+    accessToken.value = token
+    user.value = userInfo
+    
+    // 로컬 스토리지에 저장
+    tokenUtils.setToken(token)
+    userUtils.setUser(userInfo)
+  }
+
+  // 로그아웃
+  const logout = async () => {
+    try {
+      isLoading.value = true
+      
+      // 서버에 로그아웃 요청 (선택적)
+      try {
+        await authAPI.logout()
+      } catch (error) {
+        console.error('Server logout failed:', error)
+      }
+      
+      // 로컬 상태 초기화
+      accessToken.value = null
+      user.value = null
+      
+      // 로컬 스토리지 초기화
+      tokenUtils.removeToken()
+      userUtils.removeUser()
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  // 스토어 초기화
+  initialize()
+
+  return { 
+    user,
+    accessToken,
+    isLoading,
+    isLoggedIn,
+    username,
+    getKakaoLoginUrl,
+    loginWithToken,
+    logout,
+    initialize
+  }
 })
