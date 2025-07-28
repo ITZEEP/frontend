@@ -1,5 +1,5 @@
 <template>
-  <div class="flex h-screen -mx-16 -my-5 -mb-5">
+  <div class="flex h-screen">
     <!-- 사이드바 -->
     <SideBar @selectRoom="selectRoom" />
 

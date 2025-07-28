@@ -30,10 +30,9 @@
 
 <script setup>
 import { computed, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 
 const route = useRoute()
-const router = useRouter()
 
 // 1. URL 쿼리에서 step 값을 가져옴
 const role = computed(() => {
