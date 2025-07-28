@@ -17,7 +17,11 @@ import SofaIcon from '@/assets/icons/SofaIcon.vue'
 import CheckIcon from '@/assets/icons/CheckIcon.vue'
 
 const props = defineProps({
-  items: Array,
+  items: {
+    type: Array,
+    default: () => [],
+    validator: (value) => Array.isArray(value),
+  },
 })
 
 const items = props.items

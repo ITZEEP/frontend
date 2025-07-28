@@ -26,8 +26,14 @@
 import HomeIcon from '@/assets/icons/HomeIcon.vue'
 
 const props = defineProps({
-  home: Object,
-  home_detail: Object,
+  home: {
+    type: Object,
+    required: true,
+  },
+  home_detail: {
+    type: Object,
+    required: true,
+  },
 })
 
 const home = props.home

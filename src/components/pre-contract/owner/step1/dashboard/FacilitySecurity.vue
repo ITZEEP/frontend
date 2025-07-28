@@ -17,7 +17,12 @@ import SecurityIcon from '@/assets/icons/SecurityIcon.vue'
 import CheckIcon from '@/assets/icons/CheckIcon.vue'
 
 const props = defineProps({
-  items: Array,
+  items: {
+    type: Array,
+    required: true,
+    default: () => [],
+    validator: (value) => value.every((item) => typeof item === 'string'),
+  },
 })
 
 const items = props.items

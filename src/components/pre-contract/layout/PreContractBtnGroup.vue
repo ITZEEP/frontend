@@ -25,9 +25,21 @@ import BaseButton from '@/components/common/BaseButton.vue'
 import { usePreContractStore } from '@/stores/preContract'
 
 const props = defineProps({
-  step: Number,
-  subStep: Number,
-  role: String,
+  step: {
+    type: Number,
+    required: true,
+    validator: (value) => value >= 1 && value <= 6,
+  },
+  subStep: {
+    type: Number,
+    default: 1,
+    validator: (value) => value >= 1,
+  },
+  role: {
+    type: String,
+    required: true,
+    validator: (value) => ['owner', 'tenant'].includes(value),
+  },
 })
 
 const route = useRoute()

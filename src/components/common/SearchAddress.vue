@@ -57,16 +57,22 @@ const places = ref([])
 const currentPage = ref(1)
 const itemsPerPage = 5
 
+const isLoading = ref(false)
+const errorMessage = ref('')
+
 const pagedResults = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage
   return places.value.slice(start, start + itemsPerPage)
 })
 
-const waitForKakao = () => {
-  return new Promise((resolve) => {
+const waitForKakao = (timeout = 10000) => {
+  return new Promise((resolve, reject) => {
+    const startTime = Date.now()
     const check = () => {
       if (window.kakao?.maps?.services) {
         resolve(window.kakao)
+      } else if (Date.now() - startTime > timeout) {
+        reject(new Error('Kakao API 로딩 타임아웃'))
       } else {
         setTimeout(check, 100)
       }
@@ -78,17 +84,27 @@ const waitForKakao = () => {
 const searchAddress = async () => {
   if (!keyword.value.trim()) return
 
-  const kakao = await waitForKakao()
-  const ps = new kakao.maps.services.Places()
+  isLoading.value = true
+  errorMessage.value = ''
 
-  ps.keywordSearch(keyword.value, (data, status) => {
-    if (status === kakao.maps.services.Status.OK) {
-      places.value = data
-      currentPage.value = 1
-    } else {
-      places.value = []
-    }
-  })
+  try {
+    const kakao = await waitForKakao()
+    const ps = new kakao.maps.services.Places()
+
+    ps.keywordSearch(keyword.value, (data, status) => {
+      if (status === kakao.maps.services.Status.OK) {
+        places.value = data
+        currentPage.value = 1
+      } else {
+        places.value = []
+        errorMessage.value = '검색 결과를 찾을 수 없습니다.'
+      }
+    })
+  } catch (error) {
+    console.log('주소 검색 실패: ', error)
+    errorMessage.value = '주소 검색 중 오류가 발생했습니다.'
+    isLoading.value = false
+  }
 }
 
 const selectAddress = (address) => {

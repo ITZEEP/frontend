@@ -39,10 +39,13 @@ const leaseTypeLabel = computed(() => {
 
 // 가격 표시 포맷
 const formattedPrice = computed(() => {
+  const depositPrice = homeData.deposit_price || 0
+  const monthlyRent = homeData.monthly_rent || 0
+
   if (homeData.lease_type === 'JEONSE') {
-    return `보증금 ${homeData.deposit_price.toLocaleString()}만 원`
+    return `보증금 ${depositPrice.toLocaleString()}만 원`
   } else {
-    return `보증금 ${homeData.deposit_price.toLocaleString()} / 월 ${homeData.monthly_rent.toLocaleString()}만 원`
+    return `보증금 ${depositPrice.toLocaleString()} / 월 ${monthlyRent.toLocaleString()}만 원`
   }
 })
 </script>
