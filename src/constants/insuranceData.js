@@ -1,0 +1,62 @@
+export const INSURANCE_PRODUCTS = [
+  {
+    id: 1,
+    company: 'SGI서울보증',
+    description: '개인이 직접 신청 가능한 전세금보장신용보험을 제공하는 민간 보증기관입니다.',
+    features: ['개인 신청 가능', '집주인 동의 불필요', '직거래 활용 가능'],
+    image: 'https://www.sgic.co.kr/resource/pc/images/layout/logo.png',
+    link: 'https://www.sgic.co.kr/?p=CCPMAN000001F01',
+    conditions: [
+      '만 19세 이상 개인 또는 법인',
+      '전세보증금 5억원 이하 주택',
+      '임대차계약 체결 전후 15일 이내',
+      '전입신고 완료 필수',
+    ],
+    benefits: [
+      '전세보증금 100% 보장',
+      '법적 분쟁 시 소송비용 지원',
+      '온라인 간편 신청 가능',
+      '신속한 보증금 반환 처리',
+    ],
+  },
+  {
+    id: 2,
+    company: 'HUG 주택도시보증공사',
+    description: '정부 공식 보증기관으로 안정적인 전세보증금 반환 보증을 제공합니다.',
+    features: ['정부 공식 보증기관', '온라인 간편 가입', '보증료 환급 가능'],
+    image: 'https://www.khug.or.kr/hug/image/common/logo.png',
+    link: 'https://www.khug.or.kr/index_hug_in.jsp',
+    conditions: [
+      '만 19세 이상 개인 또는 법인',
+      '전세보증금 7억원 이하 주택',
+      '계약 잔여기간 5개월 이상',
+      '확정일자 받은 계약서 필수',
+    ],
+    benefits: [
+      '정부 공식 보증으로 안정성 확보',
+      '보증료 환급 가능',
+      '청년/신혼부부 특별 할인',
+      '전국 지점 방문 상담 가능',
+    ],
+  },
+  {
+    id: 3,
+    company: 'HF한국주택금융공사',
+    description: '국토교통부 산하 공공기관으로 다양한 전세보증 상품을 제공합니다.',
+    features: ['국가 공공기관', '다양한 상품 구성', '특별 할인 제공'],
+    image: 'https://www.hf.go.kr/resource/img/common/logo.png',
+    link: 'https://www.hf.go.kr/hf/index.do',
+    conditions: [
+      '만 19세 이상 개인',
+      '수도권 9억원, 그 외 7억원 이하',
+      '계약 체결 후 1개월 이내',
+      '전입신고 및 확정일자 필수',
+    ],
+    benefits: [
+      '국가 공공기관의 안정성',
+      '청년/신혼부부 우대 보증료',
+      '보증료 분납 가능',
+      '전세자금대출 연계 가능',
+    ],
+  },
+]

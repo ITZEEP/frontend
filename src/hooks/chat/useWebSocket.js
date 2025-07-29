@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import websocketService from '@/components/chat/apis/websocket'
+import websocketService from '@/apis/websocket'
 
 export function useWebSocket() {
   const isConnected = ref(false)

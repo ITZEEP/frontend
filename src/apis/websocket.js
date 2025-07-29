@@ -13,7 +13,7 @@ class WebSocketService {
 
   connect() {
     return new Promise((resolve, reject) => {
-      const socket = new SockJS('http://localhost:8080/ws')
+      const socket = new SockJS('http://localhost:8080/ws') // 추후 env 파일에서 가져오도록 수정 예정
       this.stompClient = new Client({
         webSocketFactory: () => socket,
         reconnectDelay: 5000,

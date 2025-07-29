@@ -4,7 +4,9 @@
       <button
         class="flex-1 py-2 text-center font-semibold"
         :class="
-          selectedTab === 'owner' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500'
+          selectedTab === 'owner'
+            ? 'border-b-2 border-yellow-primary text-yellow-primary'
+            : 'text-gray-500'
         "
         @click="changeTab('owner')"
       >
@@ -13,7 +15,9 @@
       <button
         class="flex-1 py-2 text-center font-semibold"
         :class="
-          selectedTab === 'buyer' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500'
+          selectedTab === 'buyer'
+            ? 'border-b-2 border-yellow-primary text-yellow-primary'
+            : 'text-gray-500'
         "
         @click="changeTab('buyer')"
       >
@@ -23,7 +27,7 @@
 
     <div v-if="loading" class="p-4 text-center text-gray-500">
       <div
-        class="animate-spin w-6 h-6 border-2 border-gray-300 border-t-blue-500 rounded-full mx-auto"
+        class="animate-spin w-6 h-6 border-2 border-gray-300 border-t-yellow-primary rounded-full mx-auto"
       ></div>
       <p class="mt-2">로딩 중...</p>
     </div>
@@ -57,7 +61,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick, watch, provide } from 'vue'
 import ChatItem from './ChatItem.vue'
-import { getOwnerChatRooms, getBuyerChatRooms } from '@/components/chat/apis/chatApi'
+import { getOwnerChatRooms, getBuyerChatRooms } from '@/apis/chatApi'
 
 const emit = defineEmits(['selectRoom'])
 
@@ -325,7 +329,7 @@ async function setCurrentUserId() {
     }
 
     // localStorage에 없으면 API 호출
-    const { getCurrentUser } = await import('@/components/chat/apis/chatApi')
+    const { getCurrentUser } = await import('@/apis/chatApi')
     const response = await getCurrentUser()
 
     if (response.success && response.data.userId) {
@@ -361,7 +365,7 @@ defineExpose({
 // 웹소켓 구독 설정
 async function setupWebSocketSubscriptions() {
   try {
-    const { default: websocketService } = await import('@/components/chat/apis/websocket')
+    const { default: websocketService } = await import('@/apis/websocket')
     if (!websocketService.getConnectionStatus()) {
       await websocketService.connect()
     }

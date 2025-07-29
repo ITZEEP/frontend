@@ -14,4 +14,14 @@ export default [
     name: 'mypage',
     component: () => import('../pages/auth/MyPage.vue'),
   },
+  {
+    path: '/oauth/callback',
+    name: 'oauth-callback',
+    component: () => import('../pages/auth/OAuthCallback.vue'),
+  },
+  {
+    path: '/oauth/callback/:provider',
+    name: 'oauth-callback-provider',
+    component: () => import('../pages/auth/OAuthCallback.vue'),
+  },
 ]

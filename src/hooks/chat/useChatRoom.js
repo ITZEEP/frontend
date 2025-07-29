@@ -1,5 +1,5 @@
 import { ref, onUnmounted, watch, onMounted } from 'vue'
-import websocketService from '@/components/chat/apis/websocket'
+import websocketService from '@/apis/websocket'
 
 export function useChatRoom(chatRoomId, currentUserId, roomData) {
   const messages = ref([])

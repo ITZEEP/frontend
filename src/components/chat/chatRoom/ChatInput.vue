@@ -96,7 +96,7 @@
 
 <script setup>
 import { ref, nextTick, onMounted, onUnmounted } from 'vue'
-import { uploadChatFile } from '@/components/chat/apis/chatApi'
+import { uploadChatFile } from '@/apis/chatApi'
 
 const emit = defineEmits(['sendMessage', 'typing'])
 

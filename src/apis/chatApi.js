@@ -1,4 +1,6 @@
-const API_BASE_URL = 'http://localhost:8080/api/chat'
+import api from '@/apis'
+
+const API_BASE_URL = '/api/chat'
 
 function getAuthToken() {
   // 🔧 수정: localStorage 키 통일
@@ -14,22 +16,27 @@ function getHeaders() {
 }
 
 async function apiRequest(url, options = {}) {
-  const response = await fetch(`${API_BASE_URL}${url}`, {
-    ...options,
-    headers: {
-      ...getHeaders(),
-      ...options.headers,
-    },
-  })
+  try {
+    const method = options.method?.toLowerCase() || 'get'
+    const headers = { ...getHeaders(), ...options.headers }
+    const fullUrl = `${API_BASE_URL}${url}`
 
-  if (!response.ok) {
-    const errorText = await response.text()
-    console.error('API 에러 응답:', errorText)
-    throw new Error(`API Error: ${response.status} - ${errorText}`)
+    const config = {
+      method,
+      url: fullUrl,
+      headers,
+    }
+
+    if (options.body) {
+      config.data = JSON.parse(options.body)
+    }
+
+    const response = await api(config)
+    return response.data
+  } catch (error) {
+    console.error('API 에러 응답:', error.response?.data || error.message)
+    throw new Error(`API Error: ${error.response?.status} - ${error.message}`)
   }
-
-  const result = await response.json()
-  return result
 }
 
 export async function getOwnerChatRooms() {
@@ -84,37 +91,28 @@ export async function uploadChatFile(file, chatRoomId, receiverId) {
   formData.append('receiverId', receiverId)
 
   try {
-    const token = getAuthToken()
-    const response = await fetch(`${API_BASE_URL}/upload`, {
-      method: 'POST',
+    const res = await api.post(`${API_BASE_URL}/upload`, formData, {
       headers: {
-        Authorization: token ? `Bearer ${token}` : '',
+        Authorization: `Bearer ${getAuthToken()}`,
+        'Content-Type': 'multipart/form-data',
       },
-      body: formData,
     })
 
-    // 에러 처리 개선
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error('파일 업로드 실패 상세:', {
-        status: response.status,
-        statusText: response.statusText,
-        errorText: errorText,
-      })
-      throw new Error(`File Upload Error: ${response.status} - ${errorText}`)
-    }
-
-    const result = await response.json()
-    return result
+    return res.data
   } catch (error) {
     console.error('파일 업로드 중 예외 발생:', error)
 
-    // 네트워크 오류와 서버 오류 구분
-    if (error.name === 'TypeError' && error.message.includes('fetch')) {
+    if (error.name === 'TypeError' && error.message.includes('Network')) {
       throw new Error('네트워크 연결 오류: 서버에 연결할 수 없습니다.')
     }
 
-    throw error
+    const status = error.response?.status
+    const statusText = error.response?.statusText
+    const errorText = error.response?.data
+
+    console.error('파일 업로드 실패 상세:', { status, statusText, errorText })
+
+    throw new Error(`File Upload Error: ${status} - ${statusText}`)
   }
 }
 
@@ -125,7 +123,6 @@ export async function getCurrentUser() {
   } catch (error) {
     console.error('서버 API 실패:', error)
 
-    // 서버 API 실패 시 JWT에서 추출 시도
     const token = getAuthToken()
     if (!token) {
       throw new Error('인증 토큰이 없습니다.')
@@ -195,22 +192,19 @@ export async function refreshToken() {
       throw new Error('리프레시 토큰이 없습니다')
     }
 
-    const response = await fetch('http://localhost:8080/api/auth/refresh', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${refreshToken}`,
+    const res = await api.post(
+      '/api/auth/refresh',
+      {},
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${refreshToken}`,
+        },
       },
-    })
+    )
 
-    if (!response.ok) {
-      throw new Error('토큰 갱신 실패')
-    }
-
-    const result = await response.json()
-
-    if (result.success && result.data.accessToken) {
-      localStorage.setItem('accessToken', result.data.accessToken)
+    if (res.data.success && res.data.data.accessToken) {
+      localStorage.setItem('accessToken', res.data.data.accessToken)
       return true
     }
 
