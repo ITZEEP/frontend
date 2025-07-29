@@ -569,20 +569,6 @@ async function sendMessage(content) {
   }
 }
 
-// 타이핑 상태 처리
-function handleTyping(typing) {
-  if (!chatRoomId.value || !currentUserId.value) return
-
-  try {
-    websocketService.sendMessage(`/app/chat/${chatRoomId.value}/typing`, {
-      userId: currentUserId.value,
-      isTyping: typing,
-    })
-  } catch (error) {
-    console.error('타이핑 상태 전송 오류:', error)
-  }
-}
-
 // API에서 기존 메시지 로드
 async function loadMessages() {
   if (!props.room || !props.room.chatRoomId) {
@@ -652,7 +638,6 @@ watch(chatReady, async (ready, wasReady) => {
   if (ready && !wasReady) {
     try {
       await websocketService.connect()
-
       sendOnlineStatus(true)
 
       if (chatRoomId.value) {
