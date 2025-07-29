@@ -3,7 +3,6 @@ import websocketService from '@/apis/websocket'
 
 export function useChatRoom(chatRoomId, currentUserId, roomData) {
   const messages = ref([])
-  const isTyping = ref(false)
   const onlineUsers = ref([])
   const isReady = ref(false)
   // 준비 상태 체크
@@ -45,13 +44,6 @@ export function useChatRoom(chatRoomId, currentUserId, roomData) {
       console.log('내가 받은 메시지 - 읽음 처리 필요')
     }
   }
-
-  // 타이핑 상태 핸들러
-  // const handleTypingStatus = (data) => {
-  //   if (data.userId !== currentUserId.value) {
-  //     isTyping.value = data.isTyping
-  //   }
-  // }
 
   // 채팅방 구독
   const subscribeToRoom = (roomId) => {
@@ -126,27 +118,6 @@ export function useChatRoom(chatRoomId, currentUserId, roomData) {
     }
   }
 
-  // 타이핑 상태 전송
-  const sendTypingStatus = (typing) => {
-    if (!chatRoomId.value) {
-      console.warn('타이핑 상태 전송 실패 - 채팅방 ID 없음')
-      return
-    }
-
-    if (!currentUserId.value) {
-      console.warn('타이핑 상태 전송 실패 - 사용자 ID 없음')
-      return
-    }
-    try {
-      websocketService.sendMessage(`/app/chat/${chatRoomId.value}/typing`, {
-        userId: currentUserId.value,
-        isTyping: typing,
-      })
-    } catch (error) {
-      console.error('타이핑 상태 전송 오류:', error)
-    }
-  }
-
   // currentUserId 변경 감지
   watch(
     currentUserId,
@@ -210,11 +181,9 @@ export function useChatRoom(chatRoomId, currentUserId, roomData) {
 
   return {
     messages,
-    isTyping,
     onlineUsers,
     isReady,
     sendMessage,
-    sendTypingStatus,
     getOtherUserId,
   }
 }
