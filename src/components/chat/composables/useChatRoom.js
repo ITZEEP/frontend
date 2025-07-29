@@ -47,11 +47,11 @@ export function useChatRoom(chatRoomId, currentUserId, roomData) {
   }
 
   // 타이핑 상태 핸들러
-  const handleTypingStatus = (data) => {
-    if (data.userId !== currentUserId.value) {
-      isTyping.value = data.isTyping
-    }
-  }
+  // const handleTypingStatus = (data) => {
+  //   if (data.userId !== currentUserId.value) {
+  //     isTyping.value = data.isTyping
+  //   }
+  // }
 
   // 채팅방 구독
   const subscribeToRoom = (roomId) => {
@@ -62,16 +62,12 @@ export function useChatRoom(chatRoomId, currentUserId, roomData) {
 
     // 채팅방 메시지 구독
     websocketService.onMessage(`/topic/chatroom/${roomId}`, handleNewMessage)
-
-    // 타이핑 상태 구독
-    websocketService.onMessage(`/topic/room/${roomId}/typing`, handleTypingStatus)
   }
 
   // 구독 해제
   const unsubscribeFromRoom = (roomId) => {
     if (!roomId) return
     websocketService.offMessage(`/topic/chatroom/${roomId}`)
-    websocketService.offMessage(`/topic/room/${roomId}/typing`)
   }
 
   // WebSocket 초기화 및 구독
