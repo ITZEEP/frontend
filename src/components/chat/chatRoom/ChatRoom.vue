@@ -1,8 +1,7 @@
 <template>
   <div class="h-full flex flex-col">
     <!-- 상단 헤더 -->
-    <RoomNav :room="room" />
-
+    <RoomNav :room="room" :current-user-id="currentUserId" />
     <!-- 채팅 메시지 영역 -->
     <div class="flex-1 overflow-y-auto p-4 bg-gray-50" ref="messagesContainer">
       <div v-if="loadingMessages" class="text-center text-gray-500">메시지 로딩 중...</div>
