@@ -155,17 +155,103 @@ function sortRoomsByTime(rooms) {
     })
 }
 
-// 방 선택 (현재 채팅방 ID 업데이트)
 function selectRoom(room) {
   if (!room || !room.chatRoomId) {
     console.error('유효하지 않은 채팅방:', room)
     return
   }
 
-  // 현재 선택된 채팅방 ID 업데이트
-  currentChatRoomId.value = room.chatRoomId
+  // 🔧 현재 채팅방을 다시 클릭한 경우 나가기 처리
+  if (currentChatRoomId.value === room.chatRoomId) {
+    console.log('현재 채팅방 재클릭 - 채팅방 나가기')
 
-  emit('selectRoom', room)
+    // 🔧 부모 컴포넌트에 먼저 null 전달하여 ChatRoom 컴포넌트가 정리되도록 함
+    emit('selectRoom', null)
+
+    // 🔧 ChatRoom 컴포넌트 정리 후 서버 알림 (약간의 지연)
+    setTimeout(() => {
+      handleLeaveChatRoom(room.chatRoomId)
+      cleanupChatRoomSubscriptions(room.chatRoomId)
+      currentChatRoomId.value = null
+    }, 100)
+
+    return
+  }
+
+  // 🔧 다른 채팅방 선택
+  console.log('새 채팅방 선택:', room.chatRoomId)
+
+  // 이전 채팅방에서 나가기
+  if (currentChatRoomId.value) {
+    // 🔧 이전 채팅방 정리도 ChatRoom 컴포넌트 먼저 정리
+    const previousRoomId = currentChatRoomId.value
+    emit('selectRoom', null) // 먼저 null로 설정
+
+    setTimeout(() => {
+      handleLeaveChatRoom(previousRoomId)
+      cleanupChatRoomSubscriptions(previousRoomId)
+
+      // 새 채팅방 선택
+      currentChatRoomId.value = room.chatRoomId
+      emit('selectRoom', room)
+    }, 100)
+  } else {
+    // 이전 채팅방이 없으면 바로 선택
+    currentChatRoomId.value = room.chatRoomId
+    emit('selectRoom', room)
+  }
+}
+
+// 🔧 채팅방 구독 정리 함수 추가
+async function cleanupChatRoomSubscriptions(chatRoomId) {
+  try {
+    const { default: websocketService } = await import('@/apis/websocket')
+
+    // 해당 채팅방의 모든 토픽 구독 해제
+    const topicsToCleanup = [
+      `/topic/chatroom/${chatRoomId}`,
+      `/topic/chatroom/${chatRoomId}/typing`,
+      `/topic/chatroom/${chatRoomId}/status`,
+    ]
+
+    topicsToCleanup.forEach((topic) => {
+      websocketService.offMessage(topic)
+      console.log('🧹 토픽 구독 정리:', topic)
+    })
+  } catch (error) {
+    console.error('채팅방 구독 정리 실패:', error)
+  }
+}
+
+// 🔧 서버 퇴장 알림 함수 수정
+async function handleLeaveChatRoom(chatRoomId) {
+  if (!currentUserId.value || !chatRoomId) return
+
+  try {
+    console.log('🚪 ChatList에서 명확한 채팅방 퇴장 처리:', {
+      userId: currentUserId.value,
+      chatRoomId: chatRoomId,
+    })
+
+    const { default: websocketService } = await import('@/apis/websocket')
+
+    // 🔧 1. 사용자 오프라인 상태 먼저 전송
+    websocketService.sendMessage('/app/user/online', {
+      userId: currentUserId.value,
+      isOnline: false,
+      chatRoomId: chatRoomId,
+    })
+
+    // 🔧 2. 채팅방 퇴장 알림
+    websocketService.sendMessage('/app/chat/leave', {
+      userId: currentUserId.value,
+      chatRoomId: chatRoomId,
+    })
+
+    console.log('✅ 퇴장 알림 전송 완료')
+  } catch (error) {
+    console.error('채팅방 퇴장 알림 실패:', error)
+  }
 }
 
 // 재시도
@@ -192,6 +278,9 @@ function updateRoomLastMessage(chatRoomId, message, timestamp, senderId, unreadC
   let wasUpdated = false
   const currentTime = Date.now()
 
+  // 🔧 현재 접속 중인 채팅방인지 확인
+  const isCurrentRoom = String(currentChatRoomId.value) === roomIdStr
+
   // 핵심 수정: 직접 객체 속성 변경 + 정렬
   const updateRoomList = (roomListRef, listName) => {
     const roomIndex = roomListRef.value.findIndex((room) => String(room.chatRoomId) === roomIdStr)
@@ -209,10 +298,22 @@ function updateRoomLastMessage(chatRoomId, message, timestamp, senderId, unreadC
     // 직접 속성 변경 (Vue 반응성 시스템이 감지)
     targetRoom.lastMessage = message
     targetRoom.lastMessageAt = timestamp || new Date().toISOString()
-    targetRoom.unreadMessageCount =
-      unreadCountFromBackend !== undefined
-        ? unreadCountFromBackend
-        : targetRoom.unreadMessageCount || 0
+
+    // 🔧 현재 접속 중인 채팅방이면 읽지 않은 메시지 수를 0으로 유지
+    if (isCurrentRoom) {
+      targetRoom.unreadMessageCount = 0
+      console.log(`현재 접속 중인 채팅방 ${roomIdStr} - 읽지 않은 메시지 수 0으로 유지`)
+    } else {
+      // 접속하지 않은 채팅방만 읽지 않은 메시지 수 증가
+      targetRoom.unreadMessageCount =
+        unreadCountFromBackend !== undefined
+          ? unreadCountFromBackend
+          : (targetRoom.unreadMessageCount || 0) + 1
+      console.log(
+        `접속하지 않은 채팅방 ${roomIdStr} - 읽지 않은 메시지 수: ${targetRoom.unreadMessageCount}`,
+      )
+    }
+
     targetRoom._lastUpdated = currentTime
 
     // 최신 메시지를 맨 위로 이동 (시간 순 정렬 유지)
@@ -362,7 +463,7 @@ defineExpose({
   },
 })
 
-// 웹소켓 구독 설정
+// 🔧 웹소켓 구독 설정 - 사용자 토픽만 구독
 async function setupWebSocketSubscriptions() {
   try {
     const { default: websocketService } = await import('@/apis/websocket')
@@ -370,7 +471,7 @@ async function setupWebSocketSubscriptions() {
       await websocketService.connect()
     }
 
-    // 사용자별 채팅방 목록 업데이트 토픽 구독
+    // 🔧 사용자별 채팅방 목록 업데이트 토픽만 구독
     const userTopic = `/topic/user/${currentUserId.value}/chatrooms`
     console.log('사용자 구독:', userTopic)
 
@@ -390,6 +491,9 @@ async function setupWebSocketSubscriptions() {
         handleWebSocketMessage({ body: JSON.stringify(message) })
       }
     })
+
+    // 🔧 중요: 개별 채팅방 토픽은 구독하지 않음!
+    // 채팅방 토픽 구독은 ChatRoom 컴포넌트에서만 처리
   } catch (error) {
     console.error('websocketService 로드 실패:', error)
     setupFallbackMethod()
@@ -410,8 +514,8 @@ function setupFallbackMethod() {
 }
 
 onMounted(async () => {
-  await setCurrentUserId() // await 추가
-  await loadChatRooms() // await 추가
+  await setCurrentUserId()
+  await loadChatRooms()
 
   if (currentUserId.value) {
     await setupWebSocketSubscriptions()
