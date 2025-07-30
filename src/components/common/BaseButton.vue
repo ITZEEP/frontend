@@ -4,7 +4,9 @@
       'rounded-md font-medium flex items-center justify-center transition-colors duration-200',
       sizeClasses,
       variantClasses,
+      props.disabled && 'opacity-50 cursor-not-allowed',
     ]"
+    :disabled="props.disabled"
     @click="onClick"
   >
     <slot />
@@ -29,6 +31,10 @@ const props = defineProps({
   size: {
     type: String,
     default: 'md', // 'sm', 'md', 'lg'
+  },
+  disabled: {
+    type: Boolean,
+    default: false,
   },
 })
 

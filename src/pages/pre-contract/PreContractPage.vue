@@ -1,13 +1,5 @@
-<template>
-  <section class="pre-contract-page">
-    <PreContractLayout :currentStep="step" :role="role">
-      <component :is="currentStepComponent" />
-    </PreContractLayout>
-  </section>
-</template>
-
 <script setup>
-import { computed } from 'vue'
+import { computed, h } from 'vue'
 import { useRoute } from 'vue-router'
 
 // 레이아웃 공통
@@ -22,14 +14,17 @@ import BuyerStep5 from '@/components/pre-contract/buyer/Step5Environment.vue'
 import BuyerStep6 from '@/components/pre-contract/buyer/Step06Confirm.vue'
 
 // owner 컴포넌트
-import OwnerStep1 from '@/components/pre-contract/owner/Step1BasicInfo.vue'
-import OwnerStep2 from '@/components/pre-contract/owner/Step2Verification.vue'
-import OwnerStep3 from '@/components/pre-contract/owner/Step3FacilityResponsibility.vue'
-import OwnerStep4 from '@/components/pre-contract/owner/Step4ContractTerms.vue'
-import OwnerStep5 from '@/components/pre-contract/owner/Step5Confirm.vue'
-import OwnerStep6 from '@/components/pre-contract/owner/Step6UploadTerms.vue'
+import OwnerStep1 from '@/components/pre-contract/owner/step1/Step1BasicInfo.vue'
+import OwnerStep2 from '@/components/pre-contract/owner/step2/Step2Verification.vue'
+import OwnerStep3 from '@/components/pre-contract/owner/step3/Step3ContractTerms.vue'
+import OwnerStep4 from '@/components/pre-contract/owner/step4/Step4LivingConditions.vue'
+import OwnerStep5 from '@/components/pre-contract/owner/step5/Step5UploadTerms.vue'
+import OwnerStep6 from '@/components/pre-contract/owner/step6/Step6Confirm.vue'
 
-// 라우터 정보 가져오기
+import { usePreContractStore } from '@/stores/preContract'
+const store = usePreContractStore()
+
+// 라우터 정보
 const route = useRoute()
 const role = computed(() => route.params.role)
 const step = computed(() => Number(route.query.step) || 1)
@@ -54,10 +49,26 @@ const stepComponentsMap = {
   },
 }
 
-const currentStepComponent = computed(() => {
+const currentStepComponent = (subStep) => {
   const roleSteps = stepComponentsMap[role.value]
-  return roleSteps ? roleSteps[step.value] : null
-})
+  const stepKey = `${role.value}-${step.value}`
+  const hasSubStep = store.subSteps[stepKey] > 1
+
+  const comp = roleSteps?.[step.value]
+  if (hasSubStep && comp) {
+    return () => h(comp, { subStep })
+  }
+
+  return typeof comp === 'function' ? comp() : comp
+}
 </script>
 
-<style scoped></style>
+<template>
+  <section class="pre-contract-page">
+    <PreContractLayout :currentStep="step" :role="role">
+      <template #default="{ subStep }">
+        <component :is="currentStepComponent(subStep)" />
+      </template>
+    </PreContractLayout>
+  </section>
+</template>

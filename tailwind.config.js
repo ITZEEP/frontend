@@ -54,6 +54,10 @@ export default {
           50: '#FFF7ED',
         },
       },
+      spacing: {
+        'layout-x': '64px',
+        'layout-y': '20px',
+      },
     },
   },
   plugins: [],

@@ -23,6 +23,7 @@
 </template>
 
 <script setup>
+import { defineProps, watch } from 'vue'
 import { useModalStore } from '@/stores/modal'
 
 const modalStore = useModalStore()
@@ -51,6 +52,14 @@ function onMaskClick() {
     handleClose()
   }
 }
+
+watch(
+  () => modalStore.isOpen,
+  (isOpen) => {
+    document.body.style.overflow = isOpen ? 'hidden' : ''
+  },
+  { immediate: true },
+)
 </script>
 
 <style scoped>

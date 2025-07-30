@@ -1,0 +1,133 @@
+[
+  {
+    "home": {
+      "home_id": 101,
+      "title": "신당동 아파트",
+      "addr1": "서울특별시 중구",
+      "addr2": "신당동 123-45",
+      "lease_type": "WOLSE",
+      "deposit_price": 1500,
+      "monthly_rent": 95,
+      "maintenance_fee": 5,
+      "home_status": "AVAILABLE",
+      "room_cnt": 1,
+      "bathroom_count": 1,
+      "supply_area": 56.19,
+      "exclusive_area": 48.28,
+      "created_at": "2024-06-01T00:00:00",
+      "view_cnt": 123,
+      "like_cnt": 10,
+      "chat_cnt": 3
+    },
+    "home_detail": {
+      "home_detail_id": 555,
+      "home_id": 101,
+      "build_date": "2018-06-01",
+      "home_floor": 8,
+      "building_total_floors": 12,
+      "home_direction": "S"
+    },
+    "maintenance_items": [
+      { "item_name": "전기" },
+      { "item_name": "수도" },
+      { "item_name": "TV" },
+      { "item_name": "인터넷" },
+      { "item_name": "청소" },
+      { "item_name": "난방" }
+    ],
+    "facilities": {
+      "건물 시설": ["엘리베이터", "계단방범", "주차가능"],
+      "내부 시설": ["에어컨", "TV", "냉장고", "가스레인지", "세탁기", "옷장"],
+      "보안 시설": ["CCTV", "도어락", "카드키", "경비"]
+    },
+    "images": [
+      {
+        "image_id": 1,
+        "space_type": "거실",
+        "image_url": "https://cdn.pixabay.com/photo/2024/05/22/01/39/room-8779502_1280.png  "
+      },
+      {
+        "image_id": 2,
+        "space_type": "침실",
+        "image_url": "https://cdn.pixabay.com/photo/2018/08/09/06/13/home-3593832_1280.jpg"
+      },
+      {
+        "image_id": 3,
+        "space_type": "주방",
+        "image_url": "https://cdn.pixabay.com/photo/2024/05/22/01/39/room-8779502_1280.png"
+      },
+      {
+        "image_id": 1,
+        "space_type": "거실",
+        "image_url": "https://cdn.pixabay.com/photo/2024/05/22/01/39/room-8779502_1280.png  "
+      },
+      {
+        "image_id": 1,
+        "space_type": "거실",
+        "image_url": "https://cdn.pixabay.com/photo/2024/05/22/01/39/room-8779502_1280.png  "
+      }
+    ]
+  },
+  {
+    "home": {
+      "home_id": 202,
+      "title": "삼성힐 아파트",
+      "addr1": "서울특별시 강남구",
+      "addr2": "삼성동 456-78",
+      "lease_type": "JEONSE",
+      "deposit_price": 8500,
+      "monthly_rent": 0,
+      "maintenance_fee": 12,
+      "home_status": "RESERVED",
+      "room_cnt": 3,
+      "bathroom_count": 2,
+      "supply_area": 84.95,
+      "exclusive_area": 68.52,
+      "created_at": "2024-07-10T00:00:00",
+      "view_cnt": 245,
+      "like_cnt": 31,
+      "chat_cnt": 5
+    },
+    "home_detail": {
+      "home_detail_id": 888,
+      "home_id": 202,
+      "build_date": "2015-11-01",
+      "home_floor": 15,
+      "building_total_floors": 25,
+      "home_direction": "SE"
+    },
+    "maintenance_items": [
+      { "item_name": "전기" },
+      { "item_name": "인터넷" },
+      { "item_name": "TV" },
+      { "item_name": "청소" }
+    ],
+    "facilities": {
+      "건물 시설": ["엘리베이터", "비상계단", "지하주차장", "택배함"],
+      "내부 시설": ["빌트인 냉장고", "식기세척기", "인덕션", "세탁기", "붙박이장", "중문"],
+      "보안 시설": ["CCTV", "로비도어", "비밀번호 출입", "스마트폰 연동 도어락"]
+    },
+    "images": [
+      {
+        "image_id": 1,
+        "space_type": "거실",
+        "image_url": "https://cdn.pixabay.com/photo/2024/05/22/01/39/room-8779502_1280.png"
+      },
+      {
+        "image_id": 2,
+        "space_type": "침실",
+        "image_url": "https://cdn.pixabay.com/photo/2018/08/09/06/13/home-3593832_1280.jpg"
+      },
+      {
+        "image_id": 3,
+        "space_type": "욕실",
+        "image_url": "https://cdn.pixabay.com/photo/2018/08/09/03/58/home-3593729_1280.jpg"
+      },
+      {
+        "image_id": 4,
+        "space_type": "주방",
+        "image_url": "https://cdn.pixabay.com/photo/2024/05/22/01/39/room-8779502_1280.png"
+      }
+    ]
+  }
+]
