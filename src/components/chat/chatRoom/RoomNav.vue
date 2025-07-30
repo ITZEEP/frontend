@@ -78,9 +78,9 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import { getChatRoomInfo } from '@/apis/chatApi'
+import { getChatRoomInfo, requestContract } from '@/apis/chatApi'
 import BaseButton from '@/components/common/BaseButton.vue'
-import { useRouter } from 'vue-router'
+// import { useRouter } from 'vue-router'
 
 const props = defineProps({
   room: {
@@ -98,7 +98,7 @@ const props = defineProps({
 const propertyInfo = ref(null)
 const loadingProperty = ref(false)
 
-const router = useRouter()
+// const router = useRouter()
 
 // 현재 사용자가 구매자인지 확인
 const isBuyer = computed(() => {
@@ -109,10 +109,7 @@ const isBuyer = computed(() => {
 const handleClickGoToContract = () => {
   if (!props.room?.chatRoomId) return
 
-  router.push({
-    path: `/pre-contract/${props.room.chatRoomId}/owner`,
-    query: { step: 1 },
-  })
+  requestContract(props.room?.chatRoomId)
 }
 
 // 매물 정보 API 호출
