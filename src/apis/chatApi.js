@@ -39,6 +39,8 @@ async function apiRequest(url, options = {}) {
   }
 }
 
+const apiPost = (url, data = {}) => apiRequest(url, { method: 'POST', data })
+
 export async function getOwnerChatRooms() {
   return apiRequest('/rooms/owner')
 }
@@ -259,6 +261,26 @@ export async function getChatRoomInfo(chatRoomId) {
     return result
   } catch (error) {
     console.error('채팅방 정보 조회 실패:', error)
+    throw error
+  }
+}
+
+export async function requestContract(chatRoomId) {
+  try {
+    const result = await apiPost(`/rooms/${chatRoomId}/contract-request`)
+    return result
+  } catch (error) {
+    console.error('계약 요청 실패', error)
+    throw error
+  }
+}
+
+export async function acceptContract(chatRoomId) {
+  try {
+    const result = await apiPost(`/rooms/${chatRoomId}/contract-accept`)
+    return result
+  } catch (error) {
+    console.error('계약 수락 실패', error)
     throw error
   }
 }
