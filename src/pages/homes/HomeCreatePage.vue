@@ -117,8 +117,6 @@ function validateCurrentStep() {
       return f.houseType !== '' && f.dealType !== ''
     case 2:
       return Number(f.deposit) > 0 || Number(f.monthly) > 0
-    case 4:
-      return f.images.length > 0
     default:
       return true
   }
@@ -130,7 +128,7 @@ function validateCurrentStep() {
   background-color: #facc15;
 }
 
-.bg-yellow-hover {
+.bg-yellow-primary {
   background-color: #eab308;
 }
 </style>

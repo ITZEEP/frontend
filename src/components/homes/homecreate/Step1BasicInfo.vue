@@ -2,9 +2,9 @@
 import BaseButton from '@/components/common/BaseButton.vue'
 import BaseModal from '@/components/common/BaseModal.vue'
 import SearchAddress from '@/components/common/SearchAddress.vue'
+import BaseRadio from '@/components/common/BaseRadio.vue'
 import { useModalStore } from '@/stores/modal'
 
-// Props 받음 (외부에서 form 객체 전달)
 const props = defineProps({
   form: {
     type: Object,
@@ -22,11 +22,18 @@ const props = defineProps({
   },
 })
 
+const emit = defineEmits(['update:form'])
 const modalStore = useModalStore()
 
-// 주소 선택 시 호출되는 함수 (SearchAddress의 'select' 이벤트 핸들러)
+const updateForm = (field, value) => {
+  emit('update:form', {
+    ...props.form,
+    [field]: value,
+  })
+}
+
 const onAddressSelect = (selectedAddress) => {
-  props.form.address = selectedAddress
+  updateForm('address', selectedAddress)
   modalStore.close()
 }
 </script>
@@ -57,7 +64,7 @@ const onAddressSelect = (selectedAddress) => {
               ? 'bg-yellow-primary text-white border-yellow-primary'
               : 'bg-white text-gray-700 hover:bg-gray-50',
           ]"
-          @click="props.form.houseType = type"
+          @click="updateForm('houseType', type)"
           type="button"
         >
           {{ type }}
@@ -71,28 +78,22 @@ const onAddressSelect = (selectedAddress) => {
         거래 유형 <span class="text-red-500">*</span>
       </label>
       <div class="flex gap-6">
-        <label
+        <BaseRadio
           v-for="type in ['월세', '전세']"
           :key="type"
-          class="flex items-center cursor-pointer text-gray-700"
-        >
-          <input
-            type="radio"
-            class="form-radio accent-blue-500 w-4 h-4"
-            name="dealType"
-            :value="type"
-            v-model="props.form.dealType"
-          />
-          <span class="ml-2 select-none">{{ type }}</span>
-        </label>
+          v-model="props.form.dealType"
+          :value="type"
+          :label="type"
+          name="dealType"
+        />
       </div>
     </div>
 
     <!-- 주소 입력 -->
     <div>
-      <label class="block mb-1 text-sm font-medium text-gray-600"
-        >주소<span class="text-red-500">*</span></label
-      >
+      <label class="block mb-1 text-sm font-medium text-gray-600">
+        주소<span class="text-red-500">*</span>
+      </label>
       <div class="flex gap-2">
         <input
           class="w-full rounded-md border border-gray-300 px-4 py-2 text-sm"
@@ -116,7 +117,8 @@ const onAddressSelect = (selectedAddress) => {
     <div>
       <label class="block mb-1 text-sm font-medium text-gray-600">상세 주소</label>
       <input
-        v-model="props.form.detailAddress"
+        :value="props.form.detailAddress"
+        @input="updateForm('detailAddress', $event.target.value)"
         class="w-full rounded-md border border-gray-300 px-4 py-2 text-sm"
         type="text"
         placeholder="상세 주소를 입력하세요"

@@ -1,6 +1,6 @@
 <template>
   <div class="max-w-3xl mx-auto p-6 space-y-6">
-    <!-- 제목 및 업로드 설명 -->
+    <!-- 설명 -->
     <label for="description" class="block font-semibold mb-1">
       사진 및 설명 <span class="text-red-600">*</span>
     </label>
@@ -8,7 +8,7 @@
       최소 1장 이상, 최대 5장까지 업로드 가능합니다. (1장당 최대 10MB)
     </p>
 
-    <!-- 파일 업로드 영역 -->
+    <!-- 파일 업로드 -->
     <label
       for="fileInput"
       class="relative cursor-pointer block w-full border-2 border-dashed border-gray-300 rounded-md p-10 text-center hover:border-gray-400 transition-colors"
@@ -43,7 +43,7 @@
       />
     </label>
 
-    <!-- 업로드된 이미지 썸네일 -->
+    <!-- 썸네일 미리보기 -->
     <div class="flex flex-wrap gap-3 mt-2">
       <div
         v-for="(file, index) in files"
@@ -79,89 +79,52 @@
       </div>
     </div>
 
-    <!-- 인증 안내 및 모달 -->
+    <!-- 본인 인증 안내 -->
     <div
       class="flex items-center gap-3 bg-yellow-100 border border-yellow-primary rounded p-3 text-yellow-800 text-sm"
       role="alert"
     >
-      <p>매물 등록을 위해 실명 인증이 필요합니다.<br />본인 인증을 완료해주세요.</p>
+      <p>
+        매물 등록을 위해 실명 인증이 필요합니다.<br />
+        본인 인증을 완료해주세요.
+      </p>
       <button
         type="button"
         class="ml-auto bg-yellow-primary text-yellow-900 font-semibold px-4 py-1 rounded hover:bg-yellow-primary"
-        @click="showModal = true"
+        @click="showVerification = true"
       >
         인증하기
       </button>
     </div>
 
-    <!-- 본인 인증 모달 -->
-    <div v-if="showModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div class="bg-white p-6 rounded-lg w-full max-w-md shadow-lg space-y-4">
-        <div class="w-full flex flex-col gap-3">
-          <BaseInput v-model="username" label="이름" placeholder="이름을 입력하세요" />
-
-          <div class="w-full flex gap-2">
-            <BaseInput
-              v-model="ssnFront"
-              label="주민번호 앞자리"
-              placeholder="앞 6자리"
-              id="ssnFront"
-              :inputClass="'[appearance:textfield]'"
-              @input="onFrontInput"
-            />
-            <BaseInput
-              v-model="ssnBack"
-              label="주민번호 뒷자리"
-              placeholder="뒤 7자리"
-              id="ssnBack"
-              @input="onBackInput"
-            />
-          </div>
-
-          <BaseInput v-model="issueDate" label="주민등록증 발급일자" type="date" />
-
-          <BaseInput
-            v-model="phone"
-            label="전화번호"
-            placeholder="010-1234-5678"
-            id="phone"
-            type="tel"
-            @input="onPhoneInput"
-          />
-
-          <BaseButton
-            variant="primary"
-            size="lg"
-            class="mt-2"
-            :disabled="!isFormValid"
-            @click="handleVerify"
-          >
-            인증하기
-          </BaseButton>
-
-          <LoadingOverlay
-            :loading="isLoading"
-            message="인증 중입니다"
-            subMessage="잠시만 기다려주세요"
-          />
-        </div>
+    <!-- 본인인증 컴포넌트 직접 렌더링 -->
+    <div
+      v-if="showVerification"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+    >
+      <div class="bg-white rounded-lg p-6 w-full max-w-md relative">
+        <button
+          @click="showVerification = false"
+          class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-xl"
+        >
+          ×
+        </button>
+        <UserVerification @verified="handleVerified" />
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
-import BaseInput from '@/components/common/BaseInput.vue'
-import BaseButton from '@/components/common/BaseButton.vue'
-import LoadingOverlay from '@/components/common/LoadingOverlay.vue'
+import { ref } from 'vue'
+import UserVerification from '@/components/pre-contract/common/UserVerification.vue'
 
 const files = ref([])
+const description = ref('')
 const maxFiles = 5
 const maxSizeMB = 10
 const maxLength = 1000
-const description = ref('')
-const showModal = ref(false)
+const showVerification = ref(false)
 
 let idCounter = 0
 
@@ -190,6 +153,7 @@ function addFiles(fileList) {
       alert(`파일 크기는 최대 ${maxSizeMB}MB 입니다.`)
       continue
     }
+
     const url = URL.createObjectURL(file)
     files.value.push({ id: idCounter++, file, url })
   }
@@ -200,41 +164,8 @@ function removeFile(index) {
   files.value.splice(index, 1)
 }
 
-const username = ref('')
-const ssnFront = ref('')
-const ssnBack = ref('')
-const issueDate = ref('')
-const phone = ref('')
-const isLoading = ref(false)
-
-function onFrontInput(e) {
-  ssnFront.value = e.target.value.replace(/[^0-9]/g, '')
-}
-
-function onBackInput(e) {
-  ssnBack.value = e.target.value.replace(/[^0-9]/g, '')
-}
-
-function onPhoneInput(e) {
-  phone.value = e.target.value.replace(/[^0-9\-]/g, '')
-}
-
-const isFormValid = computed(() => {
-  return (
-    username.value.trim() !== '' &&
-    ssnFront.value.length === 6 &&
-    ssnBack.value.length === 7 &&
-    issueDate.value !== '' &&
-    phone.value.trim() !== ''
-  )
-})
-
-function handleVerify() {
-  isLoading.value = true
-  setTimeout(() => {
-    isLoading.value = false
-    alert('인증이 완료되었습니다.')
-    showModal.value = false
-  }, 2000)
+function handleVerified() {
+  showVerification.value = false
+  alert('인증이 완료되었습니다.')
 }
 </script>

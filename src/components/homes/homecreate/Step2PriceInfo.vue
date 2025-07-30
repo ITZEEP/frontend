@@ -1,4 +1,6 @@
 <script setup>
+import BaseCheckBox from '@/components/common/BaseCheckBox.vue'
+
 const emit = defineEmits(['update:form'])
 
 const props = defineProps({
@@ -99,15 +101,13 @@ const utilityItems = {
 
       <!-- 관리비 항목 -->
       <div class="grid grid-cols-2 gap-2">
-        <label v-for="(label, key) in utilityItems" :key="key" class="inline-flex items-center">
-          <input
-            type="checkbox"
-            :checked="form.utilities[key]"
-            @change="updateUtility(key, $event.target.checked)"
-            class="form-checkbox"
-          />
-          <span class="ml-2">{{ label }}</span>
-        </label>
+        <BaseCheckBox
+          v-for="(label, key) in utilityItems"
+          :key="key"
+          :label="label"
+          :modelValue="form.utilities[key]"
+          @update:modelValue="(checked) => updateUtility(key, checked)"
+        />
       </div>
     </div>
 
@@ -161,15 +161,13 @@ const utilityItems = {
 
       <!-- 관리비 항목 -->
       <div class="grid grid-cols-2 gap-2">
-        <label v-for="(label, key) in utilityItems" :key="key" class="inline-flex items-center">
-          <input
-            type="checkbox"
-            :checked="form.utilities[key]"
-            @change="updateUtility(key, $event.target.checked)"
-            class="form-checkbox"
-          />
-          <span class="ml-2">{{ label }}</span>
-        </label>
+        <BaseCheckBox
+          v-for="(label, key) in utilityItems"
+          :key="key"
+          :label="label"
+          :modelValue="form.utilities[key]"
+          @update:modelValue="(checked) => updateUtility(key, checked)"
+        />
       </div>
     </div>
   </div>
