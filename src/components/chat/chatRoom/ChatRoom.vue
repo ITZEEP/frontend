@@ -1,9 +1,21 @@
 <template>
-  <div class="h-full flex flex-col">
+  <!-- 🔧 사용자 정보가 로드될 때까지 로딩 표시 -->
+  <div v-if="!userLoaded || !currentUserId" class="h-full flex items-center justify-center">
+    <div class="text-center">
+      <div
+        class="animate-spin w-8 h-8 border-2 border-gray-300 border-t-yellow-primary rounded-full mx-auto mb-2"
+      ></div>
+      <p class="text-gray-500">사용자 정보 로딩 중...</p>
+    </div>
+  </div>
+
+  <!-- 🔧 사용자 정보가 로드된 후에만 채팅방 컴포넌트 렌더링 -->
+  <div v-else class="h-full flex flex-col">
     <!-- 상단 헤더 -->
     <RoomNav :room="room" :current-user-id="currentUserId" />
+
     <!-- 채팅 메시지 영역 -->
-    <div class="flex-1 overflow-y-auto p-4 bg-gray-50" ref="messagesContainer">
+    <div class="flex-1 p-4 bg-gray-50 chat-messages-container" ref="messagesContainer">
       <div v-if="loadingMessages" class="text-center text-gray-500">메시지 로딩 중...</div>
 
       <div v-else-if="messagesError" class="text-center text-red-500">
@@ -15,7 +27,7 @@
         <div
           v-for="message in apiMessages"
           :key="'api-' + message.id"
-          class="mb-4"
+          class="mb-4 message-item"
           :class="{ 'text-right': isMyMessage(message) }"
         >
           <div
@@ -40,13 +52,14 @@
                   class="max-w-60 max-h-60 rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
                   @click="openImageModal(message.fileUrl, message.content)"
                   @error="handleImageError"
+                  @load="handleImageLoad"
                 />
                 <div class="text-xs opacity-75">{{ message.content }}</div>
               </div>
 
               <!-- 동영상 파일 -->
               <div v-else-if="isVideoFile(message.fileUrl)" class="space-y-2">
-                <video controls class="max-w-60 max-h-60 rounded-lg">
+                <video controls class="max-w-60 max-h-60 rounded-lg" @loadeddata="handleVideoLoad">
                   <source :src="message.fileUrl" type="video/mp4" />
                   <source :src="message.fileUrl" type="video/webm" />
                   <source :src="message.fileUrl" type="video/ogg" />
@@ -69,12 +82,21 @@
               </div>
             </div>
 
+            <div v-else-if="message.type === 'CONTRACT_REQUEST'">
+              <BaseButton @click="handleAcceptContract">계약 요청 수락하기</BaseButton>
+              <BaseButton>거절</BaseButton>
+            </div>
+
             <div class="text-xs mt-1 opacity-70 flex justify-between items-center">
               <span>{{ formatMessageTime(message.sendTime) }}</span>
               <span v-if="isMyMessage(message) && message.isRead" class="text-white ml-2"
                 >읽음</span
               >
             </div>
+
+            <BaseButton v-if="isSuccessBuildContract" @click="handleGoToContractRoom"
+              >계약서 작성하러 가기</BaseButton
+            >
           </div>
         </div>
 
@@ -82,7 +104,7 @@
         <div
           v-for="(message, index) in webSocketMessages"
           :key="'ws-' + (message.id || message.sendTime || index)"
-          class="mb-4"
+          class="mb-4 message-item"
           :class="{ 'text-right': isMyMessage(message) }"
         >
           <div
@@ -107,13 +129,14 @@
                   class="max-w-60 max-h-60 rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
                   @click="openImageModal(message.fileUrl, message.content)"
                   @error="handleImageError"
+                  @load="handleImageLoad"
                 />
                 <div class="text-xs opacity-75">{{ message.content }}</div>
               </div>
 
               <!-- 동영상 파일 -->
               <div v-else-if="isVideoFile(message.fileUrl)" class="space-y-2">
-                <video controls class="max-w-60 max-h-60 rounded-lg">
+                <video controls class="max-w-60 max-h-60 rounded-lg" @loadeddata="handleVideoLoad">
                   <source :src="message.fileUrl" type="video/mp4" />
                   <source :src="message.fileUrl" type="video/webm" />
                   <source :src="message.fileUrl" type="video/ogg" />
@@ -153,12 +176,7 @@
     </div>
 
     <!-- 입력창 -->
-    <ChatInput
-      @sendMessage="sendMessage"
-      @typing="handleTyping"
-      :chatRoomId="chatRoomId"
-      :receiverId="getOtherUserId()"
-    />
+    <ChatInput @sendMessage="sendMessage" :chatRoomId="chatRoomId" :receiverId="getOtherUserId()" />
 
     <!-- 이미지 확대 모달 -->
     <div
@@ -190,8 +208,10 @@
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import RoomNav from './RoomNav.vue'
 import ChatInput from './ChatInput.vue'
-import { getChatMessages, getCurrentUser, markChatRoomAsRead } from '@/apis/chatApi'
+import { acceptContract, getChatMessages, getCurrentUser, markChatRoomAsRead } from '@/apis/chatApi'
 import websocketService from '../../../apis/websocket'
+import BaseButton from '@/components/common/BaseButton.vue'
+import router from '@/router'
 
 const props = defineProps({
   room: {
@@ -200,6 +220,8 @@ const props = defineProps({
     default: null,
   },
 })
+
+const emit = defineEmits(['room-closed'])
 
 // API에서 로드된 기존 메시지들
 const apiMessages = ref([])
@@ -229,6 +251,13 @@ const imageModal = ref({
   src: '',
   alt: '',
 })
+
+// 계약 수락 시 채팅방 성공
+const isSuccessBuildContract = ref(false)
+const contractRoomId = ref('')
+
+// 🔧 MutationObserver 참조
+let mutationObserver = null
 
 // 파일 타입 확인 함수들
 function isImageFile(url) {
@@ -308,19 +337,38 @@ function handleImageError(event) {
   console.error('이미지 로드 실패:', event.target.src)
 }
 
+// 🔧 이미지/비디오 로드 완료 시 스크롤
+function handleImageLoad() {
+  forceScrollToBottom()
+}
+
+function handleVideoLoad() {
+  forceScrollToBottom()
+}
+
 // 사용자 정보 로드
 async function loadUserInfo() {
+  if (userLoaded.value && currentUserId.value) {
+    return // 이미 로드됨
+  }
+
   try {
+    console.log('🔄 사용자 정보 로딩 시작...')
+
     const userInfo = await getCurrentUser()
 
     if (userInfo.success && userInfo.data.userId) {
       currentUserId.value = userInfo.data.userId
       userLoaded.value = true
+
+      console.log('✅ 사용자 정보 로드 완료:', currentUserId.value)
     } else {
       throw new Error('사용자 정보가 유효하지 않습니다.')
     }
   } catch (error) {
     console.error('❌ 사용자 정보 로드 실패:', error)
+    // 🔧 오류 발생 시에도 userLoaded를 true로 설정하여 무한 로딩 방지
+    userLoaded.value = true
   }
 }
 
@@ -366,21 +414,6 @@ const notifyEnterChatRoom = () => {
   }
 }
 
-// 채팅방 퇴장 WebSocket 알림 (핵심!)
-const notifyLeaveChatRoom = () => {
-  if (!currentUserId.value) return
-
-  try {
-    console.log('🚪 채팅방 퇴장 알림 전송:', { userId: currentUserId.value })
-
-    websocketService.sendMessage('/app/chat/leave', {
-      userId: currentUserId.value,
-    })
-  } catch (error) {
-    console.error('채팅방 퇴장 알림 실패:', error)
-  }
-}
-
 // 백엔드 API 호출을 통한 읽음 처리
 const markChat = async (chatRoomId) => {
   if (!chatRoomId || hasMarkedAsRead.value) {
@@ -393,7 +426,6 @@ const markChat = async (chatRoomId) => {
   }
 
   try {
-    // API 파일의 함수 사용 (fetch 직접 호출 대신)
     await markChatRoomAsRead(chatRoomId)
 
     hasMarkedAsRead.value = true
@@ -411,27 +443,19 @@ const markChat = async (chatRoomId) => {
   }
 }
 
-// 스크롤 기반 읽음 처리
+// 🔧 스크롤 기반 읽음 처리 - 항상 아래로 스크롤
 function checkIfUserAtBottom() {
   if (!messagesContainer.value) return true
 
-  const container = messagesContainer.value
-  const threshold = 100
-  const isAtBottom =
-    container.scrollHeight - container.scrollTop - container.clientHeight < threshold
+  // 🔧 항상 맨 아래로 스크롤하도록 강제
+  // forceScrollToBottom()
 
-  shouldScrollToBottom.value = isAtBottom
-
-  if (
-    isAtBottom &&
-    props.room?.unreadMessageCount > 0 &&
-    !hasMarkedAsRead.value &&
-    chatRoomId.value
-  ) {
+  // 읽음 처리
+  if (props.room?.unreadMessageCount > 0 && !hasMarkedAsRead.value && chatRoomId.value) {
     markChat(chatRoomId.value)
   }
 
-  return isAtBottom
+  return true // 항상 맨 아래에 있다고 가정
 }
 
 // 온라인 상태 전송
@@ -450,7 +474,7 @@ const sendOnlineStatus = (isOnline) => {
   }
 }
 
-// 강제 스크롤 - 더 강력하게 개선
+// 🔧 스크롤을 항상 맨 아래로 유지하는 강화된 함수
 function forceScrollToBottom() {
   if (!messagesContainer.value) return
 
@@ -459,31 +483,36 @@ function forceScrollToBottom() {
   // 즉시 스크롤
   container.scrollTop = container.scrollHeight
 
-  // Vue의 다음 렌더링 사이클 후 스크롤
+  // Vue의 반응성 업데이트 후 스크롤
   nextTick(() => {
     container.scrollTop = container.scrollHeight
+
+    // 🔧 추가: 더 확실한 스크롤 처리
+    setTimeout(() => {
+      container.scrollTop = container.scrollHeight
+    }, 10)
+
+    setTimeout(() => {
+      container.scrollTop = container.scrollHeight
+    }, 50)
+
+    setTimeout(() => {
+      container.scrollTop = container.scrollHeight
+    }, 100)
   })
 
-  // 여러 타이밍에 스크롤 시도
-  setTimeout(() => {
-    container.scrollTop = container.scrollHeight
-  }, 10)
-
-  setTimeout(() => {
-    container.scrollTop = container.scrollHeight
-  }, 50)
-
-  setTimeout(() => {
-    container.scrollTop = container.scrollHeight
-  }, 100)
-
-  // 애니메이션 프레임 사용
+  // 애니메이션 프레임 사용으로 렌더링 완료 후 스크롤
   requestAnimationFrame(() => {
     container.scrollTop = container.scrollHeight
+
+    // 🔧 한 번 더 확실하게
+    requestAnimationFrame(() => {
+      container.scrollTop = container.scrollHeight
+    })
   })
 }
 
-// WebSocket 메시지 핸들러 개선 (자동 부모 업데이트 포함)
+// 🔧 WebSocket 메시지 핸들러 - 스크롤 강화
 const directMessageHandler = async (message) => {
   // 중복 메시지 체크
   const isDuplicate = webSocketMessages.value.some(
@@ -501,19 +530,26 @@ const directMessageHandler = async (message) => {
   webSocketMessages.value.push(message)
   console.log('직접 추가 후 배열:', webSocketMessages.value)
 
-  // 새 메시지가 추가되면 즉시 스크롤
+  // 🔧 새 메시지 추가 시 여러 타이밍으로 스크롤 보장
+  forceScrollToBottom()
+
   nextTick(() => {
     forceScrollToBottom()
   })
 
-  // 새 메시지가 오면 무조건 부모 컴포넌트에 알림 (자동 업데이트 핵심!)
+  // 🔧 약간의 지연 후에도 한 번 더 스크롤 (이미지 로딩 등을 고려)
+  setTimeout(() => {
+    forceScrollToBottom()
+  }, 200)
+
+  // 새 메시지가 오면 무조건 부모 컴포넌트에 알림
   if (window.updateChatRoomList) {
     window.updateChatRoomList(
       message.chatRoomId,
       message.content,
       message.sendTime,
       message.senderId,
-      undefined, // unreadCount는 백엔드에서 계산
+      undefined,
     )
   } else {
     console.warn('window.updateChatRoomList 함수가 없음!')
@@ -526,20 +562,16 @@ const directMessageHandler = async (message) => {
     message.chatRoomId === chatRoomId.value
   ) {
     try {
-      // 백엔드에 읽음 처리 요청 (가장 중요!)
       await markChatRoomAsRead(message.chatRoomId)
-
-      // 프론트엔드에서도 읽음 상태 변경
       message.isRead = true
     } catch (error) {
       console.error('실시간 메시지 읽음 처리 실패:', error)
-      // 백엔드 실패해도 프론트엔드에서는 읽음 처리
       message.isRead = true
     }
   }
 }
 
-// 메시지 전송
+// 🔧 메시지 전송 - 스크롤 강화
 async function sendMessage(content) {
   if (isSendingMessage.value) {
     return
@@ -566,11 +598,21 @@ async function sendMessage(content) {
     )
 
     if (success) {
-      shouldScrollToBottom.value = true
-      // 메시지 전송 후 강제 스크롤
+      // 🔧 메시지 전송 후 즉시 여러 번 스크롤 시도
+      forceScrollToBottom()
+
       nextTick(() => {
         forceScrollToBottom()
       })
+
+      // 🔧 약간의 지연 후에도 스크롤 (서버 응답 시간 고려)
+      setTimeout(() => {
+        forceScrollToBottom()
+      }, 100)
+
+      setTimeout(() => {
+        forceScrollToBottom()
+      }, 300)
     }
   } catch (error) {
     console.error('메시지 전송 중 오류:', error)
@@ -581,7 +623,7 @@ async function sendMessage(content) {
   }
 }
 
-// API에서 기존 메시지 로드
+// 🔧 API에서 기존 메시지 로드 - 스크롤 강화
 async function loadMessages() {
   if (!props.room || !props.room.chatRoomId) {
     console.warn('채팅방 정보가 없습니다.')
@@ -597,6 +639,7 @@ async function loadMessages() {
 
     apiMessages.value = response.data || []
 
+    // 🔧 메시지 로드 후 여러 타이밍으로 스크롤
     await nextTick()
     forceScrollToBottom()
 
@@ -607,6 +650,10 @@ async function loadMessages() {
     setTimeout(() => {
       forceScrollToBottom()
     }, 300)
+
+    setTimeout(() => {
+      forceScrollToBottom()
+    }, 500)
   } catch (err) {
     console.error('메시지 로드 오류:', err)
     messagesError.value =
@@ -645,11 +692,72 @@ function removeScrollListener() {
   }
 }
 
+// 🔧 MutationObserver를 사용한 DOM 변경 감지 및 자동 스크롤
+const setupAutoScroll = () => {
+  if (!messagesContainer.value) return
+
+  mutationObserver = new MutationObserver(() => {
+    // DOM 변경이 있을 때마다 스크롤
+    forceScrollToBottom()
+  })
+
+  mutationObserver.observe(messagesContainer.value, {
+    childList: true, // 자식 노드 추가/제거 감지
+    subtree: true, // 하위 트리 변경도 감지
+    attributes: true, // 속성 변경도 감지
+  })
+
+  console.log('✅ MutationObserver 설정 완료')
+}
+
+// 계약 수락 버튼
+const handleAcceptContract = async () => {
+  if (!props.room?.chatRoomId) {
+    console.error('채팅방 ID가 없습니다.')
+    return
+  }
+
+  try {
+    const response = await acceptContract(props.room.chatRoomId)
+
+    console.log('전체 응답:', response)
+    console.log('계약 채팅방 ID:', response.data)
+    console.log('성공 여부:', response.success)
+    console.log('메시지:', response.message)
+
+    if (response.success && response.data) {
+      isSuccessBuildContract.value = true
+      contractRoomId.value = response.data
+
+      console.log('계약 생성 성공:', isSuccessBuildContract.value)
+      console.log('계약 채팅방 ID:', contractRoomId.value)
+
+      alert(response.message || '계약이 성공적으로 수락되었습니다.')
+    } else {
+      console.error('계약 수락 실패:', response.message)
+      alert('계약 수락에 실패했습니다.')
+    }
+  } catch (error) {
+    console.error('계약 수락 중 오류 발생:', error)
+    alert('계약 수락 중 오류가 발생했습니다.')
+  }
+}
+
+const handleGoToContractRoom = () => {
+  if (contractRoomId.value) {
+    router.push(`/contract/${contractRoomId.value}`)
+  } else {
+    console.error('계약 채팅방 ID가 설정되지 않았습니다.')
+    alert('계약 채팅방 정보가 없습니다.')
+  }
+}
+
 // chatReady 상태 변경 감지
 watch(chatReady, async (ready, wasReady) => {
   if (ready && !wasReady) {
     try {
       await websocketService.connect()
+
       sendOnlineStatus(true)
 
       if (chatRoomId.value) {
@@ -671,8 +779,30 @@ watch(
       old: oldRoom?.chatRoomId,
       new: newRoom?.chatRoomId,
     })
+
+    // 🔧 이전 채팅방 정리 (퇴장 알림은 ChatList에서 처리하므로 구독 해제만)
     if (oldRoom?.chatRoomId && currentUserId.value) {
-      notifyLeaveChatRoom()
+      console.log('이전 채팅방 구독 해제:', oldRoom.chatRoomId)
+      websocketService.offMessage(`/topic/chatroom/${oldRoom.chatRoomId}`)
+
+      // 🔧 읽음 처리 상태 초기화
+      hasMarkedAsRead.value = false
+    }
+
+    // 🔧 새 채팅방이 null인 경우 (채팅방 나가기)
+    if (!newRoom) {
+      console.log('채팅방 완전 나가기 - 상태 초기화만')
+
+      // 상태 초기화
+      webSocketMessages.value = []
+      hasInitiallyScrolled.value = false
+      shouldScrollToBottom.value = true
+      hasMarkedAsRead.value = false
+
+      // 🔧 부모 컴포넌트에 채팅방 닫힘 알림
+      emit('room-closed')
+
+      return
     }
 
     // 상태 초기화
@@ -681,13 +811,8 @@ watch(
     shouldScrollToBottom.value = true
     hasMarkedAsRead.value = false
 
-    // 이전 채팅방 구독 해제
-    if (oldRoom?.chatRoomId) {
-      websocketService.offMessage(`/topic/chatroom/${oldRoom.chatRoomId}`)
-    }
-
-    // 새 채팅방이 있고 채팅 준비가 완료되었을 때 구독
-    if (newRoom?.chatRoomId && chatReady.value) {
+    // 새 채팅방 설정
+    if (newRoom.chatRoomId && chatReady.value) {
       try {
         if (!websocketService.getConnectionStatus()) {
           await websocketService.connect()
@@ -695,15 +820,16 @@ watch(
 
         const topic = `/topic/chatroom/${newRoom.chatRoomId}`
         websocketService.onMessage(topic, directMessageHandler)
-        // 새 채팅방 입장 알림
-        notifyEnterChatRoom()
 
-        // 새 채팅방 진입 시 읽음 처리
-        if (newRoom.chatRoomId) {
-          setTimeout(async () => {
-            await markChat(newRoom.chatRoomId)
-          }, 500)
-        }
+        // 🔧 새 채팅방 입장 알림 (약간의 지연 후)
+        setTimeout(() => {
+          notifyEnterChatRoom()
+        }, 150)
+
+        // 읽음 처리
+        setTimeout(async () => {
+          await markChat(newRoom.chatRoomId)
+        }, 500)
       } catch (error) {
         console.error('새 채팅방 구독 실패:', error)
       }
@@ -714,7 +840,7 @@ watch(
   { immediate: true },
 )
 
-// WebSocket 메시지 변경 감지
+// 🔧 WebSocket 메시지 변경 감지 - 스크롤 강화
 watch(
   webSocketMessages,
   (newMessages, oldMessages) => {
@@ -723,46 +849,181 @@ watch(
     console.log('현재 메시지 수:', newMessages?.length || 0)
 
     if (newMessages.length > (oldMessages?.length || 0)) {
-      // 새 메시지가 추가되면 무조건 스크롤
+      // 🔧 새 메시지가 추가되면 여러 타이밍으로 스크롤
+      forceScrollToBottom()
+
       nextTick(() => {
         forceScrollToBottom()
       })
+
+      // 이미지나 파일 로딩을 고려한 추가 스크롤
+      setTimeout(() => {
+        forceScrollToBottom()
+      }, 100)
+
+      setTimeout(() => {
+        forceScrollToBottom()
+      }, 300)
     }
   },
   { immediate: true, deep: true },
 )
 
+// 🔧 apiMessages 변경 감지 추가 (기존 메시지 로드 시에도 스크롤)
+watch(
+  apiMessages,
+  (newMessages) => {
+    if (newMessages && newMessages.length > 0) {
+      console.log('API 메시지 로드 완료, 스크롤 이동')
+
+      nextTick(() => {
+        forceScrollToBottom()
+
+        // 이미지 로딩 시간을 고려한 추가 스크롤
+        setTimeout(() => {
+          forceScrollToBottom()
+        }, 200)
+
+        setTimeout(() => {
+          forceScrollToBottom()
+        }, 500)
+      })
+    }
+  },
+  { immediate: true },
+)
+
 // 컴포넌트 마운트 시
 onMounted(async () => {
+  // 🔧 사용자 정보 로드 완료까지 대기
   await loadUserInfo()
+
+  // 🔧 자동 스크롤 설정
+  await nextTick()
+  setupAutoScroll()
+
+  // 스크롤 리스너 추가 (읽음 처리용)
   addScrollListener()
 
-  if (chatRoomId.value) {
+  // 읽음 처리는 사용자 정보 로드 후에 실행
+  if (chatRoomId.value && currentUserId.value) {
     setTimeout(async () => {
       await markChat(chatRoomId.value)
     }, 500)
   }
+
+  // 🔧 마운트 후 초기 스크롤
+  setTimeout(() => {
+    forceScrollToBottom()
+  }, 100)
 })
 
 // 컴포넌트 언마운트 시
 onUnmounted(() => {
-  // 채팅방 퇴장 알림
-  if (currentUserId.value) {
-    notifyLeaveChatRoom()
-    sendOnlineStatus(false)
+  console.log('ChatRoom 언마운트 - 정리 작업')
+
+  // 🔧 MutationObserver 정리
+  if (mutationObserver) {
+    mutationObserver.disconnect()
+    mutationObserver = null
+    console.log('✅ MutationObserver 정리 완료')
   }
 
-  removeScrollListener()
-
+  // 🔧 구독 해제만 수행 (퇴장 알림은 ChatList에서 처리)
   if (chatRoomId.value) {
     websocketService.offMessage(`/topic/chatroom/${chatRoomId.value}`)
   }
 
+  // 상태 초기화
   webSocketMessages.value = []
+  hasMarkedAsRead.value = false
+
+  removeScrollListener()
 })
 </script>
 
 <style scoped>
+/* 🔧 채팅 메시지 영역 스크롤 개선 */
+.chat-messages-container {
+  /* 🔧 핵심: 채팅 영역에 독립적인 스크롤 설정 */
+  height: 100%;
+  max-height: calc(100vh - 200px); /* 헤더와 입력창 공간 제외 */
+  overflow-y: auto !important;
+  overflow-x: hidden;
+
+  /* 스크롤 동작 부드럽게 */
+  scroll-behavior: smooth;
+
+  /* 자동 스크롤을 위한 추가 속성 */
+  scroll-snap-type: y mandatory;
+
+  /* 스크롤 성능 최적화 */
+  will-change: scroll-position;
+  -webkit-overflow-scrolling: touch; /* iOS 부드러운 스크롤 */
+
+  /* 🔧 스크롤바가 확실히 보이도록 */
+  scrollbar-gutter: stable;
+}
+
+/* 🔧 채팅 메시지 컨테이너 내부 스크롤바 스타일 */
+.chat-messages-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.chat-messages-container::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+  margin: 4px 0;
+}
+
+.chat-messages-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.chat-messages-container::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.chat-messages-container::-webkit-scrollbar-corner {
+  background: #f1f5f9;
+}
+
+/* 🔧 Firefox 스크롤바 스타일 */
+.chat-messages-container {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+/* 🔧 마지막 메시지가 항상 보이도록 하는 속성 */
+.chat-messages-container > div:last-child {
+  scroll-snap-align: end;
+}
+
+/* 🔧 메시지들이 아래에서부터 쌓이도록 */
+.message-item {
+  flex-shrink: 0;
+}
+
+/* 🔧 새 메시지 추가 시 부드러운 애니메이션 */
+.message-item {
+  animation: slideInFromBottom 0.3s ease-out;
+}
+
+@keyframes slideInFromBottom {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 타이핑 인디케이터 애니메이션 */
 .typing-indicator {
   animation: blink 1.5s infinite;
 }
@@ -778,6 +1039,7 @@ onUnmounted(() => {
   }
 }
 
+/* 🔧 기존 overflow-y-auto 클래스는 제거하고 새로운 스타일 적용 */
 .overflow-y-auto::-webkit-scrollbar {
   width: 6px;
 }
@@ -801,5 +1063,48 @@ onUnmounted(() => {
   word-break: break-word;
   overflow-wrap: break-word;
   hyphens: auto;
+}
+
+/* 로딩 애니메이션 */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* 🔧 모바일에서 스크롤바 조정 */
+@media (max-width: 768px) {
+  .chat-messages-container::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .chat-messages-container {
+    /* 모바일에서 더 부드러운 스크롤 */
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    max-height: calc(100vh - 180px); /* 모바일에서 높이 조정 */
+  }
+}
+
+/* 🔧 반응형 메시지 너비 조정 */
+@media (max-width: 640px) {
+  .max-w-xs {
+    max-width: 280px;
+  }
+
+  .chat-messages-container {
+    max-height: calc(100vh - 160px); /* 작은 화면에서 높이 조정 */
+  }
+}
+
+/* 🔧 전체 채팅 컨테이너 높이 설정 */
+.h-full.flex.flex-col {
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden; /* 전체 페이지 스크롤 방지 */
 }
 </style>
