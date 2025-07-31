@@ -1,4 +1,4 @@
-import api from './api'
+import api from '@/apis'
 
 // OAuth2 관련 API
 export const authAPI = {
@@ -6,12 +6,9 @@ export const authAPI = {
   getKakaoLoginUrl: () => api.get('/api/auth/kakao/login-url'),
 
   // OAuth2 로그인 완료 처리 (code를 토큰으로 교환)
-  completeOAuth2Login: (code, redirectUri) => 
-    api.post('/oauth2/login/complete', null, { 
-      params: { 
-        code,
-        redirectUri: redirectUri || 'http://localhost:5173/oauth/callback/kakao'
-      } 
+  completeOAuth2Login: (code) => 
+    api.post('/oauth2/login/complete', {}, { 
+      params: { code } 
     }),
 
   // 사용자 정보 조회

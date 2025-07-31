@@ -29,3 +29,7 @@ coverage
 
 *.tsbuildinfo
 .env
+
+# Claude AI related files
+.claude/
+.mcp.json
