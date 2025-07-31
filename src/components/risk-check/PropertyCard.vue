@@ -2,11 +2,12 @@
 import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import IconHeart from '@/components/icons/IconHeart.vue'
 import IconChat from '@/components/icons/IconChat.vue'
+import IconLock from '@/components/icons/IconLock.vue'
 import PropertyItem from '@/components/common/PropertyItem.vue'
-import { fraudApi } from '@/api/fraud'
-
-import favoritesMockData from '@/mocks/risk/favoritesMockData.json'
-import chatPropertiesMockData from '@/mocks/risk/chatPropertiesMockData.json'
+import BaseButton from '@/components/common/BaseButton.vue'
+import LoginRequiredModal from '@/components/risk-check/LoginRequiredModal.vue'
+import { fraudApi } from '@/apis/fraud'
+import { useModalStore } from '@/stores/modal'
 
 const props = defineProps({
   selectedTab: {
@@ -15,7 +16,8 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['select-tab', 'select-property'])
+const emit = defineEmits(['select-tab', 'select-property', 'error'])
+const modalStore = useModalStore()
 
 const LOADING_DELAY = 800
 const SCROLL_DELAY_CHECK = 150
@@ -28,6 +30,11 @@ const selectedPropertyId = ref(null)
 const properties = ref({
   favorite: [],
   chat: [],
+})
+const showLoginModal = ref(false)
+const needsAuth = ref({
+  favorite: false,
+  chat: false,
 })
 
 const currentProperties = computed(() => properties.value[props.selectedTab])
@@ -123,14 +130,23 @@ const fetchLikedHomes = async () => {
     }
   } catch (error) {
     console.error('찜한 매물 조회 실패:', error)
-    // 에러 시 Mock 데이터 사용
-    properties.value.favorite = favoritesMockData.favorites.map((item) => ({
-      id: item.id,
-      name: item.name,
-      address: item.address,
-      price: item.price,
-      image: item.image,
-    }))
+    
+    // 401 에러인 경우 로그인 필요 상태로 설정
+    if (error.response?.status === 401) {
+      needsAuth.value.favorite = true
+    } else {
+      // 다른 에러의 경우 에러 메시지 전달
+      let errorMessage = '찜한 매물을 불러오는데 실패했습니다.'
+      if (error.response?.status === 500) {
+        errorMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+      } else if (error.request) {
+        errorMessage = '서버와 연결할 수 없습니다. 네트워크 연결을 확인해주세요.'
+      }
+      emit('error', { type: 'favorite', message: errorMessage })
+    }
+    
+    // 에러 시 빈 배열로 설정
+    properties.value.favorite = []
   }
 }
 
@@ -153,14 +169,23 @@ const fetchChattingHomes = async () => {
     }
   } catch (error) {
     console.error('채팅 중인 매물 조회 실패:', error)
-    // 에러 시 Mock 데이터 사용
-    properties.value.chat = chatPropertiesMockData.chatProperties.map((item) => ({
-      id: item.id,
-      name: item.name,
-      address: item.address,
-      price: item.price,
-      image: item.image,
-    }))
+    
+    // 401 에러인 경우 로그인 필요 상태로 설정
+    if (error.response?.status === 401) {
+      needsAuth.value.chat = true
+    } else {
+      // 다른 에러의 경우 에러 메시지 전달
+      let errorMessage = '채팅 중인 매물을 불러오는데 실패했습니다.'
+      if (error.response?.status === 500) {
+        errorMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+      } else if (error.request) {
+        errorMessage = '서버와 연결할 수 없습니다. 네트워크 연결을 확인해주세요.'
+      }
+      emit('error', { type: 'chat', message: errorMessage })
+    }
+    
+    // 에러 시 빈 배열로 설정
+    properties.value.chat = []
   }
 }
 
@@ -218,6 +243,11 @@ watch(isLoading, (newValue) => {
     })
   }
 })
+
+const closeLoginModal = () => {
+  showLoginModal.value = false
+  modalStore.close()
+}
 </script>
 
 <template>
@@ -275,7 +305,20 @@ watch(isLoading, (newValue) => {
         class="max-h-[300px] overflow-y-auto overflow-x-visible scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100"
       >
         <transition name="fade" mode="out-in">
-          <div v-if="!isLoading" :key="selectedTab" class="px-1 pt-3">
+          <!-- 로그인이 필요한 경우 -->
+          <div v-if="!isLoading && needsAuth[selectedTab]" :key="`auth-${selectedTab}`" class="px-1 pt-3">
+            <div class="flex flex-col items-center justify-center py-8">
+              <div class="mb-4">
+                <IconLock class="w-12 h-12 text-gray-400" />
+              </div>
+              <p class="text-gray-600 mb-4">로그인이 필요한 서비스입니다.</p>
+              <BaseButton @click="showLoginModal = true" variant="primary" size="md">
+                로그인하기
+              </BaseButton>
+            </div>
+          </div>
+          <!-- 매물 목록 -->
+          <div v-else-if="!isLoading" :key="selectedTab" class="px-1 pt-3">
             <template v-for="(property, index) in sortedProperties" :key="property.id">
               <!-- 선택된 매물과 다른 매물 사이 구분선 -->
               <div v-if="selectedPropertyId && index === 1" class="relative my-4">
@@ -335,6 +378,14 @@ watch(isLoading, (newValue) => {
       ></div>
     </div>
   </div>
+
+  <!-- 로그인 필요 모달 -->
+  <LoginRequiredModal
+    :is-open="showLoginModal"
+    :title="selectedTab === 'favorite' ? '찜한 매물 조회' : '채팅 매물 조회'"
+    :message="`${selectedTab === 'favorite' ? '찜한' : '채팅 중인'} 매물을 확인하려면 로그인이 필요합니다.`"
+    @close="closeLoginModal"
+  />
 </template>
 
 <style scoped>

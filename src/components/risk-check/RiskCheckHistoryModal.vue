@@ -1,10 +1,14 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import BaseModal from '@/components/common/BaseModal.vue'
+import BaseButton from '@/components/common/BaseButton.vue'
 import IconClose from '@/components/icons/IconClose.vue'
 import IconChevronRight from '@/components/icons/IconChevronRight.vue'
+import IconLock from '@/components/icons/IconLock.vue'
 import PropertyItem from '@/components/common/PropertyItem.vue'
-import { fraudApi } from '@/api/fraud'
+import LoginRequiredModal from '@/components/risk-check/LoginRequiredModal.vue'
+import { fraudApi } from '@/apis/fraud'
+import { useModalStore } from '@/stores/modal'
 
 const props = defineProps({
   isOpen: {
@@ -14,10 +18,13 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['close', 'select-history'])
+const modalStore = useModalStore()
 
 const isLoading = ref(true)
 const analysisHistory = ref([])
 const error = ref(null)
+const needsAuth = ref(false)
+const showLoginModal = ref(false)
 
 const handleSelectHistory = (history) => {
   emit('select-history', history)
@@ -55,7 +62,29 @@ const fetchAnalysisHistory = async () => {
     }
   } catch (err) {
     console.error('분석 기록 조회 실패:', err)
-    error.value = err.message || '분석 기록을 불러오는데 실패했습니다.'
+    
+    // 401 에러인 경우 로그인 필요 상태로 설정
+    if (err.response?.status === 401) {
+      needsAuth.value = true
+      error.value = null
+    } else {
+      // 다른 에러의 경우 에러 메시지 설정
+      needsAuth.value = false
+      if (err.response) {
+        if (err.response.status === 403) {
+          error.value = '분석 기록을 조회할 권한이 없습니다.'
+        } else if (err.response.status === 500) {
+          error.value = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+        } else {
+          error.value = `오류 발생 (${err.response.status}): ${err.response.data?.message || '분석 기록을 불러오는데 실패했습니다.'}`
+        }
+      } else if (err.request) {
+        error.value = '서버와 연결할 수 없습니다. 네트워크 연결을 확인해주세요.'
+      } else {
+        error.value = err.message || '분석 기록을 불러오는데 실패했습니다.'
+      }
+    }
+    
     analysisHistory.value = []
   } finally {
     isLoading.value = false
@@ -65,9 +94,17 @@ const fetchAnalysisHistory = async () => {
 // 모달이 열릴 때마다 데이터 새로고침
 watch(() => props.isOpen, (newValue) => {
   if (newValue) {
+    // 상태 초기화
+    needsAuth.value = false
+    error.value = null
     fetchAnalysisHistory()
   }
 })
+
+const closeLoginModal = () => {
+  showLoginModal.value = false
+  modalStore.close()
+}
 </script>
 
 <template>
@@ -85,7 +122,19 @@ watch(() => props.isOpen, (newValue) => {
         <div
           class="max-h-[500px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100"
         >
-          <div v-if="!isLoading" class="space-y-4 pr-2">
+          <!-- 로그인이 필요한 경우 -->
+          <div v-if="!isLoading && needsAuth" class="flex flex-col items-center justify-center py-16">
+            <div class="mb-4">
+              <IconLock class="w-12 h-12 text-gray-400" />
+            </div>
+            <p class="text-gray-600 mb-4">로그인이 필요한 서비스입니다.</p>
+            <BaseButton @click="showLoginModal = true" variant="primary" size="md">
+              로그인하기
+            </BaseButton>
+          </div>
+          
+          <!-- 분석 기록 목록 -->
+          <div v-else-if="!isLoading && !error" class="space-y-4 pr-2">
             <div v-for="history in analysisHistory" :key="history.id" class="relative">
               <PropertyItem
                 :property="history"
@@ -127,7 +176,7 @@ watch(() => props.isOpen, (newValue) => {
           </div>
 
           <!-- 데이터 없음 상태 -->
-          <div v-else-if="!isLoading && analysisHistory.length === 0" class="text-center py-12">
+          <div v-else-if="!isLoading && !error && !needsAuth && analysisHistory.length === 0" class="text-center py-12">
             <div class="text-gray-400 mb-4">
               <svg class="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
@@ -141,6 +190,14 @@ watch(() => props.isOpen, (newValue) => {
       </div>
     </div>
   </BaseModal>
+
+  <!-- 로그인 필요 모달 -->
+  <LoginRequiredModal
+    :is-open="showLoginModal"
+    :title="'조회 기록 확인'"
+    :message="'분석 기록을 확인하려면 로그인이 필요합니다.'"
+    @close="closeLoginModal"
+  />
 </template>
 
 <style scoped>

@@ -4,6 +4,9 @@ import { ref } from 'vue'
 export const useFraudStore = defineStore('fraud', () => {
   // OCR 분석 결과를 임시 저장
   const documentAnalysisData = ref(null)
+  
+  // 매물 정보를 임시 저장 (등록되지 않은 매물용)
+  const propertyInfo = ref(null)
 
   // 문서 분석 데이터 저장
   const setDocumentAnalysisData = (data) => {
@@ -43,10 +46,52 @@ export const useFraudStore = defineStore('fraud', () => {
     documentAnalysisData.value = null
   }
 
+  // 매물 정보 저장
+  const setPropertyInfo = (info) => {
+    propertyInfo.value = {
+      ...info,
+      timestamp: Date.now()
+    }
+  }
+
+  // 매물 정보 가져오기
+  const getPropertyInfo = () => {
+    if (!propertyInfo.value) {
+      return null
+    }
+
+    const now = Date.now()
+    const dataAge = now - propertyInfo.value.timestamp
+    const thirtyMinutes = 30 * 60 * 1000 // 30분
+
+    if (dataAge > thirtyMinutes) {
+      clearPropertyInfo()
+      return null
+    }
+
+    return propertyInfo.value
+  }
+
+  // 매물 정보 삭제
+  const clearPropertyInfo = () => {
+    propertyInfo.value = null
+  }
+
+  // 모든 데이터 삭제
+  const clearAllData = () => {
+    clearDocumentAnalysisData()
+    clearPropertyInfo()
+  }
+
   return {
     documentAnalysisData,
+    propertyInfo,
     setDocumentAnalysisData,
     getDocumentAnalysisData,
-    clearDocumentAnalysisData
+    clearDocumentAnalysisData,
+    setPropertyInfo,
+    getPropertyInfo,
+    clearPropertyInfo,
+    clearAllData
   }
 })
