@@ -2,6 +2,6 @@ export default [
   {
     path: '/chat',
     name: 'chat',
-    component: () => import('../pages/chat/ChatRoom.vue'),
+    component: () => import('../pages/chat/ChatPage.vue'),
   },
 ]
