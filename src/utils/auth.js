@@ -1,4 +1,4 @@
-import api from './api'
+import api from '@/apis'
 
 // OAuth2 관련 API
 export const authAPI = {

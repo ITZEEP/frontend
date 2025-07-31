@@ -1,4 +1,4 @@
-import api from './axiosConfig'
+import api from './index'
 
 // 사기 위험도 API
 export const fraudApi = {
@@ -21,7 +21,9 @@ export const fraudApi = {
       const formData = new FormData()
       formData.append('registryFile', registryFile)
       formData.append('buildingFile', buildingFile)
-      formData.append('homeId', homeId)
+      if (homeId) {
+        formData.append('homeId', homeId)
+      }
 
       const response = await api.post('/api/fraud-risk/documents', formData, {
         headers: {
