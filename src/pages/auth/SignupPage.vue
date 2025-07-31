@@ -66,9 +66,9 @@ async function handleKakaoSignup() {
     isLoading.value = true
     error.value = ''
     
-    // 카카오 로그인 URL 직접 생성 (회원가입도 동일한 플로우)
     // 백엔드 OAuth 엔드포인트로 리다이렉트
-    const kakaoAuthUrl = 'http://localhost:8080/oauth2/authorization/kakao'
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
+    const kakaoAuthUrl = `${baseUrl}/oauth2/authorization/kakao`
     
     // 카카오 로그인 페이지로 리다이렉트
     window.location.href = kakaoAuthUrl

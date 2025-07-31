@@ -69,7 +69,8 @@ async function handleKakaoLogin() {
     error.value = ''
     
     // 백엔드 OAuth 엔드포인트로 리다이렉트
-    const kakaoAuthUrl = 'http://localhost:8080/oauth2/authorization/kakao'
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
+    const kakaoAuthUrl = `${baseUrl}/oauth2/authorization/kakao`
     
     // 카카오 로그인 페이지로 리다이렉트
     window.location.href = kakaoAuthUrl

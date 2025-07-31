@@ -71,8 +71,8 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue'])
 
-// 고유 ID 생성
-const id = computed(() => `select-${Math.random().toString(36).substr(2, 9)}`)
+// 고유 ID 생성 - 컴포넌트 인스턴스마다 고유한 ID
+const id = `select-${Math.random().toString(36).slice(2, 9)}-${Date.now()}`
 </script>
 
 <style scoped>
