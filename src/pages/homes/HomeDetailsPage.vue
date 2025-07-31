@@ -8,9 +8,6 @@
       <ListingBasicInfo :listing="listing" />
       <RoomDetails :listing="listing" />
       <div class="w-full flex gap-4">
-        <BaseButton class="w-full" variant="outline" size="lg" @click="goRiskCheck">
-          사기 위험도 측정
-        </BaseButton>
         <BaseButton class="w-full" variant="primary" size="lg" @click="goChat">
           연락하기
         </BaseButton>
@@ -86,10 +83,6 @@ onMounted(() => {
     images.value = []
   }
 })
-
-function goRiskCheck() {
-  router.push('/risk-check')
-}
 
 function goChat() {
   router.push('/chat')
