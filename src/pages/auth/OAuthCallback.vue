@@ -18,7 +18,6 @@
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { authAPI } from '@/utils/auth'
 import LoadingOverlay from '@/components/common/LoadingOverlay.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import IconError from '@/components/icons/IconError.vue'
@@ -44,31 +43,12 @@ onMounted(async () => {
       throw new Error('인증 코드가 없습니다.')
     }
 
-    // authorization code를 사용해 로그인 완료 처리
-    const redirectUri = 'http://localhost:5173/oauth/callback/kakao'
-    const response = await authAPI.completeOAuth2Login(code, redirectUri)
+    // OAuth 로그인 완료 처리
+    await authStore.completeOAuthLogin(code)
     
-    if (response.data.success) {
-      const loginData = response.data.data
-      const accessToken = loginData.access_token
-      const user = {
-        id: loginData.user_id,
-        username: loginData.nickname || loginData.username,
-        email: loginData.email,
-        name: loginData.nickname || loginData.username,
-        profileImage: loginData.profile_image,
-        role: loginData.role
-      }
-      
-      // 로그인 처리
-      await authStore.loginWithToken(accessToken, user)
-      
-      // 이전 페이지로 리다이렉트 또는 홈으로 이동
-      const redirectTo = route.query.redirect || '/'
-      router.push(redirectTo)
-    } else {
-      throw new Error(response.data.message || '로그인 처리에 실패했습니다.')
-    }
+    // 이전 페이지로 리다이렉트 또는 홈으로 이동
+    const redirectTo = route.query.redirect || '/'
+    router.push(redirectTo)
   } catch (err) {
     console.error('OAuth2 callback error:', err)
     error.value = err.message || '로그인 처리 중 오류가 발생했습니다.'
