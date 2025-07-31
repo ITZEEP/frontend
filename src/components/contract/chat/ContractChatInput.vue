@@ -108,8 +108,14 @@ import BaseButton from '@/components/common/BaseButton.vue'
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { requestEndPointExport, rejectEndPointExport } from '@/apis/contractChatApi'
 
-const emit = defineEmits(['sendMessage', 'typing', 'setStartPoint', 'exportMessages'])
-
+const emit = defineEmits([
+  'sendMessage',
+  'typing',
+  'setStartPoint',
+  'exportMessages',
+  'exportRequest',
+  'exportReject',
+])
 const props = defineProps({
   chatRoomId: {
     type: [String, Number],
@@ -160,11 +166,9 @@ watch(
   },
 )
 
-// 메시지 전송
 const sendMessage = async () => {
   const content = messageInput.value.trim()
 
-  // 전송 조건 체크
   if (!content || isSending.value || !props.canSendMessage) {
     console.warn('메시지 전송 조건 미충족:', {
       hasContent: !!content,
@@ -241,7 +245,6 @@ const handleTyping = () => {
 
 // 입력창 포커스 시
 const handleFocus = () => {
-  // 오프라인 상태에서는 포커스 해제
   if (!props.canSendMessage && messageInputRef.value) {
     messageInputRef.value.blur()
   }
@@ -249,7 +252,6 @@ const handleFocus = () => {
 
 // 입력창 블러 시
 const handleBlur = () => {
-  // 타이핑 상태 종료
   if (isTypingActive.value) {
     isTypingActive.value = false
     emit('typing', false)
