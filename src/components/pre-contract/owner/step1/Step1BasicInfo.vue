@@ -27,8 +27,14 @@ const store = usePreContractStore()
 
 onMounted(() => {
   const leaseType = HOME_DATA[0].home.lease_type
+
   if (leaseType) {
-    store.setLeaseType(leaseType)
+    localStorage.setItem('rent_type', leaseType)
+  }
+
+  const rentType = localStorage.getItem('rent_type')
+  if (rentType) {
+    store.setLeaseType(rentType)
   }
 })
 

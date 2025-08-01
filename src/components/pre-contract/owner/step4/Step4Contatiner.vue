@@ -18,15 +18,6 @@
       ]"
     />
     <ToggleRadio
-      label="반려동물 입주가 가능한가요??"
-      v-model="form.pet"
-      :options="[
-        { label: '금지', value: 'ban' },
-        { label: '허용', value: 'allow' },
-        { label: '상관없음', value: 'any' },
-      ]"
-    />
-    <ToggleRadio
       label="공사 예정, 소음 등 고지해야 할 사항이 있나요?"
       v-model="form.notice"
       :options="[
@@ -34,13 +25,16 @@
         { label: '없음', value: 'no' },
       ]"
     />
+
+    <WolseForm v-if="rentType === 'WOLSE'" />
   </div>
 </template>
 
 <script setup>
-import { reactive, watch, onMounted } from 'vue'
+import { reactive, watch, onMounted, computed } from 'vue'
 import ToggleRadio from '@/components/common/ToggleRadio.vue'
 import { usePreContractStore } from '@/stores/preContract'
+import WolseForm from './Step4WolseForm.vue'
 
 const store = usePreContractStore()
 const model = defineModel()
@@ -48,11 +42,11 @@ const model = defineModel()
 const form = reactive({
   mandatoryInsurance: '',
   insurancePayer: '',
-  pet: '',
   notice: '',
 })
 
 watch(form, () => (model.value = form), { deep: true })
+const rentType = computed(() => localStorage.getItem('rent_type'))
 
 watch(
   () => Object.values(form),
