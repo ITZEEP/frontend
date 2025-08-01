@@ -32,39 +32,12 @@
         { label: '아니요', value: false },
       ]"
     />
-
-    <!-- 반려동물 여부 -->
-    <ToggleRadio
-      v-model="hasPet"
-      label="반려동물이 있으신가요?"
-      :options="[
-        { label: '예', value: true },
-        { label: '아니요', value: false },
-      ]"
-    />
-
-    <!-- 반려동물 정보 (조건부) -->
-    <div v-if="hasPet === true" class="space-y-4">
-      <BaseInput
-        v-model="petInfo"
-        placeholder="반려동물 종류를 입력해주세요 (예: 강아지)"
-        class="w-full"
-      />
-      <BaseInput
-        v-model="petCount"
-        type="number"
-        placeholder="반려동물 수를 입력해주세요"
-        class="w-full"
-        @input="onPetCountInput"
-      />
-    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, watch, onMounted } from 'vue'
 import ToggleRadio from '@/components/common/ToggleRadio.vue'
-import BaseInput from '@/components/common/BaseInput.vue'
 import { usePreContractStore } from '@/stores/preContract'
 
 const store = usePreContractStore()
@@ -73,27 +46,11 @@ const store = usePreContractStore()
 const facilityRepairNeeded = ref(null)
 const interiorCleaningNeeded = ref(null)
 const applianceInstallationPlan = ref(null)
-const hasPet = ref(null)
-const petInfo = ref('')
-const petCount = ref('')
 
 watch(
-  [
-    facilityRepairNeeded,
-    interiorCleaningNeeded,
-    applianceInstallationPlan,
-    hasPet,
-    petInfo,
-    petCount,
-  ],
-  ([repair, clean, installation, hasP, infoP, countP]) => {
-    const allFilled =
-      repair !== null &&
-      clean !== null &&
-      installation !== null &&
-      hasP !== null &&
-      infoP !== '' &&
-      countP !== ''
+  [facilityRepairNeeded, interiorCleaningNeeded, applianceInstallationPlan],
+  ([repair, clean, installation]) => {
+    const allFilled = repair !== null && clean !== null && installation !== null
     store.setCanProceed(allFilled)
   },
 )
@@ -101,9 +58,4 @@ watch(
 onMounted(() => {
   store.canProceed = false
 })
-
-const onPetCountInput = (e) => {
-  const value = Number(e.target.value)
-  petCount.value = value < 0 ? 0 : value
-}
 </script>
