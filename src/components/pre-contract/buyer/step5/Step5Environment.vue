@@ -13,15 +13,15 @@
 import { computed, onMounted } from 'vue'
 import { usePreContractStore } from '@/stores/preContract'
 
-import Step5HasPet from './Step5Sub1MoveIn.vue' // true 일때
-import Step5NoPet from './Step5Sub1MoveIncopy.vue'
+import Step5HasPet from './Step5Sub1MoveInPet.vue' // true 일때
+import Step5NoPet from './Step5Sub1MoveIn.vue'
 import Step5Residency from './Step5Sub2Residency.vue'
 
 // Pinia store
 const store = usePreContractStore()
 
 onMounted(() => {
-  const raw = localStorage.getItem('hasPet')
+  const raw = localStorage.getItem('has_pet')
   const parsed = raw === 'true' ? true : raw === 'false' ? false : undefined
   if (typeof parsed === 'boolean') {
     store.setHasPet(parsed)

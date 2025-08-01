@@ -22,7 +22,7 @@ import Step4WolseTerms from './Step4WolseTerms.vue'
 const store = usePreContractStore()
 
 onMounted(() => {
-  const raw = localStorage.getItem('rentType')
+  const raw = localStorage.getItem('rent_type')
   store.setLeaseType(raw)
 })
 
