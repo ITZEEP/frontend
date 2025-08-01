@@ -7,9 +7,12 @@ export const usePreContractStore = defineStore('preContract', {
       // roll은 'owner' || 'buyer'
       'owner-3': 2,
       'owner-4': 2,
+      'buyer-5': 2,
     },
     currentSubSteps: {},
     canProceed: false,
+    riskCheck: false,
+    hasPet: false,
   }),
   actions: {
     setLeaseType(type) {
@@ -30,6 +33,12 @@ export const usePreContractStore = defineStore('preContract', {
     },
     setCanProceed(status) {
       this.canProceed = status
+    },
+    setRiskCheck(risk) {
+      this.riskCheck = risk;
+    },
+    setHasPet(hasPet) {
+      this.hasPet = hasPet;
     },
   },
 })
