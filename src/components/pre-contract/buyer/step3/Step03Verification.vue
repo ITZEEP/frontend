@@ -1,7 +1,9 @@
 <template>
-  <div>임차인 계약 전 사전 조사 step 3</div>
+  <UserVerification />
 </template>
 
-<script setup></script>
+<script setup>
+import UserVerification from '../../../common/UserVerification.vue'
+</script>
 
 <style scoped></style>
