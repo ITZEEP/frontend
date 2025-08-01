@@ -98,6 +98,6 @@ watch(
 )
 
 onMounted(() => {
-  store.canProcced = false
+  store.canProceed = false
 })
 </script>
