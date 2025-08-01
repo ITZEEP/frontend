@@ -55,6 +55,7 @@
         type="number"
         placeholder="반려동물 수를 입력해주세요"
         class="w-full"
+        @input="onPetCountInput"
       />
     </div>
   </div>
@@ -100,4 +101,9 @@ watch(
 onMounted(() => {
   store.canProceed = false
 })
+
+const onPetCountInput = (e) => {
+  const value = Number(e.target.value)
+  petCount.value = value < 0 ? 0 : value
+}
 </script>
