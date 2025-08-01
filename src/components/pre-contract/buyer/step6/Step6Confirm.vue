@@ -10,7 +10,6 @@
 
     <!-- 매물 정보 -->
     <div class="flex items-center bg-gray-50 rounded-2xl p-5 shadow space-x-4">
-      <PropertyImage class="w-20 h-20 rounded-xl object-cover" />
       <div>
         <div class="text-xl font-semibold">{{ houseInfo?.name }}</div>
         <div class="text-gray-500">{{ houseInfo?.address }}</div>
