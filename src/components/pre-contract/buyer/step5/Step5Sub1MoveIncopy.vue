@@ -38,7 +38,6 @@
 <script setup>
 import { ref, watch, onMounted } from 'vue'
 import ToggleRadio from '@/components/common/ToggleRadio.vue'
-import BaseInput from '@/components/common/BaseInput.vue'
 import { usePreContractStore } from '@/stores/preContract'
 
 const store = usePreContractStore()
@@ -57,6 +56,6 @@ watch(
 )
 
 onMounted(() => {
-  store.canProcced = false
+  store.canProceed = false
 })
 </script>
