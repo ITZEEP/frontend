@@ -21,7 +21,7 @@ import Step5Residency from './Step5Sub2Residency.vue'
 const store = usePreContractStore()
 
 onMounted(() => {
-  const raw = localStorage.getItem('hasPet')
+  const raw = localStorage.getItem('has_pet')
   const parsed = raw === 'true' ? true : raw === 'false' ? false : undefined
   if (typeof parsed === 'boolean') {
     store.setHasPet(parsed)

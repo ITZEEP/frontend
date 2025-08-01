@@ -18,7 +18,7 @@ const store = usePreContractStore()
 
 // ✅ 로컬스토리지에서 값 불러와 store에 반영
 onMounted(() => {
-  const raw = localStorage.getItem('riskCheck')
+  const raw = localStorage.getItem('risk_check')
   const parsed = raw === 'true' ? true : raw === 'false' ? false : undefined
   if (typeof parsed === 'boolean') {
     store.setRiskCheck(parsed)
