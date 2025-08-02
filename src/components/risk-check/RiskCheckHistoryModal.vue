@@ -7,6 +7,8 @@ import IconChevronRight from '@/components/icons/IconChevronRight.vue'
 import IconLock from '@/components/icons/IconLock.vue'
 import PropertyItem from '@/components/common/PropertyItem.vue'
 import LoginRequiredModal from '@/components/risk-check/LoginRequiredModal.vue'
+import ErrorState from '@/components/common/ErrorState.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
 import { fraudApi } from '@/apis/fraud'
 import { useModalStore } from '@/stores/modal'
 
@@ -148,7 +150,7 @@ const closeLoginModal = () => {
           </div>
 
           <!-- 스켈레톤 UI -->
-          <div v-else class="space-y-4 pr-2">
+          <div v-else-if="isLoading" class="space-y-4 pr-2">
             <PropertyItem
               v-for="n in 3"
               :key="n"
@@ -159,32 +161,23 @@ const closeLoginModal = () => {
           </div>
 
           <!-- 에러 상태 -->
-          <div v-if="error && !isLoading" class="text-center py-12">
-            <div class="text-red-500 mb-2">
-              <svg class="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-              </svg>
-            </div>
-            <p class="text-gray-600 mb-4">{{ error }}</p>
-            <button 
-              @click="fetchAnalysisHistory" 
-              class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-            >
-              다시 시도
-            </button>
+          <div v-if="error && !isLoading">
+            <ErrorState @retry="fetchAnalysisHistory" />
           </div>
 
           <!-- 데이터 없음 상태 -->
-          <div v-else-if="!isLoading && !error && !needsAuth && analysisHistory.length === 0" class="text-center py-12">
-            <div class="text-gray-400 mb-4">
-              <svg class="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-              </svg>
-            </div>
-            <p class="text-gray-600">아직 분석 기록이 없습니다.</p>
-            <p class="text-gray-500 text-sm mt-2">위험도 분석을 진행하면 기록이 여기에 표시됩니다.</p>
+          <div v-else-if="!isLoading && !error && !needsAuth && analysisHistory.length === 0">
+            <EmptyState
+              title="아직 분석 기록이 없습니다."
+              message="위험도 분석을 진행하면 기록이 여기에 표시됩니다."
+            >
+              <template #icon>
+                <svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+              </template>
+            </EmptyState>
           </div>
         </div>
       </div>

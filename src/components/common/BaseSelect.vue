@@ -4,32 +4,43 @@
       {{ label }}
       <span v-if="required" class="text-red-500">*</span>
     </label>
-    <select
-      :id="id"
-      :value="modelValue"
-      @change="$emit('update:modelValue', $event.target.value)"
-      :required="required"
-      :disabled="disabled"
-      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
-      :class="{ 'border-red-500': error }"
-    >
-      <option v-if="placeholder" value="" disabled :selected="!modelValue">
-        {{ placeholder }}
-      </option>
-      <option
-        v-for="option in options"
-        :key="option.value"
-        :value="option.value"
+    <div class="relative">
+      <select
+        :id="id"
+        :value="modelValue"
+        @change="$emit('update:modelValue', $event.target.value)"
+        @focus="isFocused = true"
+        @blur="isFocused = false"
+        :required="required"
+        :disabled="disabled"
+        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed appearance-none pr-10"
+        :class="{ 'border-red-500': error }"
       >
-        {{ option.label }}
-      </option>
-    </select>
+        <option v-if="placeholder" value="" disabled :selected="!modelValue">
+          {{ placeholder }}
+        </option>
+        <option
+          v-for="option in options"
+          :key="option.value"
+          :value="option.value"
+        >
+          {{ option.label }}
+        </option>
+      </select>
+      <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+        <IconChevronDown 
+          class="w-5 h-5 text-gray-400" 
+          :rotate="isFocused"
+        />
+      </div>
+    </div>
     <p v-if="error" class="mt-1 text-sm text-red-500">{{ error }}</p>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref } from 'vue'
+import IconChevronDown from '@/components/icons/IconChevronDown.vue'
 
 const props = defineProps({
   modelValue: {
@@ -73,15 +84,11 @@ const emit = defineEmits(['update:modelValue'])
 
 // 고유 ID 생성 - 컴포넌트 인스턴스마다 고유한 ID
 const id = `select-${Math.random().toString(36).slice(2, 9)}-${Date.now()}`
+
+// 포커스 상태 추적
+const isFocused = ref(false)
 </script>
 
 <style scoped>
-.base-select select {
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-  background-position: right 0.5rem center;
-  background-repeat: no-repeat;
-  background-size: 1.5em 1.5em;
-  padding-right: 2.5rem;
-}
+/* 커스텀 드롭다운 스타일 제거 (이제 아이콘 컴포넌트 사용) */
 </style>

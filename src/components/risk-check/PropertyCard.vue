@@ -6,6 +6,8 @@ import IconLock from '@/components/icons/IconLock.vue'
 import PropertyItem from '@/components/common/PropertyItem.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import LoginRequiredModal from '@/components/risk-check/LoginRequiredModal.vue'
+import ErrorState from '@/components/common/ErrorState.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
 import { fraudApi } from '@/apis/fraud'
 import { useModalStore } from '@/stores/modal'
 
@@ -16,7 +18,7 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['select-tab', 'select-property', 'error'])
+const emit = defineEmits(['select-tab', 'select-property'])
 const modalStore = useModalStore()
 
 const LOADING_DELAY = 800
@@ -35,6 +37,14 @@ const showLoginModal = ref(false)
 const needsAuth = ref({
   favorite: false,
   chat: false,
+})
+const hasError = ref({
+  favorite: false,
+  chat: false,
+})
+const errorMessage = ref({
+  favorite: '',
+  chat: '',
 })
 
 const currentProperties = computed(() => properties.value[props.selectedTab])
@@ -114,9 +124,11 @@ const formatPrice = (item) => {
 // 찜한 매물 목록 조회
 const fetchLikedHomes = async () => {
   try {
+    hasError.value.favorite = false
     const response = await fraudApi.getLikedHomes()
-    if (response.success && response.data) {
-      properties.value.favorite = response.data.map(item => ({
+    if (response.success) {
+      // 성공적으로 데이터를 받았을 때만 배열 설정
+      properties.value.favorite = response.data ? response.data.map(item => ({
         id: item.homeId,
         name: item.residenceType,
         address: item.address,
@@ -126,7 +138,7 @@ const fetchLikedHomes = async () => {
         leaseType: item.leaseType,
         depositPrice: item.depositPrice,
         monthlyRent: item.monthlyRent
-      }))
+      })) : []
     }
   } catch (error) {
     console.error('찜한 매물 조회 실패:', error)
@@ -134,15 +146,23 @@ const fetchLikedHomes = async () => {
     // 401 에러인 경우 로그인 필요 상태로 설정
     if (error.response?.status === 401) {
       needsAuth.value.favorite = true
+      hasError.value.favorite = false
     } else {
-      // 다른 에러의 경우 에러 메시지 전달
-      let errorMessage = '찜한 매물을 불러오는데 실패했습니다.'
-      if (error.response?.status === 500) {
-        errorMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+      // 다른 에러의 경우 에러 상태 설정
+      hasError.value.favorite = true
+      if (error.response) {
+        if (error.response.status === 403) {
+          errorMessage.value.favorite = '찜한 매물을 조회할 권한이 없습니다.'
+        } else if (error.response.status === 500) {
+          errorMessage.value.favorite = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+        } else {
+          errorMessage.value.favorite = `오류 발생 (${error.response.status}): ${error.response.data?.message || '찜한 매물을 불러오는데 실패했습니다.'}`
+        }
       } else if (error.request) {
-        errorMessage = '서버와 연결할 수 없습니다. 네트워크 연결을 확인해주세요.'
+        errorMessage.value.favorite = '서버와 연결할 수 없습니다. 네트워크 연결을 확인해주세요.'
+      } else {
+        errorMessage.value.favorite = error.message || '찜한 매물을 불러오는데 실패했습니다.'
       }
-      emit('error', { type: 'favorite', message: errorMessage })
     }
     
     // 에러 시 빈 배열로 설정
@@ -153,8 +173,10 @@ const fetchLikedHomes = async () => {
 // 채팅 중인 매물 목록 조회
 const fetchChattingHomes = async () => {
   try {
+    hasError.value.chat = false
     const response = await fraudApi.getChattingHomes(1, 50) // 처음 50개 조회
-    if (response.content) {
+    // PageResponse의 content가 있을 때만 배열 설정
+    if (response && response.content !== undefined) {
       properties.value.chat = response.content.map(item => ({
         id: item.homeId,
         name: item.residenceType,
@@ -166,6 +188,9 @@ const fetchChattingHomes = async () => {
         depositPrice: item.depositPrice,
         monthlyRent: item.monthlyRent
       }))
+    } else {
+      // 응답은 있지만 content가 없는 경우
+      properties.value.chat = []
     }
   } catch (error) {
     console.error('채팅 중인 매물 조회 실패:', error)
@@ -173,15 +198,23 @@ const fetchChattingHomes = async () => {
     // 401 에러인 경우 로그인 필요 상태로 설정
     if (error.response?.status === 401) {
       needsAuth.value.chat = true
+      hasError.value.chat = false
     } else {
-      // 다른 에러의 경우 에러 메시지 전달
-      let errorMessage = '채팅 중인 매물을 불러오는데 실패했습니다.'
-      if (error.response?.status === 500) {
-        errorMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+      // 다른 에러의 경우 에러 상태 설정
+      hasError.value.chat = true
+      if (error.response) {
+        if (error.response.status === 403) {
+          errorMessage.value.chat = '채팅 중인 매물을 조회할 권한이 없습니다.'
+        } else if (error.response.status === 500) {
+          errorMessage.value.chat = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+        } else {
+          errorMessage.value.chat = `오류 발생 (${error.response.status}): ${error.response.data?.message || '채팅 중인 매물을 불러오는데 실패했습니다.'}`
+        }
       } else if (error.request) {
-        errorMessage = '서버와 연결할 수 없습니다. 네트워크 연결을 확인해주세요.'
+        errorMessage.value.chat = '서버와 연결할 수 없습니다. 네트워크 연결을 확인해주세요.'
+      } else {
+        errorMessage.value.chat = error.message || '채팅 중인 매물을 불러오는데 실패했습니다.'
       }
-      emit('error', { type: 'chat', message: errorMessage })
     }
     
     // 에러 시 빈 배열로 설정
@@ -305,8 +338,18 @@ const closeLoginModal = () => {
         class="max-h-[300px] overflow-y-auto overflow-x-visible scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100"
       >
         <transition name="fade" mode="out-in">
+          <!-- 스켈레톤 UI -->
+          <div v-if="isLoading" :key="`loading-${selectedTab}`" class="space-y-3 px-1 pt-3">
+            <PropertyItem
+              v-for="n in 3"
+              :key="n"
+              :property="{}"
+              :is-loading="true"
+              :clickable="false"
+            />
+          </div>
           <!-- 로그인이 필요한 경우 -->
-          <div v-if="!isLoading && needsAuth[selectedTab]" :key="`auth-${selectedTab}`" class="px-1 pt-3">
+          <div v-else-if="needsAuth[selectedTab]" :key="`auth-${selectedTab}`" class="px-1 pt-3">
             <div class="flex flex-col items-center justify-center py-8">
               <div class="mb-4">
                 <IconLock class="w-12 h-12 text-gray-400" />
@@ -317,8 +360,21 @@ const closeLoginModal = () => {
               </BaseButton>
             </div>
           </div>
+          <!-- 백엔드 연결 실패 시 에러 메시지 -->
+          <div v-else-if="hasError[selectedTab]" :key="`error-${selectedTab}`" class="px-1 pt-3">
+            <ErrorState 
+              @retry="selectedTab === 'favorite' ? fetchLikedHomes() : fetchChattingHomes()"
+            />
+          </div>
+          <!-- 매물이 없는 경우 안내 메시지 -->
+          <div v-else-if="sortedProperties.length === 0" :key="`empty-${selectedTab}`" class="px-1 pt-3">
+            <EmptyState
+              :title="selectedTab === 'favorite' ? '아직 찜한 매물이 없습니다.' : '채팅 중인 매물이 없습니다.'"
+              :message="selectedTab === 'favorite' ? '마음에 드는 매물을 찜해보세요!' : '관심있는 매물의 판매자와 채팅을 시작해보세요!'"
+            />
+          </div>
           <!-- 매물 목록 -->
-          <div v-else-if="!isLoading" :key="selectedTab" class="px-1 pt-3">
+          <div v-else :key="selectedTab" class="px-1 pt-3">
             <template v-for="(property, index) in sortedProperties" :key="property.id">
               <!-- 선택된 매물과 다른 매물 사이 구분선 -->
               <div v-if="selectedPropertyId && index === 1" class="relative my-4">
@@ -358,15 +414,6 @@ const closeLoginModal = () => {
                 />
               </div>
             </template>
-          </div>
-          <div v-else :key="`loading-${selectedTab}`" class="space-y-3 px-1 pt-3">
-            <PropertyItem
-              v-for="n in 3"
-              :key="n"
-              :property="{}"
-              :is-loading="true"
-              :clickable="false"
-            />
           </div>
         </transition>
       </div>
