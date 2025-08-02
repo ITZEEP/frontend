@@ -38,7 +38,7 @@
     <!-- 입주 예정일 -->
     <div>
       <BaseInput
-        v-model="moveInDate"
+        v-model="expectedMoveInDate"
         type="date"
         label="입주 예정일을 선택해주세요"
         class="w-full"
@@ -63,9 +63,9 @@
       v-model="renewalIntent"
       label="재계약(갱신) 의사가 있으신가요?"
       :options="[
-        { label: '있음', value: '있음' },
-        { label: '없음', value: '없음' },
-        { label: '미정', value: '미정' },
+        { label: '있음', value: 'YES' },
+        { label: '없음', value: 'NO' },
+        { label: '미정', value: 'UNDECIDED' },
       ]"
     />
   </div>
@@ -94,7 +94,7 @@ onMounted(async () => {
     loanPlan.value = data.loanPlan
     insurancePlan.value = data.insurancePlan
     depositAdjustment.value = data.depositAdjustment
-    moveInDate.value = data.moveInDate
+    expectedMoveInDate.value = data.expectedMoveInDate
     contractDuration.value = data.contractDuration
     renewalIntent.value = data.renewalIntent
   } catch (error) {
@@ -106,13 +106,13 @@ onMounted(async () => {
 const loanPlan = ref(null)
 const insurancePlan = ref(null)
 const depositAdjustment = ref(null)
-const moveInDate = ref('')
+const expectedMoveInDate = ref('')
 const contractDuration = ref('')
 const renewalIntent = ref('')
 
 // 빠진값이 없는지 확인
 watch(
-  [loanPlan, insurancePlan, depositAdjustment, moveInDate, contractDuration, renewalIntent],
+  [loanPlan, insurancePlan, depositAdjustment, expectedMoveInDate, contractDuration, renewalIntent],
   ([loan, insurance, deposit, moveIn, contract, renewal]) => {
     const allFilled =
       loan !== null &&
@@ -131,7 +131,7 @@ const updateTenantStep1 = async () => {
     loanPlan: loanPlan.value,
     insurancePlan: insurancePlan.value,
     depositAdjustment: depositAdjustment.value,
-    expectedMoveInDate: moveInDate.value,
+    expectedMoveInDate: expectedMoveInDate.value,
     contractDuration: contractDuration.value,
     renewalIntent: renewalIntent.value,
   }
