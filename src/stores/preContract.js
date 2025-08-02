@@ -11,7 +11,6 @@ export const usePreContractStore = defineStore('preContract', {
     },
     currentSubSteps: {},
     canProceed: false,
-    riskCheck: false,
     hasPet: true,
     hasParking: false,
   }),
@@ -34,9 +33,6 @@ export const usePreContractStore = defineStore('preContract', {
     },
     setCanProceed(status) {
       this.canProceed = status
-    },
-    setRiskCheck(risk) {
-      this.riskCheck = risk;
     },
     setHasPet(hasPet) {
       this.hasPet = hasPet;
