@@ -1,13 +1,10 @@
 <script setup>
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
+
+// Components
 import BaseButton from '@/components/common/BaseButton.vue'
 import LoadingOverlay from '@/components/common/LoadingOverlay.vue'
-import { useModalStore } from '@/stores/modal'
-import { useFraudStore } from '@/stores/fraud'
-import { fraudApi } from '@/apis/fraud'
-import { extractErrorCode, getErrorInfo, getErrorTypeFromGeneric, getGenericErrorInfo } from '@/utils/errorMapping'
-
 import PropertyTypeSelector from '@/components/risk-check/PropertyTypeSelector.vue'
 import PropertyCard from '@/components/risk-check/PropertyCard.vue'
 import PropertyInfoForm from '@/components/risk-check/PropertyInfoForm.vue'
@@ -18,22 +15,22 @@ import PropertyTypeWarningModal from '@/components/risk-check/PropertyTypeWarnin
 import PropertySelectionWarningModal from '@/components/risk-check/PropertySelectionWarningModal.vue'
 import ErrorModal from '@/components/common/ErrorModal.vue'
 
+// Icons
 import IconClock from '@/components/icons/IconClock.vue'
 import IconSearch from '@/components/icons/IconSearch.vue'
 
+// Stores & APIs
+import { useModalStore } from '@/stores/modal'
+import { useFraudStore } from '@/stores/fraud'
+import { fraudApi } from '@/apis/fraud'
+import { extractErrorCode, getErrorInfo, getErrorTypeFromGeneric, getGenericErrorInfo } from '@/utils/errorMapping'
+
+// Composables
 const router = useRouter()
 const modalStore = useModalStore()
 const fraudStore = useFraudStore()
 
-const showHistoryModal = ref(false)
-const showFileWarningModal = ref(false)
-const showPropertyTypeWarningModal = ref(false)
-const showPropertySelectionWarningModal = ref(false)
-const showErrorModal = ref(false)
-const errorTitle = ref('오류 발생')
-const errorMessage = ref('')
-const errorType = ref('unknown_error')
-const missingFiles = ref([])
+// State
 const selectedPropertyType = ref(null)
 const selectedTab = ref('favorite')
 const selectedPropertyId = ref(null)
@@ -43,10 +40,26 @@ const uploadedFiles = ref({
   건축물대장: null,
 })
 const isAnalyzing = ref(false)
+
+// Modal States
+const showHistoryModal = ref(false)
+const showFileWarningModal = ref(false)
+const showPropertyTypeWarningModal = ref(false)
+const showPropertySelectionWarningModal = ref(false)
+const showErrorModal = ref(false)
+
+// Error States
+const errorTitle = ref('오류 발생')
+const errorMessage = ref('')
+const errorType = ref('unknown_error')
+const missingFiles = ref([])
+
+// Refs
 const propertyTypeSelectorRef = ref(null)
 const propertyCardRef = ref(null)
 const documentUploadRef = ref(null)
 
+// Lifecycle
 onMounted(() => {
   document.body.style.backgroundColor = '#F7F7F8'
 })
@@ -55,130 +68,144 @@ onUnmounted(() => {
   document.body.style.backgroundColor = ''
 })
 
+// Property Type Handler
 const handlePropertyTypeSelect = (type) => {
   selectedPropertyType.value = type
-  selectedPropertyId.value = null // 매물 유형 변경 시 선택된 매물 초기화
-  propertyInfo.value = {} // 매물 정보 초기화
+  selectedPropertyId.value = null
+  propertyInfo.value = {}
+  
   if (type === 'unregistered') {
     uploadedFiles.value.등기부등본 = null
     uploadedFiles.value.건축물대장 = null
   }
 }
 
+// Tab Handler
 const handleTabSelect = (tab) => {
   selectedTab.value = tab
-  selectedPropertyId.value = null // 탭 변경 시 선택 초기화
+  selectedPropertyId.value = null
 }
 
+// Property Selection Handler
 const handlePropertySelect = (propertyId) => {
   selectedPropertyId.value = propertyId
 }
 
+// File Update Handler
 const handleFileUpdate = (fileType, file) => {
   uploadedFiles.value[fileType] = file
 }
 
+// Property Info Update Handler
 const handlePropertyInfoUpdate = (info) => {
   propertyInfo.value = info
 }
 
-const startRiskAnalysis = async () => {
-  // 매물 유형 선택 검증
+// Validation Functions
+const validatePropertyType = () => {
   if (!selectedPropertyType.value) {
     showPropertyTypeWarningModal.value = true
     modalStore.open()
-    return
+    return false
   }
+  return true
+}
 
-  // 등록된 매물인 경우 매물 선택 검증
+const validatePropertySelection = () => {
   if (selectedPropertyType.value === 'registered' && !selectedPropertyId.value) {
     showPropertySelectionWarningModal.value = true
     modalStore.open()
-    return
+    return false
   }
+  return true
+}
 
-  // 등록되지 않은 매물인 경우 매물 정보 검증
+const validatePropertyInfo = () => {
   if (selectedPropertyType.value === 'unregistered') {
-    if (!propertyInfo.value.address || !propertyInfo.value.leaseType || !propertyInfo.value.residenceType) {
-      errorTitle.value = '매물 정보 입력 필요'
-      errorMessage.value = '매물 정보를 모두 입력해주세요.\n\n주소, 거래유형, 주거유형은 필수 입력 항목입니다.'
-      errorType.value = 'form_validation_error'
-      showErrorModal.value = true
-      modalStore.open()
-      return
+    const { address, leaseType, residenceType } = propertyInfo.value
+    if (!address || !leaseType || !residenceType) {
+      showError('매물 정보 입력 필요', '매물 정보를 모두 입력해주세요.\\n\\n주소, 거래유형, 주거유형은 필수 입력 항목입니다.', 'form_validation_error')
+      return false
     }
   }
+  return true
+}
 
-  // 파일 업로드 검증
+const validateFiles = () => {
   const missing = []
-  if (!uploadedFiles.value.등기부등본) {
-    missing.push('등기부등본')
-  }
-  if (!uploadedFiles.value.건축물대장) {
-    missing.push('건축물대장')
-  }
+  if (!uploadedFiles.value.등기부등본) missing.push('등기부등본')
+  if (!uploadedFiles.value.건축물대장) missing.push('건축물대장')
 
   if (missing.length > 0) {
     missingFiles.value = missing
     showFileWarningModal.value = true
     modalStore.open()
+    return false
+  }
+  return true
+}
+
+// Error Handler
+const showError = (title, message, type) => {
+  errorTitle.value = title
+  errorMessage.value = message
+  errorType.value = type
+  showErrorModal.value = true
+  modalStore.open()
+}
+
+// Main Risk Analysis Function
+const startRiskAnalysis = async () => {
+  // Validate inputs
+  if (!validatePropertyType() || 
+      !validatePropertySelection() || 
+      !validatePropertyInfo() || 
+      !validateFiles()) {
     return
   }
 
   isAnalyzing.value = true
 
   try {
-    // 실제 API 호출
     const homeId = selectedPropertyType.value === 'registered' ? selectedPropertyId.value : null
     const response = await fraudApi.analyzeDocuments(
       uploadedFiles.value['등기부등본'],
       uploadedFiles.value['건축물대장'],
-      homeId // 매물 ID (등록되지 않은 매물의 경우 null)
+      homeId
     )
 
     if (response.success && response.data) {
-      // Store에 OCR 분석 결과와 매물 정보 저장
       fraudStore.setDocumentAnalysisData(response.data)
       
-      // 등록되지 않은 매물의 경우 매물 정보도 함께 저장
       if (selectedPropertyType.value === 'unregistered') {
         fraudStore.setPropertyInfo(propertyInfo.value)
       }
       
-      // OCR 확인 페이지로 이동 (URL에는 민감한 정보 노출하지 않음)
       router.push('/risk-check/confirm')
     } else {
-      errorTitle.value = '문서 분석 실패'
-      errorMessage.value = response.message || '알 수 없는 오류가 발생했습니다.'
-      showErrorModal.value = true
-      modalStore.open()
+      showError('문서 분석 실패', response.message || '알 수 없는 오류가 발생했습니다.')
     }
   } catch (error) {
     console.error('OCR 분석 오류:', error)
     
-    // 에러 코드 추출 및 매핑
     const errorCode = extractErrorCode(error)
     let errorInfo
     
     if (errorCode) {
-      // 알려진 에러 코드인 경우 매핑된 정보 사용
       errorInfo = getErrorInfo(errorCode)
       errorType.value = errorInfo.type
     } else {
-      // 일반적인 HTTP 에러 처리
       errorInfo = getGenericErrorInfo(error)
       errorType.value = getErrorTypeFromGeneric(error)
     }
     
-    errorTitle.value = errorInfo.title
-    errorMessage.value = errorInfo.message
-    showErrorModal.value = true
-    modalStore.open()
+    showError(errorInfo.title, errorInfo.message)
   } finally {
     isAnalyzing.value = false
   }
 }
 
+// History Modal Handlers
 const handleCheckHistory = () => {
   showHistoryModal.value = true
   modalStore.open()
@@ -190,11 +217,10 @@ const closeHistoryModal = () => {
 }
 
 const handleSelectHistory = (history) => {
-  console.log('선택된 분석 기록:', history)
-  // riskCheckId를 사용해서 결과 페이지로 이동
   router.push(`/risk-check/result/${history.riskCheckId || history.id}`)
 }
 
+// File Warning Modal Handlers
 const closeFileWarningModal = () => {
   showFileWarningModal.value = false
   modalStore.close()
@@ -206,6 +232,7 @@ const confirmFileWarning = () => {
   scrollToElement(documentUploadRef.value)
 }
 
+// Property Type Warning Modal Handlers
 const closePropertyTypeWarningModal = () => {
   showPropertyTypeWarningModal.value = false
   modalStore.close()
@@ -217,6 +244,7 @@ const confirmPropertyTypeWarning = () => {
   scrollToElement(propertyTypeSelectorRef.value)
 }
 
+// Property Selection Warning Modal Handlers
 const closePropertySelectionWarningModal = () => {
   showPropertySelectionWarningModal.value = false
   modalStore.close()
@@ -228,6 +256,13 @@ const confirmPropertySelectionWarning = () => {
   scrollToElement(propertyCardRef.value)
 }
 
+// Error Modal Handler
+const closeErrorModal = () => {
+  showErrorModal.value = false
+  modalStore.close()
+}
+
+// Utility Functions
 const scrollToElement = async (element) => {
   if (element) {
     await nextTick()
@@ -238,23 +273,11 @@ const scrollToElement = async (element) => {
     }, 3000)
   }
 }
-
-const handlePropertyCardError = (error) => {
-  console.error('PropertyCard 에러:', error)
-  errorTitle.value = `${error.type === 'favorite' ? '찜한' : '채팅 중인'} 매물 조회 실패`
-  errorMessage.value = error.message
-  showErrorModal.value = true
-  modalStore.open()
-}
-
-const closeErrorModal = () => {
-  showErrorModal.value = false
-  modalStore.close()
-}
 </script>
 
 <template>
   <div class="max-w-7xl mx-auto py-8">
+    <!-- Header -->
     <div class="flex items-center justify-between mb-8">
       <div>
         <h1 class="text-3xl font-bold text-gray-warm-700 mb-2">사기 위험도 분석</h1>
@@ -266,6 +289,7 @@ const closeErrorModal = () => {
       </BaseButton>
     </div>
 
+    <!-- Property Type Selector -->
     <div ref="propertyTypeSelectorRef" class="mb-8">
       <PropertyTypeSelector
         :selected-type="selectedPropertyType"
@@ -273,15 +297,16 @@ const closeErrorModal = () => {
       />
     </div>
 
+    <!-- Property Card (for registered properties) -->
     <div v-if="selectedPropertyType === 'registered'" ref="propertyCardRef" class="mb-8">
       <PropertyCard 
         :selected-tab="selectedTab" 
         @select-tab="handleTabSelect"
         @select-property="handlePropertySelect"
-        @error="handlePropertyCardError"
       />
     </div>
 
+    <!-- Property Info Form (for unregistered properties) -->
     <div v-if="selectedPropertyType === 'unregistered'" class="mb-8">
       <PropertyInfoForm 
         :property-info="propertyInfo"
@@ -289,14 +314,19 @@ const closeErrorModal = () => {
       />
     </div>
 
+    <!-- Document Upload -->
     <div
       v-if="selectedPropertyType === 'registered' || selectedPropertyType === 'unregistered'"
       ref="documentUploadRef"
       class="mb-8"
     >
-      <DocumentUpload :uploaded-files="uploadedFiles" @update-files="handleFileUpdate" />
+      <DocumentUpload 
+        :uploaded-files="uploadedFiles" 
+        @update-files="handleFileUpdate" 
+      />
     </div>
 
+    <!-- Analysis Button -->
     <div v-if="selectedPropertyType" class="flex justify-center">
       <BaseButton
         size="lg"
@@ -311,16 +341,14 @@ const closeErrorModal = () => {
             AI 위험도 분석 시작
           </div>
           <div v-else key="loading" class="flex items-center">
-            <div
-              class="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"
-            ></div>
+            <div class="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
             분석 중...
           </div>
         </transition>
       </BaseButton>
     </div>
 
-    <!-- 로딩 오버레이 -->
+    <!-- Loading Overlay -->
     <LoadingOverlay
       :loading="isAnalyzing"
       message="OCR 처리 중..."
@@ -328,6 +356,7 @@ const closeErrorModal = () => {
     />
   </div>
 
+  <!-- Modals -->
   <RiskCheckHistoryModal
     :is-open="showHistoryModal"
     @close="closeHistoryModal"
