@@ -20,6 +20,21 @@
       ]"
     />
 
+    <!-- 보증금 조정 여부 -->
+    <div class="space-y-1">
+      <ToggleRadio
+        v-model="depositAdjustment"
+        label="임대인에게 보증금/월세 조정을 제안하시겠습니까?"
+        :options="[
+          { label: '예', value: true },
+          { label: '아니요', value: false },
+        ]"
+      />
+      <p class="text-sm text-gray-500 text-left">
+        '예' 선택시 계약서 작성 시 임대인에게 보증금/월세 조정을 제안합니다.
+      </p>
+    </div>
+
     <!-- 입주 예정일 -->
     <div>
       <BaseInput
@@ -70,6 +85,7 @@ const store = usePreContractStore()
 const route = useRoute()
 const contractChatId = route.params.id
 
+// 페이지 조회
 onMounted(async () => {
   store.canProceed = false
   try {
@@ -77,6 +93,7 @@ onMounted(async () => {
 
     loanPlan.value = data.loanPlan
     insurancePlan.value = data.insurancePlan
+    depositAdjustment.value = data.depositAdjustment
     moveInDate.value = data.moveInDate
     contractDuration.value = data.contractDuration
     renewalIntent.value = data.renewalIntent
@@ -85,25 +102,35 @@ onMounted(async () => {
   }
 })
 
+// 초기화
 const loanPlan = ref(null)
 const insurancePlan = ref(null)
+const depositAdjustment = ref(null)
 const moveInDate = ref('')
 const contractDuration = ref('')
 const renewalIntent = ref('')
 
+// 빠진값이 없는지 확인
 watch(
-  [loanPlan, insurancePlan, moveInDate, contractDuration, renewalIntent],
-  ([loan, insurance, moveIn, contract, renewal]) => {
+  [loanPlan, insurancePlan, depositAdjustment, moveInDate, contractDuration, renewalIntent],
+  ([loan, insurance, deposit, moveIn, contract, renewal]) => {
     const allFilled =
-      loan !== null && insurance !== null && moveIn !== '' && contract !== '' && renewal !== ''
+      loan !== null &&
+      insurance !== null &&
+      deposit !== null &&
+      moveIn !== '' &&
+      contract !== '' &&
+      renewal !== ''
     store.setCanProceed(allFilled)
   },
 )
 
+// 저장
 const updateTenantStep1 = async () => {
   const step1DTO = {
     loanPlan: loanPlan.value,
     insurancePlan: insurancePlan.value,
+    depositAdjustment: depositAdjustment.value,
     expectedMoveInDate: moveInDate.value,
     contractDuration: contractDuration.value,
     renewalIntent: renewalIntent.value,

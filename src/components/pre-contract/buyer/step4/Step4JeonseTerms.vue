@@ -20,6 +20,21 @@
       ]"
     />
 
+    <!-- 계약금 조정 여부 -->
+    <div class="space-y-1">
+      <ToggleRadio
+        v-model="depositAdjustment"
+        label="임대인에게 보증금 조정을 제안하시겠습니까?"
+        :options="[
+          { label: '예', value: true },
+          { label: '아니요', value: false },
+        ]"
+      />
+      <p class="text-sm text-gray-500 text-left">
+        '예' 선택시 계약서 작성 시 임대인에게 보증금 조정을 제안합니다.
+      </p>
+    </div>
+
     <!-- 입주 예정일 -->
     <div>
       <BaseInput
@@ -74,6 +89,15 @@ const store = usePreContractStore()
 const route = useRoute()
 const contractChatId = route.params.id
 
+// 초기화
+const loanPlan = ref(null)
+const insurancePlan = ref(null)
+const depositAdjustment = ref(null)
+const expectedMoveInDate = ref('')
+const contractDuration = ref('')
+const renewalIntent = ref('')
+
+// 페이지 마운트시 -> 조회
 onMounted(async () => {
   store.canProceed = false
   try {
@@ -84,6 +108,7 @@ onMounted(async () => {
     console.log(loanPlan.value)
     insurancePlan.value = data.insurancePlan
     console.log(insurancePlan.value)
+    depositAdjustment.value = data.depositAdjustment
     expectedMoveInDate.value = data.expectedMoveInDate
     console.log(expectedMoveInDate.value)
     contractDuration.value = data.contractDuration
@@ -95,21 +120,22 @@ onMounted(async () => {
   }
 })
 
-const loanPlan = ref(null)
-const insurancePlan = ref(null)
-const expectedMoveInDate = ref('')
-const contractDuration = ref('')
-const renewalIntent = ref('')
-
+// 저장 전 -> 빠진게 없는지 확인
 watch(
-  [loanPlan, insurancePlan, expectedMoveInDate, contractDuration, renewalIntent],
-  ([loan, insurance, moveIn, contract, renewal]) => {
+  [loanPlan, insurancePlan, depositAdjustment, expectedMoveInDate, contractDuration, renewalIntent],
+  ([loan, insurance, deposit, moveIn, contract, renewal]) => {
     const allFilled =
-      loan !== null && insurance !== null && moveIn !== '' && contract !== '' && renewal !== ''
+      loan !== null &&
+      insurance !== null &&
+      deposit !== null &&
+      moveIn !== '' &&
+      contract !== '' &&
+      renewal !== ''
     store.setCanProceed(allFilled)
   },
 )
 
+// 데이터베이스에 저장
 const updateTenantStep1 = async () => {
   alert(55255)
   console.log('contractDuration.value:', contractDuration.value)
@@ -117,6 +143,7 @@ const updateTenantStep1 = async () => {
   const step1DTO = {
     loanPlan: loanPlan.value,
     insurancePlan: insurancePlan.value,
+    depositAdjustment: depositAdjustment.value,
     expectedMoveInDate: expectedMoveInDate.value,
     contractDuration: contractDuration.value,
     renewalIntent: renewalIntent.value,
