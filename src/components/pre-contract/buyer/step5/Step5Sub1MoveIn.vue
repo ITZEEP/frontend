@@ -33,14 +33,33 @@
       ]"
     />
   </div>
+  <BaseButton @click="updateTenantStep2"> 테스트 버튼 </BaseButton>
 </template>
 
 <script setup>
 import { ref, watch, onMounted } from 'vue'
 import ToggleRadio from '@/components/common/ToggleRadio.vue'
+import BaseInput from '@/components/common/BaseInput.vue'
 import { usePreContractStore } from '@/stores/preContract'
+import buyerApi from '@/apis/pre-contract-buyer.js'
+import { useRoute } from 'vue-router'
 
 const store = usePreContractStore()
+
+const route = useRoute()
+const contractChatId = route.params.id
+
+onMounted(async () => {
+  store.canProcced = false
+  try {
+    const { data } = await buyerApi.selectTenantStep2(contractChatId)
+    facilityRepairNeeded.value = data.facilityRepairNeeded
+    interiorCleaningNeeded.value = data.interiorCleaningNeeded
+    applianceInstallationPlan.value = data.applianceInstallationPlan
+  } catch (error) {
+    console.error('step2 조회 실패 ❌', error)
+  }
+})
 
 // 상태값
 const facilityRepairNeeded = ref(null)
@@ -55,7 +74,18 @@ watch(
   },
 )
 
-onMounted(() => {
-  store.canProceed = false
-})
+const updateTenantStep2 = async () => {
+  const step2DTO = {
+    facilityRepairNeeded: facilityRepairNeeded.value,
+    interiorCleaningNeeded: interiorCleaningNeeded.value,
+    applianceInstallationPlan: applianceInstallationPlan.value,
+  }
+
+  try {
+    await buyerApi.updateTenantStep2(contractChatId, step2DTO)
+    alert('Step2 애완동물 불가 정보가 저장되었습니다! ✅')
+  } catch (error) {
+    console.error('step2 애완동물 불가 저장 실패 ❌', error)
+  }
+}
 </script>

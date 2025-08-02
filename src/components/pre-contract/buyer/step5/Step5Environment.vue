@@ -29,6 +29,8 @@ onMounted(() => {
 })
 
 const hasPet = computed(() => store.hasPet)
+console.log('haspet : {}', hasPet)
+alert(hasPet.value)
 
 // props로 현재 subStep 받아오기
 const props = defineProps({

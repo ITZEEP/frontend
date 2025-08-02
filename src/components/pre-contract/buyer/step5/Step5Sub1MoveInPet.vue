@@ -32,42 +32,37 @@
         { label: '아니요', value: false },
       ]"
     />
-
-    <!-- 반려동물 여부 -->
-    <ToggleRadio
-      v-model="hasPet"
-      label="반려동물이 있으신가요?"
-      :options="[
-        { label: '예', value: true },
-        { label: '아니요', value: false },
-      ]"
-    />
-
-    <!-- 반려동물 정보 (조건부) -->
-    <div v-if="hasPet === true" class="space-y-4">
-      <BaseInput
-        v-model="petInfo"
-        placeholder="반려동물 종류를 입력해주세요 (예: 강아지)"
-        class="w-full"
-      />
-      <BaseInput
-        v-model="petCount"
-        type="number"
-        placeholder="반려동물 수를 입력해주세요"
-        class="w-full"
-        @input="onPetCountInput"
-      />
-    </div>
   </div>
+  <BaseButton @click="updateTenantStep2"> 테스트 버튼 </BaseButton>
 </template>
 
 <script setup>
 import { ref, watch, onMounted } from 'vue'
 import ToggleRadio from '@/components/common/ToggleRadio.vue'
-import BaseInput from '@/components/common/BaseInput.vue'
 import { usePreContractStore } from '@/stores/preContract'
+import buyerApi from '@/apis/pre-contract-buyer.js'
+import { useRoute } from 'vue-router'
+import BaseButton from '@/components/common/BaseButton.vue'
 
 const store = usePreContractStore()
+
+const route = useRoute()
+const contractChatId = route.params.id
+
+onMounted(async () => {
+  store.canProceed = false
+  try {
+    const { data } = await buyerApi.selectTenantStep2(contractChatId)
+    facilityRepairNeeded.value = data.facilityRepairNeeded
+    interiorCleaningNeeded.value = data.interiorCleaningNeeded
+    applianceInstallationPlan.value = data.applianceInstallationPlan
+    hasPet.value = data.hasPet
+    petInfo.value = data.petInfo
+    petCount.value = data.petCount
+  } catch (error) {
+    console.error('step2 조회 실패 ❌', error)
+  }
+})
 
 // 상태값
 const facilityRepairNeeded = ref(null)
@@ -75,35 +70,31 @@ const interiorCleaningNeeded = ref(null)
 const applianceInstallationPlan = ref(null)
 const hasPet = ref(null)
 const petInfo = ref('')
-const petCount = ref('')
+const petCount = ref(null)
 
 watch(
-  [
-    facilityRepairNeeded,
-    interiorCleaningNeeded,
-    applianceInstallationPlan,
-    hasPet,
-    petInfo,
-    petCount,
-  ],
-  ([repair, clean, installation, hasP, infoP, countP]) => {
-    const allFilled =
-      repair !== null &&
-      clean !== null &&
-      installation !== null &&
-      hasP !== null &&
-      infoP !== '' &&
-      countP !== ''
+  [facilityRepairNeeded, interiorCleaningNeeded, applianceInstallationPlan],
+  ([repair, clean, installation]) => {
+    const allFilled = repair !== null && clean !== null && installation !== null
     store.setCanProceed(allFilled)
   },
 )
 
-onMounted(() => {
-  store.canProceed = false
-})
+const updateTenantStep2 = async () => {
+  const step2DTO = {
+    facilityRepairNeeded: facilityRepairNeeded.value,
+    interiorCleaningNeeded: interiorCleaningNeeded.value,
+    applianceInstallationPlan: applianceInstallationPlan.value,
+    hasPet: hasPet.value,
+    petInfo: petInfo.value,
+    petCount: petCount.value,
+  }
 
-const onPetCountInput = (e) => {
-  const value = Number(e.target.value)
-  petCount.value = value < 0 ? 0 : value
+  try {
+    await buyerApi.updateTenantStep2(contractChatId, step2DTO)
+    alert('Step2 애완동물 가능 정보가 저장되었습니다! ✅')
+  } catch (error) {
+    console.error('step2 애완동물 가능 저장 실패 ❌', error)
+  }
 }
 </script>
