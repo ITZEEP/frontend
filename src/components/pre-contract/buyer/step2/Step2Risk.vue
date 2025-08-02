@@ -1,6 +1,5 @@
 <template>
   <div class="flex flex-col items-center justify-center gap-8">
-    <!-- 불리언 기반 조건 분기 -->
     <Step2RiskResult v-if="isRisk" />
     <Step2RiskCheck v-else />
   </div>
@@ -16,7 +15,7 @@ import Step2RiskResult from './Step2RiskResult.vue'
 // Pinia store
 const store = usePreContractStore()
 
-// ✅ 로컬스토리지에서 값 불러와 store에 반영
+// 로컬스토리지에서 값 불러와 store에 반영
 onMounted(() => {
   const raw = localStorage.getItem('risk_check')
   const parsed = raw === 'true' ? true : raw === 'false' ? false : undefined
@@ -25,6 +24,6 @@ onMounted(() => {
   }
 })
 
-// ✅ computed 값으로 UI 조건 분기
+// computed 값으로 UI 조건 분기
 const isRisk = computed(() => store.riskCheck)
 </script>
