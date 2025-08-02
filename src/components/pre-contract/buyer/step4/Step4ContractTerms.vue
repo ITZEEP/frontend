@@ -30,5 +30,6 @@ onMounted(() => {
 const currentComponent = computed(() => {
   if (store.leaseType === 'JEONSE') return Step4JeonseTerms
   if (store.leaseType === 'WOLSE') return Step4WolseTerms
+  return null // 아무것도 렌더링하지 않음
 })
 </script>
