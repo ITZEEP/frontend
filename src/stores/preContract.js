@@ -12,7 +12,8 @@ export const usePreContractStore = defineStore('preContract', {
     currentSubSteps: {},
     canProceed: false,
     riskCheck: false,
-    hasPet: false,
+    hasPet: true,
+    hasParking: false,
   }),
   actions: {
     setLeaseType(type) {
@@ -39,6 +40,9 @@ export const usePreContractStore = defineStore('preContract', {
     },
     setHasPet(hasPet) {
       this.hasPet = hasPet;
+    },
+    setHasParking(hasParking) {
+      this.hasParking = hasParking;
     },
   },
 })
