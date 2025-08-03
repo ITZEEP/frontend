@@ -14,16 +14,36 @@
 <script setup>
 import { computed, onMounted } from 'vue'
 import { usePreContractStore } from '@/stores/preContract'
+import { useRoute } from 'vue-router'
+import buyerApi from '@/apis/pre-contract-buyer.js'
 
 import Step4JeonseTerms from './Step4JeonseTerms.vue'
 import Step4WolseTerms from './Step4WolseTerms.vue'
 
+const route = useRoute()
+const contractChatId = route.params.id
+
 // Pinia 스토어 가져오기
 const store = usePreContractStore()
 
-onMounted(() => {
-  const raw = localStorage.getItem('rent_type')
-  store.setLeaseType(raw)
+onMounted(async () => {
+  try {
+    // 1. API로부터 초기 임차인 정보 가져오기
+    const { data } = await buyerApi.saveTenantInfo(contractChatId)
+
+    // 2. 받아온 데이터를 localStorage에 저장
+    if (data) {
+      localStorage.setItem('rent_type', data.rentType)
+      localStorage.setItem('has_pet', data.hasPet.toString())
+      localStorage.setItem('has_parking', data.hasParking.toString())
+
+      // 3. Pinia store에도 필요한 값 반영
+      const raw = localStorage.getItem('rent_type')
+      store.setLeaseType(raw)
+    }
+  } catch (error) {
+    console.error('초기 임차인 정보 가져오기 실패 ❌', error)
+  }
 })
 
 // leaseType에 따라 컴포넌트 분기
