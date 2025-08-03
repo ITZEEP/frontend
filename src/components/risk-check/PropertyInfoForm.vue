@@ -216,7 +216,7 @@ updatePropertyInfo()
     <div
       class="mt-6 p-3 rounded-lg"
       :class="
-        isValid ? 'bg-green-50 border border-green-200' : 'bg-amber-50 border border-amber-200'
+        isValid ? 'bg-green-50 border border-green-100' : 'bg-yellow-50 border border-yellow-100'
       "
     >
       <div class="flex items-center">
@@ -233,7 +233,7 @@ updatePropertyInfo()
               />
             </svg>
           </div>
-          <div v-else class="w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center">
+          <div v-else class="w-5 h-5 bg-yellow-primary rounded-full flex items-center justify-center">
             <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
               <path
                 fill-rule="evenodd"
@@ -244,10 +244,10 @@ updatePropertyInfo()
           </div>
         </div>
         <div class="ml-3">
-          <p class="text-sm font-medium" :class="isValid ? 'text-green-800' : 'text-amber-800'">
+          <p class="text-sm font-medium" :class="isValid ? 'text-green-800' : 'text-gray-warm-700'">
             {{ isValid ? '입력 완료' : '필수 정보 입력 필요' }}
           </p>
-          <p class="text-xs" :class="isValid ? 'text-green-600' : 'text-amber-600'">
+          <p class="text-xs" :class="isValid ? 'text-green-600' : 'text-gray-warm-500'">
             {{
               isValid
                 ? '매물 정보가 모두 입력되었습니다'

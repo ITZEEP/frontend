@@ -348,14 +348,14 @@ watch(dataNotFound, (newValue) => {
 
       <!-- Loading State -->
       <div v-if="isLoading" class="flex flex-col items-center justify-center py-32">
-        <div class="w-16 h-16 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <div class="w-16 h-16 border-4 border-yellow-primary border-t-transparent rounded-full animate-spin mb-4"></div>
         <p class="text-gray-600">분석 결과를 불러오고 있습니다...</p>
       </div>
 
       <!-- Data Not Found State -->
       <div v-else-if="dataNotFound" class="text-center py-32">
         <p class="text-gray-600 mb-4">분석 결과를 찾을 수 없습니다.</p>
-        <button @click="goBack" class="text-primary-600 hover:text-primary-700">
+        <button @click="goBack" class="text-yellow-primary hover:text-yellow-500">
           돌아가기
         </button>
       </div>
@@ -409,17 +409,7 @@ watch(dataNotFound, (newValue) => {
 
         <!-- Recommended Services -->
         <div class="mb-8">
-          <RecommendedServices />
-        </div>
-
-        <!-- Action Button -->
-        <div class="flex justify-center">
-          <button 
-            @click="analyzeAnother"
-            class="px-8 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
-          >
-            다른 매물 분석하기
-          </button>
+          <RecommendedServices @analyze-another="analyzeAnother" />
         </div>
       </template>
     </div>

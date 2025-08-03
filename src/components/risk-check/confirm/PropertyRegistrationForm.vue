@@ -127,7 +127,7 @@ const removeMortgagee = (index) => {
         <button
           type="button"
           @click="addMortgagee"
-          class="text-sm text-primary-600 hover:text-primary-700 font-medium"
+          class="text-sm text-yellow-primary hover:text-yellow-500 font-medium"
         >
           + 근저당권 추가
         </button>
