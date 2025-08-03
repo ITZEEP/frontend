@@ -132,6 +132,7 @@
           관계: <span class="font-medium">{{ lifeInfo?.relation }}</span>
         </div>
       </div>
+      <BaseButton @click="mongoDB"> 테스트 버튼 </BaseButton>
     </div>
   </div>
 </template>
@@ -141,6 +142,7 @@ import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import buyerApi from '@/apis/pre-contract-buyer.js'
 import { useRoute } from 'vue-router'
+import BaseButton from '@/components/common/BaseButton.vue'
 
 const route = useRoute()
 const contractChatId = route.params.id
@@ -258,4 +260,13 @@ const lifeInfo = ref({
   emergencyContact: '',
   relation: '',
 })
+
+const mongoDB = async () => {
+  try {
+    const response = await buyerApi.saveMongoDB(contractChatId)
+    console.log('성공 ✅', response.data)
+  } catch (error) {
+    console.error('실패 ❌', error)
+  }
+}
 </script>
