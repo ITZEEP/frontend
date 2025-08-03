@@ -59,10 +59,10 @@ const updatePropertyInfo = () => {
   const propertyInfo = {
     ...formData.value,
     propertyPrice: formData.value.propertyPrice
-      ? parseInt(formData.value.propertyPrice.replace(/,/g, ''))
+      ? parseInt(formData.value.propertyPrice.replace(/,/g, '')) * 10000 // 만원 단위를 원 단위로 변환
       : 0,
     monthlyRent: formData.value.monthlyRent
-      ? parseInt(formData.value.monthlyRent.replace(/,/g, ''))
+      ? parseInt(formData.value.monthlyRent.replace(/,/g, '')) * 10000 // 만원 단위를 원 단위로 변환
       : 0,
   }
   emit('update:property-info', propertyInfo)

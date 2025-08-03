@@ -30,8 +30,9 @@ const RESIDENCE_TYPE_MAP = {
 }
 
 // State
-const isExternalProperty = route.params.analysisId === 'external' || route.params.id === 'external'
+// 라우트 파라미터 구조를 통일하여 더 명확한 판별 로직 사용
 const analysisId = route.params.analysisId || route.params.id
+const isExternalProperty = analysisId === 'external'
 const dataNotFound = ref(false)
 const currentAnalysis = ref(null)
 const currentProperty = ref(null)
@@ -67,7 +68,10 @@ const formatPrice = (transactionType, price, monthly = 0) => {
     
     if (depositInManwon >= 10000) {
       const depositBillion = Math.floor(depositInManwon / 10000)
-      return `월세 ${depositBillion}억/${monthlyInManwon}만원`
+      const depositRemain = depositInManwon % 10000
+      return depositRemain === 0
+        ? `월세 ${depositBillion}억/${monthlyInManwon}만원`
+        : `월세 ${depositBillion}억 ${depositRemain}만원/${monthlyInManwon}만원`
     } else {
       return `월세 ${depositInManwon}/${monthlyInManwon}만원`
     }

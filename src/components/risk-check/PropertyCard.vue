@@ -106,7 +106,18 @@ const formatPrice = (item) => {
   let priceDisplay = ''
   if (item.leaseType === 'WOLSE' && item.monthlyRent) {
     // 월세인 경우
-    priceDisplay = `월세 ${(item.depositPrice / 10000).toLocaleString()}/${(item.monthlyRent / 10000).toLocaleString()}만원`
+    const depositInManwon = Math.floor(item.depositPrice / 10000)
+    const monthlyInManwon = Math.floor(item.monthlyRent / 10000)
+    
+    if (depositInManwon >= 10000) {
+      const depositBillion = Math.floor(depositInManwon / 10000)
+      const depositRemain = depositInManwon % 10000
+      priceDisplay = depositRemain === 0
+        ? `월세 ${depositBillion}억/${monthlyInManwon}만원`
+        : `월세 ${depositBillion}억 ${depositRemain.toLocaleString()}만원/${monthlyInManwon}만원`
+    } else {
+      priceDisplay = `월세 ${depositInManwon.toLocaleString()}/${monthlyInManwon}만원`
+    }
   } else if (item.depositPrice) {
     // 전세 또는 매매인 경우
     const priceInManwon = item.depositPrice / 10000
