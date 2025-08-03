@@ -1,5 +1,9 @@
 <template>
-  <div class="absolute right-0 mt-2 w-80 white-box shadow-lg" v-show="isVisible" ref="dropdownRef">
+  <div
+    class="absolute right-0 mt-2 w-80 white-box shadow-lg z-50"
+    v-show="isVisible"
+    ref="dropdownRef"
+  >
     <div class="pb-2 border-b border-gray-200 font-semibold">알림</div>
     <div class="min-h-24 max-h-80 overflow-y-auto flex flex-col" v-if="alarms.length">
       <AlarmCard
