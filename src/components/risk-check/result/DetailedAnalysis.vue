@@ -12,6 +12,14 @@ const props = defineProps({
     type: Array,
     required: false,
   },
+  categorizedDetails: {
+    type: Object,
+    required: false,
+  },
+  riskFactors: {
+    type: Array,
+    required: false,
+  },
 })
 
 // 섹션 정의 배열
@@ -66,6 +74,28 @@ const getIconClass = (status) => {
               <span class="text-sm font-medium text-gray-warm-700">{{ item.title }}</span>
             </div>
             <p class="text-base text-gray-warm-500">{{ item.content }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- categorizedDetails 사용 -->
+    <div v-else-if="categorizedDetails" class="space-y-8">
+      <div v-for="section in sections" :key="section.key">
+        <h4 class="text-lg font-semibold text-gray-warm-700 pb-2.5 border-b border-gray-300 mb-4">
+          {{ section.title }}
+        </h4>
+        <div class="grid grid-cols-2 gap-4">
+          <div
+            v-for="item in categorizedDetails[section.key]"
+            :key="item.name"
+            class="p-4 bg-gray-100 rounded-xl"
+          >
+            <div class="flex items-center gap-2 mb-2">
+              <component :is="getStatusIcon(item.status)" :class="getIconClass(item.status)" />
+              <span class="text-sm font-medium text-gray-warm-700">{{ item.name }}</span>
+            </div>
+            <p class="text-base text-gray-warm-500">{{ item.description }}</p>
           </div>
         </div>
       </div>

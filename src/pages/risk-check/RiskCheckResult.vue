@@ -151,6 +151,7 @@ const fetchInternalPropertyData = async () => {
   const response = await fraudApi.getRiskCheckDetail(analysisId)
   
   if (response.success && response.data) {
+    console.log('API 응답 데이터:', response.data)
     currentAnalysis.value = response.data
     
     const price = response.data.depositPrice || response.data.sellingPrice || response.data.jeonsePrice || 0
@@ -459,6 +460,24 @@ watch(dataNotFound, (newValue) => {
 
       <!-- Analysis Results -->
       <template v-else-if="analysisResult">
+        <!-- Warning message for external property -->
+        <div v-if="isExternalProperty" class="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <svg class="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+              </svg>
+            </div>
+            <div class="ml-3">
+              <h3 class="text-sm font-medium text-yellow-800">미등록 매물 분석 결과</h3>
+              <div class="mt-2 text-sm text-yellow-700">
+                <p>이 분석 결과는 서비스에 등록되지 않은 외부 매물의 결과입니다.</p>
+                <p class="mt-1">결과는 <span class="font-semibold">저장되지 않으며</span>, 페이지를 나가면 다시 확인할 수 없습니다.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Property Info Card -->
         <div class="mb-8">
           <PropertyInfoCard :property-info="analysisResult.propertyInfo" />
@@ -478,6 +497,7 @@ watch(dataNotFound, (newValue) => {
           <DetailedAnalysis 
             :risk-factors="analysisResult.riskFactors"
             :categorized-details="categorizedAnalysisDetails"
+            :detail-groups="currentAnalysis?.detailGroups"
           />
         </div>
 

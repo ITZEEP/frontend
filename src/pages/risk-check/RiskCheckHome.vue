@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 
 // Components
 import BaseButton from '@/components/common/BaseButton.vue'
+import BaseModal from '@/components/common/BaseModal.vue'
 import LoadingOverlay from '@/components/common/LoadingOverlay.vue'
 import PropertyTypeSelector from '@/components/risk-check/PropertyTypeSelector.vue'
 import PropertyCard from '@/components/risk-check/PropertyCard.vue'
@@ -47,6 +48,7 @@ const showFileWarningModal = ref(false)
 const showPropertyTypeWarningModal = ref(false)
 const showPropertySelectionWarningModal = ref(false)
 const showErrorModal = ref(false)
+const showExternalPropertyWarningModal = ref(false)
 
 // Error States
 const errorTitle = ref('오류 발생')
@@ -164,6 +166,18 @@ const startRiskAnalysis = async () => {
     return
   }
 
+  // Show warning modal for external property
+  if (selectedPropertyType.value === 'unregistered') {
+    showExternalPropertyWarningModal.value = true
+    modalStore.open()
+    return
+  }
+  
+  proceedWithAnalysis()
+}
+
+// Proceed with analysis after warning confirmation
+const proceedWithAnalysis = async () => {
   isAnalyzing.value = true
 
   try {
@@ -260,6 +274,18 @@ const confirmPropertySelectionWarning = () => {
 const closeErrorModal = () => {
   showErrorModal.value = false
   modalStore.close()
+}
+
+// External Property Warning Modal Handlers
+const closeExternalPropertyWarningModal = () => {
+  showExternalPropertyWarningModal.value = false
+  modalStore.close()
+}
+
+const confirmExternalPropertyWarning = () => {
+  showExternalPropertyWarningModal.value = false
+  modalStore.close()
+  proceedWithAnalysis()
 }
 
 // Utility Functions
@@ -389,6 +415,31 @@ const scrollToElement = async (element) => {
     :error-type="errorType"
     @close="closeErrorModal"
   />
+  
+  <!-- External Property Warning Modal -->
+  <BaseModal v-if="showExternalPropertyWarningModal" @close="closeExternalPropertyWarningModal">
+    <div class="text-center">
+      <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-yellow-100 mb-4">
+        <svg class="h-8 w-8 text-yellow-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 mb-2">미등록 매물 분석 안내</h3>
+      <div class="text-sm text-gray-600 mb-6 space-y-2">
+        <p>서비스에 등록되지 않은 외부 매물을 분석하려고 합니다.</p>
+        <p class="font-semibold text-gray-800">분석 결과는 저장되지 않으며, 조회 기록에도 남지 않습니다.</p>
+        <p>분석 결과 페이지를 나가면 다시 확인할 수 없으니 주의해주세요.</p>
+      </div>
+      <div class="flex gap-3">
+        <BaseButton @click="closeExternalPropertyWarningModal" variant="outline" class="flex-1">
+          취소
+        </BaseButton>
+        <BaseButton @click="confirmExternalPropertyWarning" variant="primary" class="flex-1">
+          계속 진행
+        </BaseButton>
+      </div>
+    </div>
+  </BaseModal>
 </template>
 
 <style scoped>

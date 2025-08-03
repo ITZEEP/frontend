@@ -121,12 +121,13 @@ const ocrData = reactive({
     도로명주소: analysisData?.registryDocument?.roadAddress || '',
     소유자이름: analysisData?.registryDocument?.ownerName || '',
     소유자생년월일: analysisData?.registryDocument?.ownerBirthDate || '1980-01-01',
-    근저당권목록: analysisData?.registryDocument?.mortgageeList?.map(item => ({
-      순위: item.priorityNumber,
-      채권최고액: item.maxClaimAmount,
-      채무자: item.debtor,
-      근저당권자: item.mortgagee,
-    })) || [],
+    근저당권목록:
+      analysisData?.registryDocument?.mortgageeList?.map((item) => ({
+        순위: item.priorityNumber,
+        채권최고액: item.maxClaimAmount,
+        채무자: item.debtor,
+        근저당권자: item.mortgagee,
+      })) || [],
     법적제한사항: {
       가압류: analysisData?.registryDocument?.hasSeizure || false,
       경매: analysisData?.registryDocument?.hasAuction || false,
@@ -145,7 +146,7 @@ const ocrData = reactive({
   },
   homeId: analysisData?.homeId || 1,
   registryFileUrl: analysisData?.registryFileUrl || '',
-  buildingFileUrl: analysisData?.buildingFileUrl || ''
+  buildingFileUrl: analysisData?.buildingFileUrl || '',
 })
 
 // Lifecycle
@@ -234,7 +235,7 @@ const buildExternalAnalysisData = () => ({
     roadAddress: ocrData.등기부등본.도로명주소,
     ownerName: ocrData.등기부등본.소유자이름,
     ownerBirthDate: ocrData.등기부등본.소유자생년월일,
-    mortgageeList: ocrData.등기부등본.근저당권목록.map(item => ({
+    mortgageeList: ocrData.등기부등본.근저당권목록.map((item) => ({
       priorityNumber: item.순위,
       maxClaimAmount: item.채권최고액,
       debtor: item.채무자,
@@ -245,9 +246,6 @@ const buildExternalAnalysisData = () => ({
     hasLitigation: ocrData.등기부등본.법적제한사항.소송,
     hasAttachment: ocrData.등기부등본.법적제한사항.압류,
     debtor: ocrData.등기부등본.소유자이름,
-    maxClaimAmount: ocrData.등기부등본.근저당권목록.reduce((max, item) => 
-      Math.max(max, parseInt(item.채권최고액) || 0), 0),
-    mortgagee: ocrData.등기부등본.근저당권목록[0]?.근저당권자 || ''
   },
   buildingDocument: {
     siteLocation: ocrData.건축물대장.대지위치,
@@ -256,9 +254,9 @@ const buildExternalAnalysisData = () => ({
     purpose: ocrData.건축물대장.용도,
     floorNumber: parseInt(ocrData.건축물대장.층수) || 1,
     approvalDate: ocrData.건축물대장.사용승인일,
-    isViolationBuilding: ocrData.건축물대장.위반건축물여부
+    isViolationBuilding: ocrData.건축물대장.위반건축물여부,
   },
-  buildingFileUrl: ocrData.buildingFileUrl
+  buildingFileUrl: ocrData.buildingFileUrl,
 })
 
 const buildInternalAnalysisData = () => ({
@@ -268,7 +266,7 @@ const buildInternalAnalysisData = () => ({
     roadAddress: ocrData.등기부등본.도로명주소,
     ownerName: ocrData.등기부등본.소유자이름,
     ownerBirthDate: ocrData.등기부등본.소유자생년월일,
-    mortgageeList: ocrData.등기부등본.근저당권목록.map(item => ({
+    mortgageeList: ocrData.등기부등본.근저당권목록.map((item) => ({
       priorityNumber: item.순위,
       maxClaimAmount: item.채권최고액,
       debtor: item.채무자,
@@ -277,7 +275,7 @@ const buildInternalAnalysisData = () => ({
     hasSeizure: ocrData.등기부등본.법적제한사항.가압류,
     hasAuction: ocrData.등기부등본.법적제한사항.경매,
     hasLitigation: ocrData.등기부등본.법적제한사항.소송,
-    hasAttachment: ocrData.등기부등본.법적제한사항.압류
+    hasAttachment: ocrData.등기부등본.법적제한사항.압류,
   },
   buildingDocument: {
     siteLocation: ocrData.건축물대장.대지위치,
@@ -286,10 +284,10 @@ const buildInternalAnalysisData = () => ({
     purpose: ocrData.건축물대장.용도,
     floorNumber: parseInt(ocrData.건축물대장.층수) || 1,
     approvalDate: ocrData.건축물대장.사용승인일,
-    isViolationBuilding: ocrData.건축물대장.위반건축물여부
+    isViolationBuilding: ocrData.건축물대장.위반건축물여부,
   },
   registryFileUrl: ocrData.registryFileUrl,
-  buildingFileUrl: ocrData.buildingFileUrl
+  buildingFileUrl: ocrData.buildingFileUrl,
 })
 
 // Main analysis function
@@ -301,18 +299,21 @@ const proceedAnalysis = async () => {
   }
 
   isAnalyzing.value = true
-  
+
   try {
     let response
-    
+
     if (isExternalProperty) {
       response = await fraudApi.analyzeExternal(buildExternalAnalysisData())
     } else {
       response = await fraudApi.analyzeRisk(buildInternalAnalysisData())
     }
+
+    console.log('분석 응답:', response)
     
     if (response && response.success) {
       if (isExternalProperty) {
+        console.log('외부 매물 분석 결과 저장:', response.data)
         fraudStore.setExternalAnalysisResult(response.data)
         router.push('/risk-check/result/external')
       } else {
@@ -324,7 +325,7 @@ const proceedAnalysis = async () => {
     }
   } catch (error) {
     console.error('분석 중 오류:', error)
-    
+
     if (error.response?.data?.message) {
       errorTitle.value = '분석 실패'
       errorMessage.value = error.response.data.message
@@ -335,7 +336,7 @@ const proceedAnalysis = async () => {
       errorTitle.value = '분석 오류'
       errorMessage.value = '분석 중 오류가 발생했습니다. 다시 시도해주세요.'
     }
-    
+
     showErrorModal.value = true
     modalStore.open()
   } finally {
@@ -377,6 +378,38 @@ const closeErrorModal = () => {
         </BaseButton>
       </div>
 
+      <!-- Warning message for external property -->
+      <div
+        v-if="isExternalProperty"
+        class="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg"
+      >
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <svg
+              class="h-5 w-5 text-yellow-400"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <h3 class="text-sm font-medium text-yellow-800">미등록 매물 분석</h3>
+            <div class="mt-2 text-sm text-yellow-700">
+              <p>현재 분석 중인 매물은 서비스에 등록되지 않은 외부 매물입니다.</p>
+              <p class="mt-1">
+                분석 결과는 확인만 가능하며, <span class="font-semibold">저장되지 않습니다.</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- OCR Forms -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
         <PropertyRegistrationForm
@@ -399,7 +432,7 @@ const closeErrorModal = () => {
       subMessage="잠시만 기다려주세요"
     />
   </div>
-  
+
   <!-- Error Modal -->
   <ErrorModal
     :is-open="showErrorModal"
