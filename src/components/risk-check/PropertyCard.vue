@@ -452,16 +452,16 @@ const closeLoginModal = () => {
 }
 
 .scrollbar-thin::-webkit-scrollbar-track {
-  background: #f3f4f6;
+  @apply bg-gray-100;
   border-radius: 3px;
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background: #d1d5db;
+  @apply bg-gray-300;
   border-radius: 3px;
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
+  @apply bg-gray-400;
 }
 </style>

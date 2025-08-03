@@ -63,11 +63,11 @@ const documentUploadRef = ref(null)
 
 // Lifecycle
 onMounted(() => {
-  document.body.style.backgroundColor = '#F7F7F8'
+  document.body.classList.add('bg-gray-100')
 })
 
 onUnmounted(() => {
-  document.body.style.backgroundColor = ''
+  document.body.classList.remove('bg-gray-100')
 })
 
 // Property Type Handler

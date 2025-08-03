@@ -128,10 +128,10 @@ const fetchExternalPropertyData = () => {
   if (leaseType === 'WOLSE') {
     const deposit = propertyInfo.propertyPrice || 0
     const monthly = propertyInfo.monthlyRent || 0
-    priceDisplay = `월세 ${deposit.toLocaleString()}/${monthly.toLocaleString()}만원`
+    priceDisplay = formatPrice('월세', deposit, monthly)
   } else if (leaseType === 'JEONSE') {
     const price = propertyInfo.propertyPrice || 0
-    priceDisplay = `전세 ${price.toLocaleString()}만원`
+    priceDisplay = formatPrice('전세', price)
   }
   
   currentProperty.value = {
@@ -307,18 +307,18 @@ const analyzeAnother = () => {
 }
 
 // Lifecycle
-validateRouteParams()
-fetchAnalysisResult()
-
 onMounted(() => {
-  document.body.style.backgroundColor = '#F7F7F8'
+  if (!validateRouteParams()) return
+  fetchAnalysisResult()
+  
+  document.body.classList.add('bg-gray-100')
   document.body.style.overflow = 'auto'
   document.documentElement.style.overflow = 'auto'
   window.scrollTo(0, 0)
 })
 
 onUnmounted(() => {
-  document.body.style.backgroundColor = ''
+  document.body.classList.remove('bg-gray-100')
   document.body.style.overflow = ''
   document.documentElement.style.overflow = ''
   

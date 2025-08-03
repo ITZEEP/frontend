@@ -151,12 +151,15 @@ const ocrData = reactive({
 
 // Lifecycle
 onMounted(() => {
-  document.body.style.backgroundColor = '#F7F7F8'
+  document.body.classList.add('bg-gray-100')
 })
 
 onUnmounted(() => {
-  document.body.style.backgroundColor = ''
-  fraudStore.clearAllData()
+  document.body.classList.remove('bg-gray-100')
+  // 외부 매물인 경우 결과 페이지에서 데이터를 사용해야 하므로 clearAllData를 호출하지 않음
+  if (!isExternalProperty) {
+    fraudStore.clearAllData()
+  }
 })
 
 // Validation function
