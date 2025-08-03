@@ -88,7 +88,7 @@
         <div>
           주요 설비 보수: <span class="font-medium">{{ lifeInfo?.facilityRepairNeeded }}</span>
         </div>
-        <div class="pl-8">
+        <div>
           입주 전 청소: <span class="font-medium">{{ lifeInfo?.interiorCleaningNeeded }}</span>
         </div>
         <div>
@@ -97,38 +97,38 @@
         </div>
         <!-- 반려동물 관련 정보 (localStorage의 hasPet이 true일 때만 표시) -->
         <div v-if="hasPet">
-          <div class="pl-8">
+          <div>
             반려동물: <span class="font-medium">{{ lifeInfo?.hasPet }}</span>
           </div>
           <div>
             반려동물 종: <span class="font-medium">{{ lifeInfo?.petInfo }}</span>
           </div>
-          <div class="pl-8">
+          <div>
             반려동물 수: <span class="font-medium">{{ lifeInfo?.petCount }}</span>
           </div>
         </div>
         <div>
           실내 흡연 계획: <span class="font-medium">{{ lifeInfo?.indoorSmokingPlan }}</span>
         </div>
-        <div class="pl-8">
+        <div>
           중도 퇴거 가능성: <span class="font-medium">{{ lifeInfo?.earlyTerminationRisk }}</span>
         </div>
         <div>
           거주 외 목적 사용: <span class="font-medium">{{ lifeInfo?.nonresidentialUsePlan }}</span>
         </div>
-        <div class="pl-8">
+        <div>
           요청 사항: <span class="font-medium">{{ lifeInfo?.requestToOwner }}</span>
         </div>
         <div>
           거주 인원: <span class="font-medium">{{ lifeInfo?.residentCount }}</span>
         </div>
-        <div class="pl-8">
+        <div>
           직업: <span class="font-medium">{{ lifeInfo?.occupation }}</span>
         </div>
         <div class="col-span-2">
           비상 연락처: <span class="font-medium">{{ lifeInfo?.emergencyContact }}</span>
         </div>
-        <div class="pl-8">
+        <div>
           관계: <span class="font-medium">{{ lifeInfo?.relation }}</span>
         </div>
       </div>
