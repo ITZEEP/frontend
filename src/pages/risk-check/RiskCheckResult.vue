@@ -197,103 +197,6 @@ const fetchAnalysisResult = async () => {
   }
 }
 
-// Risk factors generation
-const generateRiskFactorsFromDetailedAnalysis = () => {
-  if (!currentAnalysis.value?.detailGroups || currentAnalysis.value.detailGroups.length === 0) {
-    return generateDefaultRiskFactors(currentAnalysis.value?.riskType || 'SAFE')
-  }
-
-  const overallStatus = currentAnalysis.value.riskType?.toLowerCase() || 'safe'
-  
-  const findInGroups = (groupTitle) => {
-    const group = currentAnalysis.value.detailGroups.find(g => g.title === groupTitle)
-    if (group && group.items && group.items.length > 0) {
-      return group.items[0].content || '확인 중'
-    }
-    return '확인 중'
-  }
-
-  return [
-    {
-      title: '법적 안전성',
-      status: overallStatus === 'danger' ? 'danger' : overallStatus === 'warn' ? 'warning' : 'safe',
-      items: [
-        {
-          name: '법적 분쟁',
-          status: 'safe',
-          description: '법적 분쟁 사항이 없습니다.'
-        },
-        {
-          name: '위반건축물',
-          status: findInGroups('건축물대장').includes('적법') ? 'safe' : 'danger',
-          description: findInGroups('건축물대장')
-        },
-        {
-          name: '권리 제한',
-          status: findInGroups('을기사항').includes('없어') || findInGroups('을기사항').includes('안전') ? 'safe' : 'warning',
-          description: findInGroups('을기사항')
-        }
-      ]
-    },
-    {
-      title: '건물 안전성',
-      status: overallStatus === 'danger' ? 'danger' : overallStatus === 'warn' ? 'warning' : 'safe',
-      items: [
-        {
-          name: '건물 상태',
-          status: findInGroups('건축물대장').includes('적합') || findInGroups('건축물대장').includes('적법') ? 'safe' : 'warning',
-          description: findInGroups('건축물대장')
-        },
-        {
-          name: '면적 정보',
-          status: 'safe',
-          description: '면적 정보가 정확히 기재되어 있습니다.'
-        }
-      ]
-    },
-    {
-      title: '금융 안전성',
-      status: overallStatus === 'danger' ? 'danger' : overallStatus === 'warn' ? 'warning' : 'safe',
-      items: [
-        {
-          name: '근저당',
-          status: findInGroups('을기사항').includes('없어') || findInGroups('을기사항').includes('안전') ? 'safe' : 'warning',
-          description: findInGroups('을기사항')
-        },
-        {
-          name: '시세 대비 가격',
-          status: 'safe',
-          description: '시세 대비 적정한 가격입니다.'
-        }
-      ]
-    }
-  ]
-}
-
-const generateDefaultRiskFactors = (overallRisk) => {
-  const riskStatus = overallRisk === 'safe' ? 'safe' : overallRisk === 'warning' ? 'warning' : 'danger'
-
-  return [
-    {
-      title: '법적 안전성',
-      status: riskStatus,
-      items: [
-        {
-          name: '소유권 확인',
-          status: riskStatus,
-          description: riskStatus === 'safe' ? '소유권이 확인되었습니다.' : 
-                      riskStatus === 'warning' ? '소유권 확인이 필요합니다.' : '소유권에 문제가 있습니다.'
-        },
-        {
-          name: '법적 제한',
-          status: riskStatus,
-          description: riskStatus === 'safe' ? '법적 제한사항이 없습니다.' : 
-                      riskStatus === 'warning' ? '법적 제한사항을 확인해주세요.' : '법적 제한사항이 있습니다.'
-        }
-      ]
-    }
-  ]
-}
 
 // Computed properties
 const analysisResult = computed(() => {
@@ -311,7 +214,6 @@ const analysisResult = computed(() => {
       price: currentProperty.value?.priceDisplay || '',
       image: currentProperty.value?.image || currentAnalysis.value?.propertyImageUrl || '/property-placeholder.jpg',
     },
-    riskFactors: generateRiskFactorsFromDetailedAnalysis(),
   }
 })
 
@@ -495,7 +397,6 @@ watch(dataNotFound, (newValue) => {
         <!-- Detailed Analysis -->
         <div class="mb-8">
           <DetailedAnalysis 
-            :risk-factors="analysisResult.riskFactors"
             :categorized-details="categorizedAnalysisDetails"
             :detail-groups="currentAnalysis?.detailGroups"
           />

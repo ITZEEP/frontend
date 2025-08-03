@@ -42,7 +42,7 @@
 import { ref } from 'vue'
 import IconChevronDown from '@/components/icons/IconChevronDown.vue'
 
-const props = defineProps({
+defineProps({
   modelValue: {
     type: [String, Number],
     default: ''
@@ -80,7 +80,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['update:modelValue'])
+defineEmits(['update:modelValue'])
 
 // 고유 ID 생성 - 컴포넌트 인스턴스마다 고유한 ID
 const id = `select-${Math.random().toString(36).slice(2, 9)}-${Date.now()}`

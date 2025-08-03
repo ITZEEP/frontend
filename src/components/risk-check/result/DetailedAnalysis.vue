@@ -3,7 +3,7 @@ import IconCheckCircle from '@/components/icons/IconCheckCircle.vue'
 import IconQuestionCircle from '@/components/icons/IconQuestionCircle.vue'
 import IconWarningTriangle from '@/components/icons/IconWarningTriangle.vue'
 
-const props = defineProps({
+defineProps({
   analysisData: {
     type: Object,
     required: false,
@@ -14,10 +14,6 @@ const props = defineProps({
   },
   categorizedDetails: {
     type: Object,
-    required: false,
-  },
-  riskFactors: {
-    type: Array,
     required: false,
   },
 })

@@ -23,7 +23,7 @@
 </template>
 
 <script setup>
-import { defineProps, watch } from 'vue'
+import { watch } from 'vue'
 import { useModalStore } from '@/stores/modal'
 
 const modalStore = useModalStore()

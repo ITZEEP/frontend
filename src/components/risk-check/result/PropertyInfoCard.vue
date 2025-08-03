@@ -1,7 +1,7 @@
 <script setup>
 import PropertyImage from '@/components/common/PropertyImage.vue'
 
-const props = defineProps({
+defineProps({
   propertyInfo: {
     type: Object,
     required: true,
