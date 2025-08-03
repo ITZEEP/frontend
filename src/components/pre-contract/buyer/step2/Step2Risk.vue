@@ -1,15 +1,15 @@
 <template>
   <div class="flex flex-col items-center justify-center gap-8">
-    <!-- 불리언 기반 조건 분기 -->
     <Step2RiskResult v-if="isRisk" />
     <Step2RiskCheck v-else />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import buyerApi from '@/apis/pre-contract-buyer.js'
 import { useRoute } from 'vue-router'
+import { usePreContractStore } from '@/stores/preContract'
 
 const route = useRoute()
 const contractChatId = route.params.id
