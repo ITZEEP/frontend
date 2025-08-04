@@ -6,7 +6,6 @@ export const usePreContractStore = defineStore('preContract', {
     subSteps: {
       // roll은 'owner' || 'buyer'
       'owner-3': 2,
-      'owner-4': 2,
       'buyer-5': 2,
     },
     currentSubSteps: {},
@@ -35,10 +34,10 @@ export const usePreContractStore = defineStore('preContract', {
       this.canProceed = status
     },
     setHasPet(hasPet) {
-      this.hasPet = hasPet;
+      this.hasPet = hasPet
     },
     setHasParking(hasParking) {
-      this.hasParking = hasParking;
+      this.hasParking = hasParking
     },
   },
 })
