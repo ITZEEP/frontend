@@ -5,7 +5,7 @@
       :key="message.id || index"
       :message="message.content"
       :buttons="message.buttons"
-      @action="handleAction(message.action)"
+      @action="(action) => handleAction(action)"
     />
   </div>
 </template>
@@ -20,6 +20,8 @@ const props = defineProps({
     required: true,
   },
 })
+
+const emit = defineEmits(['action'])
 
 const displayedMessages = ref([])
 
@@ -52,6 +54,6 @@ watch(
 
 // 액션 핸들러 (버튼 클릭 등)
 const handleAction = (action) => {
-  console.log('사용자 액션:', action)
+  emit('action', action)
 }
 </script>
