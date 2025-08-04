@@ -12,7 +12,7 @@
     </div>
 
     <!-- 채팅 메시지 영역 -->
-    <div class="flex-1 overflow-y-auto p-4 bg-gray-50" ref="messagesContainer">
+    <div class="flex-1 p-4 bg-gray-50 max-h-[420px] overflow-y-auto" ref="messagesContainer">
       <!-- 로딩 상태 -->
       <div v-if="loadingMessages" class="text-center text-gray-500">메시지 로딩 중...</div>
 
@@ -77,6 +77,9 @@
           아직 메시지가 없습니다. 첫 메시지를 보내보세요!
         </div>
       </div>
+
+      <!-- 스텝 별 시나리오 메시지 -->
+      <StepContainer />
     </div>
 
     <!-- 입력창 -->
@@ -131,7 +134,8 @@ import {
 import { getCurrentUser } from '@/apis/chatApi'
 import { useContractChat } from '@/hooks/chat/useContractChat'
 import ContractChatInput from './ContractChatInput.vue'
-import UserChatMessage from './UserChatMessage.vue'
+import UserChatMessage from './messages/UserChatMessage.vue'
+import StepContainer from './StepContainer.vue'
 
 const route = useRoute()
 
