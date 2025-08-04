@@ -8,6 +8,7 @@ import { VueAwesomePaginate } from 'vue-awesome-paginate'
 import App from './App.vue'
 import router from './router'
 import { useKakao } from 'vue3-kakao-maps/@utils'
+import { initializeFCM } from '@/fcm/fcmService'
 
 window.global = window
 
@@ -22,3 +23,25 @@ app.use(createPinia())
 app.use(router)
 
 app.mount('#app')
+
+setTimeout(async () => {
+  try {
+    // 로그인 상태 확인
+    const token = localStorage.getItem('accessToken') || localStorage.getItem('access-token')
+
+    if (token) {
+      console.log('🔔 FCM 초기화 시작...')
+      const success = await initializeFCM()
+
+      if (success) {
+        console.log('✅ FCM 초기화 성공 - 푸시 알림 준비 완료')
+      } else {
+        console.warn('⚠️ FCM 초기화 실패 - 알림 권한 확인 필요')
+      }
+    } else {
+      console.log('ℹ️ 비로그인 상태 - FCM 초기화 건너뜀')
+    }
+  } catch (error) {
+    console.error('❌ FCM 초기화 중 오류:', error)
+  }
+}, 2000) // 2초 후 실행 (로그인 완료 대기)
