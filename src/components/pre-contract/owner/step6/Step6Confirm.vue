@@ -59,6 +59,21 @@
 
 <script setup>
 import SecurityBasicIcon from '@/assets/icons/SecurityBasicIcon.vue'
+import { onMounted } from 'vue'
+import { OwnerPreContractAPI } from '@/apis/preContractOwner'
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
+const contractChatId = route.query.id || route.params.id
+
+onMounted(async () => {
+  try {
+    const data = await OwnerPreContractAPI.getOwnerContractSummary(contractChatId)
+    console.log(data)
+  } catch (err) {
+    console.error('거주 조건 Step1 조회 실패', err)
+  }
+})
 </script>
 
 <style scoped></style>
