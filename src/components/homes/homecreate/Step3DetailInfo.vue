@@ -150,8 +150,8 @@
     </fieldset>
 
     <!-- 시설 옵션 -->
-    <fieldset class="border rounded-md p-4">
-      <legend class="text-lg font-semibold mb-4">시설 옵션</legend>
+    <fieldset class="rounded-md p-4">
+      <!--      <legend class="text-lg font-semibold mb-4">시설 옵션</legend>-->
       <OptionChecklist v-model="form.options" />
     </fieldset>
   </form>
