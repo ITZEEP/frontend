@@ -26,9 +26,7 @@
           </div>
 
           <!-- 단계별 컴포넌트 -->
-          <div class="w-3/5 bg-white rounded-lg overflow-auto">
-            <component v-if="step != null" :is="currentStepComponent" />
-          </div>
+          <StepContentWrapper v-if="step !== null" :step="step" />
         </div>
       </div>
     </div>
@@ -41,12 +39,7 @@ import { useRoute } from 'vue-router'
 
 import ContractChat from '@/components/contract/chat/ContractChat.vue'
 import ParticipantItem from '@/components/contract/chat/ParticipantItem.vue'
-
-import Step1Compare from '@/components/contract/form/Step1Compare.vue'
-import Step2Price from '@/components/contract/form/Step2Price.vue'
-import Step3Terms from '@/components/contract/form/Step3Terms.vue'
-import Step4Legal from '@/components/contract/form/Step4Legal.vue'
-import Step5Done from '@/components/contract/form/Step5Done.vue'
+import StepContentWrapper from '@/components/contract/form/StepContentWrapper.vue'
 
 const route = useRoute()
 
@@ -59,17 +52,6 @@ const step = computed(() => {
   const s = Number(route.query.step)
   return Number.isNaN(s) ? null : s
 })
-
-// 단계별 컴포넌트 매핑
-const stepComponents = {
-  1: Step1Compare,
-  2: Step2Price,
-  3: Step3Terms,
-  4: Step4Legal,
-  5: Step5Done,
-}
-
-const currentStepComponent = computed(() => (step.value ? stepComponents[step.value] : null))
 
 const participants = [
   { id: 1, name: '이임차', role: '임차인', isOnline: true, isAi: false },
