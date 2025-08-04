@@ -28,13 +28,34 @@
       ]"
     />
 
+    <h2 class="text-gray-warm-700 font-bold">임차인이 납부할 계좌</h2>
+
+    <div class="w-full flex flex-col gap-1">
+      <p class="text-sm font-medium text-gray-600">은행명을 입력하세요.</p>
+      <div class="w-40 flex gap-4">
+        <BaseInput v-model="ownerBankName" type="text" class="w-32" placeholder="예) 농협" />
+      </div>
+    </div>
+
+    <div class="w-full flex flex-col gap-1">
+      <p class="text-sm font-medium text-gray-600">계좌번호를 입력하세요.</p>
+      <div class="w-72 flex gap-4">
+        <BaseInput
+          v-model="ownerAccountNumber"
+          type="text"
+          class="w-full"
+          placeholder="숫자만 입력 (예: 12345678901234)"
+        />
+      </div>
+    </div>
+
     <template v-if="rentType === 'WOLSE'">
-      <BaseInput
-        v-model="paymentDueDate"
-        label="월세 납부일"
-        type="number"
-        placeholder="1 ~ 31일 사이의 숫자를 입력하세요"
-      />
+      <div class="w-full flex flex-col gap-1">
+        <p class="text-sm font-medium text-gray-600">월세 납부일</p>
+        <div class="w-40 flex gap-4">
+          <BaseInput v-model="paymentDueDate" type="number" placeholder="1 ~ 31일 사이 숫자" />
+        </div>
+      </div>
 
       <div class="w-full flex flex-col gap-2">
         <p class="text-sm font-medium text-gray-600">연체 시 이자율 (%) 입력하세요.</p>
@@ -61,10 +82,12 @@ const route = useRoute()
 const contractChatId = route.query.id || route.params.id
 const rentType = ref(localStorage.getItem('rent_type'))
 
-// 상태 변수 정의
+// 상태 변수
 const requireRentGuaranteeInsurance = ref(null)
 const insuranceBurden = ref('')
 const hasNotice = ref('')
+const ownerBankName = ref('')
+const ownerAccountNumber = ref('')
 const paymentDueDate = ref(null)
 const lateFeeInterestRate = ref(null)
 
@@ -73,12 +96,15 @@ watch(
     requireRentGuaranteeInsurance,
     insuranceBurden,
     hasNotice,
+    ownerBankName,
+    ownerAccountNumber,
     paymentDueDate,
     lateFeeInterestRate,
     rentType,
   ],
-  ([insurance, burden, notice, dueDate, lateFee, type]) => {
-    const commonValid = insurance !== null && burden !== '' && notice !== ''
+  ([insurance, burden, notice, bank, account, dueDate, lateFee, type]) => {
+    const commonValid =
+      insurance !== null && burden !== '' && notice !== '' && bank !== '' && account !== ''
 
     const isValid =
       type === 'JEONSE' ? commonValid : commonValid && dueDate !== null && lateFee !== null
@@ -89,11 +115,14 @@ watch(
 
 onMounted(async () => {
   try {
-    const data = await OwnerPreContractAPI.getLivingStep1(contractChatId)
+    const response = await OwnerPreContractAPI.getLivingStep1(contractChatId)
+    const data = response.data
 
     requireRentGuaranteeInsurance.value = data.requireRentGuaranteeInsurance ?? null
     insuranceBurden.value = data.insuranceBurden ?? ''
     hasNotice.value = data.hasNotice ?? ''
+    ownerBankName.value = data.ownerBankName ?? ''
+    ownerAccountNumber.value = data.ownerAccountNumber ?? ''
     paymentDueDate.value = data.paymentDueDate ?? null
     lateFeeInterestRate.value = data.lateFeeInterestRate ?? null
   } catch (err) {
