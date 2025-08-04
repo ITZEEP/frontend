@@ -1,6 +1,7 @@
 import api from './index'
 
-// 사기 위험도 API
+const REQUEST_TIMEOUT = 30000
+
 export const fraudApi = {
   // 위험도 체크 목록 조회
   getRiskCheckList: async (page = 1, size = 10) => {
@@ -29,7 +30,7 @@ export const fraudApi = {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
-        timeout: 30000, // 30초 타임아웃 (OCR 처리 시간 고려)
+        timeout: REQUEST_TIMEOUT,
       })
       return response.data
     } catch (error) {
@@ -38,15 +39,28 @@ export const fraudApi = {
     }
   },
 
-  // 위험도 분석
+  // 서비스 내 매물 위험도 분석
   analyzeRisk: async (analysisData) => {
     try {
       const response = await api.post('/api/fraud-risk/analyze', analysisData, {
-        timeout: 30000, // 30초 타임아웃 (AI 분석 시간 고려)
+        timeout: REQUEST_TIMEOUT,
       })
       return response.data
     } catch (error) {
       console.error('위험도 분석 실패:', error)
+      throw error
+    }
+  },
+
+  // 서비스 외 매물 위험도 분석
+  analyzeExternal: async (externalData) => {
+    try {
+      const response = await api.post('/api/fraud-risk/analyze/external', externalData, {
+        timeout: REQUEST_TIMEOUT,
+      })
+      return response.data
+    } catch (error) {
+      console.error('서비스 외 매물 위험도 분석 실패:', error)
       throw error
     }
   },

@@ -25,16 +25,16 @@ const handleConfirm = () => {
     maxWidth="max-w-[420px]"
   >
     <div class="-m-6 overflow-hidden rounded-md">
-      <div class="bg-blue-50 p-5">
+      <div class="bg-yellow-50 p-5">
         <div class="flex items-start">
           <div class="flex-shrink-0">
-            <div class="rounded-full bg-blue-100 p-2">
-              <IconWarning class="h-6 w-6 text-blue-600" />
+            <div class="rounded-full bg-yellow-100 p-2">
+              <IconWarning class="h-6 w-6 text-yellow-primary" />
             </div>
           </div>
           <div class="ml-4">
-            <h3 class="text-lg font-semibold text-blue-900">매물 유형 선택 필요</h3>
-            <p class="mt-2 text-sm text-blue-700">
+            <h3 class="text-lg font-semibold text-gray-warm-700">매물 유형 선택 필요</h3>
+            <p class="mt-2 text-sm text-gray-warm-500">
               AI 위험도 분석을 시작하기 전에 매물 유형을 선택해주세요.
             </p>
           </div>

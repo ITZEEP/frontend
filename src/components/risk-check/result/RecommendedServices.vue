@@ -4,7 +4,7 @@ import IconChart from '@/components/icons/IconChart.vue'
 import IconShield from '@/components/icons/IconShield.vue'
 import IconChain from '@/components/icons/IconChain.vue'
 
-const emit = defineEmits(['analyze-another'])
+defineEmits(['analyze-another'])
 const router = useRouter()
 
 const goToInsurance = () => {

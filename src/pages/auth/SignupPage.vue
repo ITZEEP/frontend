@@ -55,9 +55,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
 
-const router = useRouter()
 const isLoading = ref(false)
 const error = ref('')
 

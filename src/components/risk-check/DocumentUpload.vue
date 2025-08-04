@@ -9,7 +9,7 @@ import IconClose from '@/components/icons/IconClose.vue'
 import IconError from '@/components/icons/IconError.vue'
 import { useModalStore } from '@/stores/modal'
 
-const props = defineProps({
+defineProps({
   uploadedFiles: {
     type: Object,
     default: () => ({
@@ -70,7 +70,7 @@ const processFile = async (file, fileType) => {
     emit('update-files', fileType, file)
     isUploading.value[fileType] = false
     return true
-  } catch (error) {
+  } catch {
     alert('파일 업로드 중 오류가 발생했습니다. 다시 시도해주세요.')
     isUploading.value[fileType] = false
     return false
