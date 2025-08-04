@@ -6,15 +6,15 @@ import { useRoute } from 'vue-router'
 import PreContractLayout from '@/components/pre-contract/layout/PreContractLayout.vue'
 
 // buyer 컴포넌트
-import BuyerStep1 from '@/components/pre-contract/buyer/Step1SelectHome.vue'
-import BuyerStep2 from '@/components/pre-contract/buyer/Step2RiskCheck.vue'
-import BuyerStep3 from '@/components/pre-contract/buyer/Step03Verification.vue'
-import BuyerStep4 from '@/components/pre-contract/buyer/Step4ContractTerms.vue'
-import BuyerStep5 from '@/components/pre-contract/buyer/Step5Environment.vue'
-import BuyerStep6 from '@/components/pre-contract/buyer/Step06Confirm.vue'
+import BuyerStep1 from '@/components/pre-contract/common/step1HomeInfo/Step1BasicInfo.vue'
+import BuyerStep2 from '@/components/pre-contract/buyer/step2/Step2.vue'
+import BuyerStep3 from '@/components/pre-contract/buyer/step3/Step03Verification.vue'
+import BuyerStep4 from '@/components/pre-contract/buyer/step4/Step4ContractTerms.vue'
+import BuyerStep5 from '@/components/pre-contract/buyer/step5/Step5Environment.vue'
+import BuyerStep6 from '@/components/pre-contract/buyer/step6/Step6Confirm.vue'
 
 // owner 컴포넌트
-import OwnerStep1 from '@/components/pre-contract/owner/step1/Step1BasicInfo.vue'
+import OwnerStep1 from '@/components/pre-contract/common/step1HomeInfo/Step1BasicInfo.vue'
 import OwnerStep2 from '@/components/pre-contract/owner/step2/Step2Verification.vue'
 import OwnerStep3 from '@/components/pre-contract/owner/step3/Step3ContractTerms.vue'
 import OwnerStep4 from '@/components/pre-contract/owner/step4/Step4LivingConditions.vue'

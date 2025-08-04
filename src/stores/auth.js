@@ -38,6 +38,42 @@ export const useAuthStore = defineStore('auth', () => {
     userUtils.setUser(userInfo)
   }
 
+  // OAuth 로그인 완료 처리
+  const completeOAuthLogin = async (code) => {
+    try {
+      isLoading.value = true
+      
+      // authorization code를 사용해 토큰 교환
+      const response = await authAPI.completeOAuth2Login(code)
+      
+      if (response.data.success) {
+        const loginData = response.data.data
+        const token = loginData.access_token
+        const userInfo = {
+          id: loginData.user_id,
+          username: loginData.username,
+          email: loginData.email,
+          name: loginData.nickname || loginData.username,
+          profileImage: loginData.profile_image,
+          role: loginData.role,
+          gender: loginData.gender
+        }
+        
+        // 로그인 처리
+        await loginWithToken(token, userInfo)
+        
+        return { success: true }
+      } else {
+        throw new Error(response.data.message || '로그인 처리에 실패했습니다.')
+      }
+    } catch (error) {
+      console.error('OAuth login error:', error)
+      throw error
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   // 로그아웃
   const logout = async () => {
     try {
@@ -73,6 +109,7 @@ export const useAuthStore = defineStore('auth', () => {
     username,
     getKakaoLoginUrl,
     loginWithToken,
+    completeOAuthLogin,
     logout,
     initialize
   }

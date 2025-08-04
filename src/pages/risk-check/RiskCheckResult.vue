@@ -7,7 +7,7 @@ import OverallRiskSection from '@/components/risk-check/result/OverallRiskSectio
 import DetailedAnalysis from '@/components/risk-check/result/DetailedAnalysis.vue'
 import TransactionNotes from '@/components/risk-check/result/TransactionNotes.vue'
 import RecommendedServices from '@/components/risk-check/result/RecommendedServices.vue'
-import { fraudApi } from '@/api/fraud'
+import { fraudApi } from '@/apis/fraud'
 
 const router = useRouter()
 const route = useRoute()
@@ -130,6 +130,25 @@ const statusMapping = {
 
 function mapStatus(koreanStatus) {
   return statusMapping[koreanStatus] || 'danger'
+}
+
+// API의 riskType을 UI에서 사용하는 위험도 형태로 변환하는 함수
+function mapRiskType(riskType) {
+  if (!riskType) return 'safe'
+  
+  const type = riskType.toUpperCase()
+  switch (type) {
+    case 'SAFE':
+      return 'safe'
+    case 'WARN':
+    case 'WARNING':
+      return 'warning'
+    case 'DANGER':
+    case 'HIGH':
+      return 'danger'
+    default:
+      return 'safe'
+  }
 }
 
 // Generate risk factors from the detailed analysis data
@@ -259,7 +278,7 @@ const analysisResult = computed(() => {
   if (!currentAnalysis.value) return null
   
   return {
-    overallRisk: currentAnalysis.value.riskType?.toLowerCase() || 'safe',
+    overallRisk: mapRiskType(currentAnalysis.value.riskType),
     analysisDate: currentAnalysis.value.analyzedAt || new Date().toISOString(),
     note: currentAnalysis.value.summary || '',
     propertyInfo: {
@@ -481,6 +500,9 @@ const analyzeAnother = () => {
 
 onMounted(() => {
   document.body.style.backgroundColor = '#F7F7F8'
+  // 스크롤 관련 스타일 초기화
+  document.body.style.overflow = 'auto'
+  document.documentElement.style.overflow = 'auto'
   window.scrollTo(0, 0)
 })
 
@@ -494,11 +516,13 @@ watch(dataNotFound, (newValue) => {
 
 onUnmounted(() => {
   document.body.style.backgroundColor = ''
+  document.body.style.overflow = ''
+  document.documentElement.style.overflow = ''
 })
 </script>
 
 <template>
-  <div class="min-h-screen">
+  <div class="py-8 min-h-0 px-4">
     <div class="max-w-[1024px] mx-auto">
       <!-- 헤더 -->
       <div class="flex items-center gap-4 mb-8">

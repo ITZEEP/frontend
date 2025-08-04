@@ -47,12 +47,22 @@
     @apply box-border font-sans;
   }
 
+  html {
+    @apply scroll-smooth;
+    overflow-y: auto !important;
+  }
+
   body {
-    @apply h-screen m-0;
+    @apply m-0 min-h-screen;
+    overflow-y: auto !important;
+  }
+  
+  #app {
+    overflow-y: visible !important;
   }
 
   .container {
-    @apply w-full h-full overflow-y-auto m-0;
+    @apply w-full m-0;
   }
 
   h1,

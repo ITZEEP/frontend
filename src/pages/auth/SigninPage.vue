@@ -68,10 +68,9 @@ async function handleKakaoLogin() {
     isLoading.value = true
     error.value = ''
     
-    // 카카오 로그인 URL 직접 생성
-    const KAKAO_CLIENT_ID = '7e3ddda2d8f49e376721e23f6b717d5f'
-    const REDIRECT_URI = encodeURIComponent('http://localhost:5173/oauth/callback/kakao')
-    const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code`
+    // 백엔드 OAuth 엔드포인트로 리다이렉트
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
+    const kakaoAuthUrl = `${baseUrl}/oauth2/authorization/kakao`
     
     // 카카오 로그인 페이지로 리다이렉트
     window.location.href = kakaoAuthUrl

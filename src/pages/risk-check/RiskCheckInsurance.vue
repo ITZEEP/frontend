@@ -14,7 +14,7 @@ const goBack = () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-100">
+  <div class="bg-gray-100">
     <!-- 헤더 -->
     <nav class="bg-white border-b border-gray-300 shadow-sm">
       <div class="max-w-[1280px] mx-auto px-8">

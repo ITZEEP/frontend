@@ -7,7 +7,7 @@ import IconChevronLeft from '@/components/icons/IconChevronLeft.vue'
 import IconCheck from '@/components/icons/IconCheck.vue'
 import PropertyRegistrationForm from '@/components/risk-check/confirm/PropertyRegistrationForm.vue'
 import BuildingRegistryForm from '@/components/risk-check/confirm/BuildingRegistryForm.vue'
-import { fraudApi } from '@/api/fraud'
+import { fraudApi } from '@/apis/fraud'
 import { useFraudStore } from '@/stores/fraud'
 
 const router = useRouter()
@@ -258,7 +258,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen">
+  <div>
     <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
       <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
         <div class="flex items-center gap-4">

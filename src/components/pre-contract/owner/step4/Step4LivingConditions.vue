@@ -5,14 +5,10 @@
       <p class="text-gray-500">납부 및 입주 관련 상세 조건을 설정해주세요.</p>
     </div>
 
-    <component :is="subStep === 1 ? SubStep1CommonForm : SubStep2TypeForm" />
+    <SubStep1CommonForm />
   </div>
 </template>
 
 <script setup>
-import { defineProps } from 'vue'
-import SubStep1CommonForm from './SubStep1CommonForm.vue'
-import SubStep2TypeForm from './SubStep2TypeForm.vue'
-
-defineProps({ subStep: Number })
+import SubStep1CommonForm from './Step4Contatiner.vue'
 </script>
