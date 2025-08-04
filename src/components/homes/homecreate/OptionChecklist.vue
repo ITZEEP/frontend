@@ -1,5 +1,5 @@
 <template>
-  <form @submit.prevent="onSubmit" class="max-w-4xl mx-auto p-6 space-y-6 border rounded-md">
+  <form @submit.prevent="onSubmit" class="max-w-4xl mx-auto p-6 space-y-6 rounded-md">
     <h2 class="text-lg font-semibold text-gray mb-2">시설 정보</h2>
     <p class="mb-4 text-gray-700">
       해당되는 시설을 모두 선택해주세요. 임차인이 확인할 수 있습니다.
