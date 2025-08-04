@@ -28,17 +28,10 @@
       v-model="nonresidentialUsePlan"
       label="거주 외 목적으로 사용할 계획이 있으신가요?"
       :options="[
-        { label: '사업자 등록', value: '사업자 등록' },
-        { label: '숙박', value: '숙박' },
-        { label: '없음', value: '없음' },
+        { label: '사업자 등록', value: 'BUSINESS' },
+        { label: '숙박', value: 'LODGING' },
+        { label: '없음', value: 'NONE' },
       ]"
-    />
-
-    <!-- 요청 사항 -->
-    <BaseInput
-      v-model="requestToOwner"
-      label="임대인에게 추가로 요청하실 사항이 있다면 작성해 주세요."
-      placeholder="임대인에게 추가로 요청하실 사항이 있다면 작성해 주세요."
     />
 
     <!-- 거주 인원 -->
@@ -77,6 +70,15 @@
       label="비상 연락처와의 관계"
       placeholder="비상 연락처와의 관계 (예: 남편)"
     />
+
+    <!-- 요청 사항 -->
+    <BaseInput
+      v-model="requestToOwner"
+      label="임대인에게 추가로 요청하실 사항이 있다면 작성해 주세요."
+      placeholder="임대인에게 추가로 요청하실 사항이 있다면 작성해 주세요."
+    />
+
+    <BaseButton @click="updateTenantStep3"> 테스트 버튼 </BaseButton>
   </div>
 </template>
 
@@ -85,19 +87,25 @@ import { ref, watch, onMounted } from 'vue'
 import ToggleRadio from '@/components/common/ToggleRadio.vue'
 import BaseInput from '@/components/common/BaseInput.vue'
 import { usePreContractStore } from '@/stores/preContract'
+import BaseButton from '@/components/common/BaseButton.vue'
+import buyerApi from '@/apis/pre-contract-buyer.js'
+import { useRoute } from 'vue-router'
 
 // store
 const store = usePreContractStore()
+
+const route = useRoute()
+const contractChatId = route.params.id
 
 // 상태 변수
 const indoorSmokingPlan = ref(null)
 const earlyTerminationRisk = ref(null)
 const nonresidentialUsePlan = ref('')
-const requestToOwner = ref('')
 const residentCount = ref('')
 const occupation = ref('')
 const emergencyContact = ref('')
 const relation = ref('')
+const requestToOwner = ref('')
 
 const onResidentInput = (e) => {
   const value = Number(e.target.value)
@@ -156,29 +164,65 @@ watch(
     indoorSmokingPlan,
     earlyTerminationRisk,
     nonresidentialUsePlan,
-    requestToOwner,
     residentCount,
     occupation,
     emergencyContact,
     relation,
+    requestToOwner,
   ],
-  ([smoking, earlyRisk, nonUse, toOwner, count, occup, contact, rel]) => {
+  ([smoking, earlyRisk, nonUse, count, occup, contact, rel, toOwner]) => {
     const allFilled =
       smoking !== null &&
       earlyRisk !== null &&
       nonUse !== '' &&
-      toOwner !== '' &&
       count !== '' &&
       occup !== '' &&
       contact !== '' &&
       rel !== '' &&
+      toOwner !== '' &&
       phonePattern.test(contact)
 
     store.setCanProceed(allFilled)
   },
 )
 
-onMounted(() => {
+// 조회
+onMounted(async () => {
   store.canProceed = false
+
+  try {
+    const { data } = await buyerApi.selectTenantStep3(contractChatId)
+    indoorSmokingPlan.value = data.indoorSmokingPlan
+    earlyTerminationRisk.value = data.earlyTerminationRisk
+    nonresidentialUsePlan.value = data.nonresidentialUsePlan
+    residentCount.value = data.residentCount
+    occupation.value = data.occupation
+    emergencyContact.value = data.emergencyContact
+    relation.value = data.relation
+    requestToOwner.value = data.requestToOwner
+  } catch (error) {
+    console.error('step3 조회 실패 ❌', error)
+  }
 })
+
+// 저장
+const updateTenantStep3 = async () => {
+  const step3DTO = {
+    indoorSmokingPlan: indoorSmokingPlan.value,
+    earlyTerminationRisk: earlyTerminationRisk.value,
+    nonresidentialUsePlan: nonresidentialUsePlan.value,
+    residentCount: residentCount.value,
+    occupation: occupation.value,
+    emergencyContact: emergencyContact.value,
+    relation: relation.value,
+    requestToOwner: requestToOwner.value,
+  }
+
+  try {
+    await buyerApi.updateTenantStep3(contractChatId, step3DTO)
+    alert('Step1 전세 정보가 저장되었습니다! ✅')
+  } catch (error) {
+    console.error('step3 전세 저장 실패 ❌', error)
+  }
+}
 </script>

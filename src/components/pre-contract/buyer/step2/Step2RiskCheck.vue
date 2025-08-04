@@ -17,11 +17,7 @@
 
     <!-- 분석 시작 버튼 -->
     <div class="flex justify-center mb-6">
-      <button
-        class="bg-[#FFB800] hover:bg-[#e8a600] text-white px-6 py-2 rounded-md font-semibold text-sm shadow-sm"
-      >
-        🔍 사기 위험도 분석 시작하기
-      </button>
+      <BaseButton variant="primary" @click="goToRisk"> 🔍 사기 위험도 분석 시작하기 </BaseButton>
     </div>
 
     <!-- 내용 분리: 분석 내용 + 매물 정보 -->
@@ -55,9 +51,10 @@
 </template>
 
 <script setup>
-import { onMounted, watch } from 'vue'
+import { onMounted } from 'vue'
 import { usePreContractStore } from '@/stores/preContract'
 import { useRouter } from 'vue-router'
+import BaseButton from '@/components/common/BaseButton.vue'
 
 const store = usePreContractStore()
 const router = useRouter()
@@ -66,7 +63,7 @@ onMounted(() => {
   store.canProceed = true
 })
 
-function goNext() {
+function goToRisk() {
   router.push('/risk-check')
 }
 </script>
