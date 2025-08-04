@@ -1,5 +1,5 @@
 <script setup>
-import { computed, watch } from 'vue'
+import { computed } from 'vue'
 
 const props = defineProps({
   overallRisk: {
@@ -8,11 +8,6 @@ const props = defineProps({
     validator: (value) => ['safe', 'warning', 'danger'].includes(value),
   },
 })
-
-// overallRisk prop 값 확인
-watch(() => props.overallRisk, (newValue) => {
-  // 디버깅이 필요한 경우 여기에 로그 추가
-}, { immediate: true })
 
 // 위험도에 따른 색상 맵핑
 const getRiskBgColor = (risk) => {

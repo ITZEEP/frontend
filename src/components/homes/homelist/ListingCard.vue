@@ -21,15 +21,6 @@
           <div>👁️ {{ listing.views ?? 0 }}</div>
           <div>💬 {{ listing.chats ?? 0 }}</div>
         </div>
-
-        <div class="text-right">
-          <span
-            class="text-xs font-semibold px-2 py-1 rounded-full inline-block"
-            :class="listing.verified ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'"
-          >
-            {{ listing.verified ? '실명인증' : '미인증' }}
-          </span>
-        </div>
       </div>
     </div>
   </router-link>

@@ -7,7 +7,7 @@ import PreContractLayout from '@/components/pre-contract/layout/PreContractLayou
 
 // buyer 컴포넌트
 import BuyerStep1 from '@/components/pre-contract/common/step1HomeInfo/Step1BasicInfo.vue'
-import BuyerStep2 from '@/components/pre-contract/buyer/step2/Step2.vue'
+import BuyerStep2 from '@/components/pre-contract/buyer/step2/Step2Risk.vue'
 import BuyerStep3 from '@/components/pre-contract/buyer/step3/Step03Verification.vue'
 import BuyerStep4 from '@/components/pre-contract/buyer/step4/Step4ContractTerms.vue'
 import BuyerStep5 from '@/components/pre-contract/buyer/step5/Step5Environment.vue'

@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@stomp/stompjs": "^7.1.1",
+    "@vueuse/core": "^13.6.0",
     "axios": "^1.10.0",
     "moment": "^2.30.1",
     "pinia": "^3.0.3",

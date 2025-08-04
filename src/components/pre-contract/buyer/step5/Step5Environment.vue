@@ -21,14 +21,22 @@ import Step5Residency from './Step5Sub2Residency.vue'
 const store = usePreContractStore()
 
 onMounted(() => {
-  const raw = localStorage.getItem('has_pet')
-  const parsed = raw === 'true' ? true : raw === 'false' ? false : undefined
-  if (typeof parsed === 'boolean') {
-    store.setHasPet(parsed)
+  const raw1 = localStorage.getItem('has_pet')
+  const parsed1 = raw1 === 'true' ? true : raw1 === 'false' ? false : undefined
+  if (typeof parsed1 === 'boolean') {
+    store.setHasPet(parsed1)
+  }
+
+  const raw2 = localStorage.getItem('has_parking')
+  const parsed2 = raw2 === 'true' ? true : raw2 === 'false' ? false : undefined
+  if (typeof parsed2 === 'boolean') {
+    store.setHasParking(parsed2)
   }
 })
 
 const hasPet = computed(() => store.hasPet)
+console.log('haspet : {}', hasPet)
+alert(hasPet.value)
 
 // props로 현재 subStep 받아오기
 const props = defineProps({

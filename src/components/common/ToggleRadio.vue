@@ -39,8 +39,6 @@
 </template>
 
 <script setup>
-import { defineProps, defineEmits } from 'vue'
-
 const { modelValue, label, options } = defineProps({
   modelValue: {
     type: [String, Boolean, Number],
