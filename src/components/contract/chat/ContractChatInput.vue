@@ -1,7 +1,9 @@
 <template>
   <div class="border-t bg-white">
     <!-- 특약 관련 버튼들 -->
-    <div class="w-full p-2 border-b flex gap-4">
+    <div
+      class="w-full p-2 border-b flex flex-wrap gap-2 md:gap-4 md:flex-nowrap sm:gap-4 sm:flex-nowrap"
+    >
       <BaseButton
         variant="outline"
         @click="handleSetStartPoint"

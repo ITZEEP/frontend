@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-92 flex flex-col">
+  <div class="h-full flex flex-col">
     <!-- 상단 헤더 -->
     <div class="px-4 py-3 border-b-2 bg-white">
       <p class="font-bold text-lg">실시간 협의</p>
