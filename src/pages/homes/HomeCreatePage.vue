@@ -8,20 +8,13 @@
 
     <!-- 버튼 영역 -->
     <div :class="currentStep === 1 ? 'flex justify-end' : 'flex justify-between'">
-      <button
-        v-if="currentStep > 1"
-        class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-6 rounded-lg transition"
-        @click="goToPreviousStep"
-      >
+      <BaseButton v-if="currentStep > 1" variant="outline" @click="goToPreviousStep">
         이전
-      </button>
+      </BaseButton>
 
-      <button
-        class="bg-yellow-primary hover:bg-yellow-hover text-white font-bold py-2 px-6 rounded-lg transition"
-        @click="goToNextStep"
-      >
+      <BaseButton variant="primary" @click="goToNextStep">
         {{ currentStep < stepComponents.length ? '다음' : '제출' }}
-      </button>
+      </BaseButton>
     </div>
   </div>
 </template>
@@ -35,6 +28,7 @@ import Step1BasicInfo from '@/components/homes/homecreate/Step1BasicInfo.vue'
 import Step2PriceInfo from '@/components/homes/homecreate/Step2PriceInfo.vue'
 import Step3DetailInfo from '@/components/homes/homecreate/Step3DetailInfo.vue'
 import Step4ImageUpload from '@/components/homes/homecreate/Step4ImageUpload.vue'
+import BaseButton from '@/components/common/BaseButton.vue'
 
 const stepComponents = [Step1BasicInfo, Step2PriceInfo, Step3DetailInfo, Step4ImageUpload]
 const route = useRoute()
@@ -122,13 +116,3 @@ function validateCurrentStep() {
   }
 }
 </script>
-
-<style scoped>
-.bg-yellow-primary {
-  background-color: #facc15;
-}
-
-.bg-yellow-primary {
-  background-color: #eab308;
-}
-</style>
