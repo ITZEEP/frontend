@@ -1,5 +1,5 @@
 <template>
-  <section class="w-screen h-screen bg-yellow-50">
+  <section class="w-screen min-h-screen bg-yellow-50">
     <div class="w-full h-full px-4 sm:px-8 md:px-16 lg:px-24 xl:px-36 py-8 flex flex-col gap-8">
       <header class="flex flex-col gap-2">
         <h1 class="text-gray-warm-700 font-bold text-xl">협업 계약서 작성</h1>
