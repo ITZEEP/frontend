@@ -106,6 +106,26 @@ class WebSocketService {
     return success
   }
 
+  // websocketService.js에 추가
+  notifyEnterChatRoom(userId, chatRoomId) {
+    return this.sendMessage('/app/chat/enter', {
+      userId,
+      chatRoomId,
+    })
+  }
+
+  notifyLeaveChatRoom(userId) {
+    return this.sendMessage('/app/chat/leave', {
+      userId,
+    })
+  }
+
+  setUserOffline(userId) {
+    return this.sendMessage('/app/user/offline', {
+      userId,
+    })
+  }
+
   sendContractChatMessage(contractChatId, senderId, receiverId, content, type = 'TEXT') {
     const success = this.sendMessage('/app/contract/chat/send', {
       contractChatId,
