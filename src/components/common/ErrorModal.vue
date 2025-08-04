@@ -36,6 +36,12 @@ const handleClose = () => {
   emit('close')
 }
 
+// 메시지에서 \n을 실제 줄바꿈으로 변환
+const formattedMessage = computed(() => {
+  if (!props.message) return ''
+  return props.message.replace(/\\n/g, '\n')
+})
+
 // 에러 타입별 아이콘 컴포넌트
 const iconComponent = computed(() => {
   const icons = {
@@ -82,7 +88,7 @@ const colorClasses = computed(() => {
         <component :is="iconComponent" :class="['h-8 w-8', colorClasses.icon]" />
       </div>
       <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ title }}</h3>
-      <p class="text-sm text-gray-600 whitespace-pre-line mb-6">{{ message }}</p>
+      <p class="text-sm text-gray-600 whitespace-pre-line mb-6">{{ formattedMessage }}</p>
       <BaseButton @click="handleClose" variant="primary" class="w-full">
         {{ buttonText }}
       </BaseButton>
