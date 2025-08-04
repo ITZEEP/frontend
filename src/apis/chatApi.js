@@ -3,7 +3,6 @@ import api from '@/apis'
 const API_BASE_URL = '/api/chat'
 
 function getAuthToken() {
-  // 🔧 수정: localStorage 키 통일
   return localStorage.getItem('accessToken') || localStorage.getItem('access-token')
 }
 
@@ -283,4 +282,82 @@ export async function acceptContract(chatRoomId) {
     console.error('계약 수락 실패', error)
     throw error
   }
+}
+// 알림 목록 조회
+export async function getNotifications(page = 0, size = 10, type = '') {
+  const queryParams = new URLSearchParams({ page, size, type }).toString()
+  return apiRequest(`/notifications?${queryParams}`)
+}
+
+// 최신 알림 조회
+export async function getRecentNotifications(limit = 5) {
+  const queryParams = new URLSearchParams({ limit }).toString()
+  return apiRequest(`/notifications/recent?${queryParams}`)
+}
+
+// 읽지 않은 알림 수 조회
+export async function getUnreadNotificationCount() {
+  return apiRequest('/notifications/unread-count')
+}
+
+// 특정 알림 읽음 처리
+export async function markNotificationAsRead(notiId) {
+  return apiRequest(`/notifications/${notiId}/read`, {
+    method: 'POST',
+  })
+}
+
+// 여러 알림 읽음 처리
+export async function markMultipleNotificationsAsRead(notificationIds) {
+  return apiRequest('/notifications/read', {
+    method: 'POST',
+    body: JSON.stringify({ ids: notificationIds }),
+  })
+}
+
+// 모든 알림 읽음 처리
+export async function markAllNotificationsAsRead() {
+  return apiRequest('/notifications/read-all', {
+    method: 'POST',
+  })
+}
+
+// 특정 알림 삭제
+export async function deleteNotification(notiId) {
+  return apiRequest(`/notifications/${notiId}`, {
+    method: 'DELETE',
+  })
+}
+
+// 여러 알림 삭제
+export async function deleteMultipleNotifications(notificationIds) {
+  return apiRequest('/notifications', {
+    method: 'DELETE',
+    body: JSON.stringify({ ids: notificationIds }),
+  })
+}
+
+// 모든 알림 삭제
+export async function deleteAllNotifications() {
+  return apiRequest('/notifications/all', {
+    method: 'DELETE',
+  })
+}
+
+// 백그라운드 알림 저장
+export async function saveBackgroundNotification(notificationData) {
+  return apiRequest('/notifications/save-background', {
+    method: 'POST',
+    body: JSON.stringify(notificationData),
+  })
+}
+
+// 알림 통계 조회
+export async function getNotificationStats() {
+  return apiRequest('/notifications/stats')
+}
+
+// 알림 타입별 통계 조회
+export async function getNotificationStatsByType() {
+  return apiRequest('/notifications/stats/types')
 }
