@@ -1,7 +1,7 @@
 <script setup>
 import IconHome from '@/components/icons/IconHome.vue'
 
-const props = defineProps({
+defineProps({
   selectedType: {
     type: String,
     default: null,

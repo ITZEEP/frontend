@@ -1,52 +1,43 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
-export const useFraudStore = defineStore('fraud', () => {
-  // OCR 분석 결과를 임시 저장
-  const documentAnalysisData = ref(null)
-  
-  // 매물 정보를 임시 저장 (등록되지 않은 매물용)
-  const propertyInfo = ref(null)
+const DATA_EXPIRY_TIME = 30 * 60 * 1000 // 30분
 
-  // 문서 분석 데이터 저장
+export const useFraudStore = defineStore('fraud', () => {
+  // State
+  const documentAnalysisData = ref(null)
+  const propertyInfo = ref(null)
+  const externalAnalysisResult = ref(null)
+
+  // 데이터 유효성 검증 헬퍼 함수
+  const isDataValid = (data) => {
+    if (!data || !data.timestamp) return false
+    const now = Date.now()
+    const dataAge = now - data.timestamp
+    return dataAge <= DATA_EXPIRY_TIME
+  }
+
+  // OCR 분석 결과 관리
   const setDocumentAnalysisData = (data) => {
     documentAnalysisData.value = {
-      homeId: data.homeId,
-      registryDocument: data.registryDocument,
-      buildingDocument: data.buildingDocument,
-      registryFileUrl: data.registryFileUrl,
-      buildingFileUrl: data.buildingFileUrl,
-      registryAnalysisStatus: data.registryAnalysisStatus,
-      buildingAnalysisStatus: data.buildingAnalysisStatus,
-      timestamp: Date.now() // 데이터 유효성 검증을 위한 타임스탬프
+      ...data,
+      timestamp: Date.now()
     }
   }
 
-  // 문서 분석 데이터 가져오기
   const getDocumentAnalysisData = () => {
-    // 데이터가 없거나 30분 이상 지난 경우 null 반환
-    if (!documentAnalysisData.value) {
-      return null
-    }
-
-    const now = Date.now()
-    const dataAge = now - documentAnalysisData.value.timestamp
-    const thirtyMinutes = 30 * 60 * 1000
-
-    if (dataAge > thirtyMinutes) {
+    if (!isDataValid(documentAnalysisData.value)) {
       clearDocumentAnalysisData()
       return null
     }
-
     return documentAnalysisData.value
   }
 
-  // 문서 분석 데이터 삭제
   const clearDocumentAnalysisData = () => {
     documentAnalysisData.value = null
   }
 
-  // 매물 정보 저장
+  // 서비스 외 매물 정보 관리
   const setPropertyInfo = (info) => {
     propertyInfo.value = {
       ...info,
@@ -54,44 +45,67 @@ export const useFraudStore = defineStore('fraud', () => {
     }
   }
 
-  // 매물 정보 가져오기
   const getPropertyInfo = () => {
-    if (!propertyInfo.value) {
-      return null
-    }
-
-    const now = Date.now()
-    const dataAge = now - propertyInfo.value.timestamp
-    const thirtyMinutes = 30 * 60 * 1000 // 30분
-
-    if (dataAge > thirtyMinutes) {
+    if (!isDataValid(propertyInfo.value)) {
       clearPropertyInfo()
       return null
     }
-
     return propertyInfo.value
   }
 
-  // 매물 정보 삭제
   const clearPropertyInfo = () => {
     propertyInfo.value = null
   }
 
-  // 모든 데이터 삭제
+  // 서비스 외 매물 분석 결과 관리
+  const setExternalAnalysisResult = (result) => {
+    externalAnalysisResult.value = {
+      ...result,
+      timestamp: Date.now()
+    }
+  }
+
+  const getExternalAnalysisResult = () => {
+    if (!isDataValid(externalAnalysisResult.value)) {
+      clearExternalAnalysisResult()
+      return null
+    }
+    return externalAnalysisResult.value
+  }
+
+  const clearExternalAnalysisResult = () => {
+    externalAnalysisResult.value = null
+  }
+
+  // 전체 데이터 초기화
   const clearAllData = () => {
     clearDocumentAnalysisData()
     clearPropertyInfo()
+    clearExternalAnalysisResult()
   }
 
   return {
+    // State
     documentAnalysisData,
     propertyInfo,
+    externalAnalysisResult,
+    
+    // OCR 분석 결과
     setDocumentAnalysisData,
     getDocumentAnalysisData,
     clearDocumentAnalysisData,
+    
+    // 매물 정보
     setPropertyInfo,
     getPropertyInfo,
     clearPropertyInfo,
+    
+    // 서비스 외 매물 분석 결과
+    setExternalAnalysisResult,
+    getExternalAnalysisResult,
+    clearExternalAnalysisResult,
+    
+    // 전체 관리
     clearAllData
   }
 })

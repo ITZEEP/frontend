@@ -4,7 +4,7 @@ import BaseModal from '@/components/common/BaseModal.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import IconLock from '@/components/icons/IconLock.vue'
 
-const props = defineProps({
+defineProps({
   isOpen: {
     type: Boolean,
     default: false,
