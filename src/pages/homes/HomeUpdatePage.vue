@@ -12,7 +12,7 @@
 
     <!-- 기본 정보 (읽기 전용) -->
     <section class="bg-white rounded-xl shadow-md p-6">
-      <BasicInfoForm :listing="listing" readonly />
+      <BasicInfoForm :listing="listing" :readonly="true" />
     </section>
 
     <!-- 가격 정보 -->
@@ -32,7 +32,7 @@
 
     <!-- 이미지 업로더 -->
     <section class="bg-white rounded-xl shadow-md p-6">
-      <ImageUploader v-model="listing.images" />
+      <ImageUploader v-model="listing.imageUrls" />
       <p class="text-sm text-gray-500 mt-2">※ 최대 10장까지 업로드 가능합니다.</p>
     </section>
 
@@ -52,6 +52,7 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import axios from 'axios'
 
 // 공통 버튼 컴포넌트
 import BaseButton from '@/components/common/BaseButton.vue'
@@ -68,36 +69,20 @@ const router = useRouter()
 const listingId = route.params.id
 
 const listing = ref({})
-const originalListing = ref({}) // 원본 데이터 복사본
+const originalListing = ref({})
 
 const isLoading = ref(false)
 const error = ref(null)
 
-onMounted(() => {
-  // 예시 데이터 로드 (실제 API 호출로 변경 필요)
-  listing.value = {
-    id: listingId,
-    address: '서울시 강남구 테헤란로 123',
-    type: '오피스텔',
-    deposit: 1000,
-    monthly: 45,
-    maintenance: 5,
-    netArea: 33.05,
-    grossArea: 42.97,
-    currentFloor: 10,
-    totalFloors: 13,
-    approvalDate: '2020-03-15',
-    heating: '개별난방',
-    parking: true,
-    elevator: true,
-    pet: false,
-    images: [
-      'https://source.unsplash.com/featured/?room',
-      'https://source.unsplash.com/featured/?apartment',
-    ],
+onMounted(async () => {
+  try {
+    const res = await axios.get(`/api/listings/${listingId}`)
+    listing.value = res.data
+    originalListing.value = JSON.parse(JSON.stringify(listing.value))
+  } catch (err) {
+    error.value = '매물 정보를 불러오는 중 오류가 발생했습니다.'
+    console.error(err)
   }
-  // 원본 복사본 저장 (딥카피)
-  originalListing.value = JSON.parse(JSON.stringify(listing.value))
 })
 
 const updateListing = async () => {
@@ -105,15 +90,11 @@ const updateListing = async () => {
     isLoading.value = true
     error.value = null
 
-    console.log('저장된 매물:', listing.value)
-    // TODO: 실제 API 호출 구현
-    // await updateListingAPI(listing.value)
-
-    // 성공 시 목록 페이지로 이동
+    await axios.put(`/api/listings/${listingId}`, listing.value)
     router.push('/homes')
   } catch (err) {
     error.value = '저장 중 오류가 발생했습니다.'
-    console.error('저장 실패:', err)
+    console.error(err)
   } finally {
     isLoading.value = false
   }

@@ -13,10 +13,10 @@ const props = defineProps({
       return (
         value &&
         typeof value === 'object' &&
-        'houseType' in value &&
-        'dealType' in value &&
-        'address' in value &&
-        'detailAddress' in value
+        'residenceType' in value &&
+        'leaseType' in value &&
+        'addr1' in value &&
+        'addr2' in value
       )
     },
   },
@@ -33,7 +33,7 @@ const updateForm = (field, value) => {
 }
 
 const onAddressSelect = (selectedAddress) => {
-  updateForm('address', selectedAddress)
+  updateForm('addr1', selectedAddress)
   modalStore.close()
 }
 </script>
@@ -60,11 +60,11 @@ const onAddressSelect = (selectedAddress) => {
           :key="type"
           :class="[
             'py-2 px-4 border rounded-md text-sm font-medium transition',
-            props.form.houseType === type
+            props.form.residenceType === type
               ? 'bg-yellow-primary text-white border-yellow-primary'
               : 'bg-white text-gray-700 hover:bg-gray-50',
           ]"
-          @click="updateForm('houseType', type)"
+          @click="updateForm('residenceType', type)"
           type="button"
         >
           {{ type }}
@@ -81,10 +81,11 @@ const onAddressSelect = (selectedAddress) => {
         <BaseRadio
           v-for="type in ['월세', '전세']"
           :key="type"
-          v-model="props.form.dealType"
+          :modelValue="props.form.leaseType"
           :value="type"
           :label="type"
-          name="dealType"
+          name="leaseType"
+          @update:modelValue="updateForm('leaseType', $event)"
         />
       </div>
     </div>
@@ -98,7 +99,7 @@ const onAddressSelect = (selectedAddress) => {
         <input
           class="w-full rounded-md border border-gray-300 px-4 py-2 text-sm"
           type="text"
-          :value="props.form.address"
+          :value="props.form.addr1"
           placeholder="주소 검색"
           disabled
         />
@@ -117,8 +118,8 @@ const onAddressSelect = (selectedAddress) => {
     <div>
       <label class="block mb-1 text-sm font-medium text-gray-600">상세 주소</label>
       <input
-        :value="props.form.detailAddress"
-        @input="updateForm('detailAddress', $event.target.value)"
+        :value="props.form.addr2"
+        @input="updateForm('addr2', $event.target.value)"
         class="w-full rounded-md border border-gray-300 px-4 py-2 text-sm"
         type="text"
         placeholder="상세 주소를 입력하세요"

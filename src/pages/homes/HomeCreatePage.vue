@@ -6,7 +6,6 @@
       <component :is="currentStepComponent" v-model:form="form" />
     </section>
 
-    <!-- 버튼 영역 -->
     <div :class="currentStep === 1 ? 'flex justify-end' : 'flex justify-between'">
       <BaseButton v-if="currentStep > 1" variant="outline" @click="goToPreviousStep">
         이전
@@ -22,6 +21,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import axios from 'axios'
 
 import StepProgressIndicator from '@/components/homes/homecreate/StepProgressIndicator.vue'
 import Step1BasicInfo from '@/components/homes/homecreate/Step1BasicInfo.vue'
@@ -48,9 +48,10 @@ watch(
 
 const form = ref({
   // Step 1
-  houseType: '',
-  dealType: '',
-  address: '',
+  residenceType: '',
+  leaseType: '',
+  addr1: '',
+  addr2: '',
 
   // Step 2
   deposit: '',
@@ -65,7 +66,7 @@ const form = ref({
   totalFloors: '',
   approvalDate: '',
   direction: '',
-  options: [], // 여기에 OptionChecklist에서 선택된 값(예: appliances 등)을 연결해서 사용 가능
+  options: [],
   utilities: {
     electricity: false,
     gas: false,
@@ -77,7 +78,7 @@ const form = ref({
   description: '',
 
   // Step 4
-  images: [],
+  images: [], // File[]
 })
 
 const currentStepComponent = computed(() => stepComponents[currentStep.value - 1])
@@ -91,9 +92,7 @@ function goToNextStep() {
   if (currentStep.value < stepComponents.length) {
     router.push({ query: { step: currentStep.value + 1 } })
   } else {
-    console.log('제출 데이터:', form.value)
-    alert('등록이 완료되었습니다.')
-    router.push('/homes')
+    submitForm()
   }
 }
 
@@ -103,16 +102,53 @@ function goToPreviousStep() {
   }
 }
 
-// 스텝별 필수 항목 검사 함수
 function validateCurrentStep() {
   const f = form.value
   switch (currentStep.value) {
     case 1:
-      return f.houseType !== '' && f.dealType !== ''
+      return f.residenceType !== '' && f.leaseType !== ''
     case 2:
       return Number(f.deposit) > 0 || Number(f.monthly) > 0
     default:
       return true
+  }
+}
+
+async function submitForm() {
+  const f = form.value
+
+  const selectedUtilities = Object.entries(f.utilities)
+    .filter(([, value]) => value)
+    .map(([key]) => key)
+
+  const payload = new FormData()
+  payload.append('houseType', f.residenceType)
+  payload.append('dealType', f.leaseType)
+  payload.append('address', `${f.addr1} ${f.addr2}`)
+  payload.append('deposit', f.deposit)
+  payload.append('monthly', f.monthly)
+  payload.append('maintenanceFee', f.maintenanceFee)
+  payload.append('exclusiveArea', f.exclusiveArea)
+  payload.append('roomCount', f.roomCount)
+  payload.append('bathroomCount', f.bathroomCount)
+  payload.append('floor', f.floor)
+  payload.append('totalFloors', f.totalFloors)
+  payload.append('approvalDate', f.approvalDate)
+  payload.append('direction', f.direction)
+  f.options.forEach((option) => payload.append('options', option))
+  selectedUtilities.forEach((util) => payload.append('utilities', util))
+  payload.append('description', f.description)
+  f.images.forEach((file) => payload.append('images', file))
+
+  try {
+    await axios.post('/api/homes', payload, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    alert('등록이 완료되었습니다.')
+    router.push('/homes')
+  } catch (error) {
+    console.error('등록 실패:', error)
+    alert('등록 중 오류가 발생했습니다.')
   }
 }
 </script>
