@@ -80,10 +80,18 @@ const handlePrevClick = () => {
   }
 }
 
-const goToStep = (newStep) => {
+const goToStep = async (newStep) => {
+  if (store.triggerSubmit) {
+    try {
+      await store.triggerSubmit()
+    } catch (e) {
+      console.error('저장 실패:', e)
+      return
+    }
+  }
+
   if (newStep <= maxStep) {
     router.push({ query: { ...route.query, step: newStep } })
-    store.triggerSubmit?.()
   }
 }
 </script>

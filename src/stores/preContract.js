@@ -12,6 +12,7 @@ export const usePreContractStore = defineStore('preContract', {
     canProceed: false,
     hasPet: true,
     hasParking: false,
+    triggerSubmit: null,
   }),
   actions: {
     setLeaseType(type) {

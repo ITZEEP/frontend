@@ -41,7 +41,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref, watch } from 'vue'
+import { onBeforeMount, onMounted, ref, watch } from 'vue'
 import ToggleRadio from '@/components/common/ToggleRadio.vue'
 import { usePreContractStore } from '@/stores/preContract'
 import { useRoute } from 'vue-router'
@@ -72,6 +72,19 @@ const fetchContractStep1 = async () => {
   }
 }
 
+const patchContractStep1 = async () => {
+  try {
+    await OwnerPreContractAPI.updateContractStep1(contractChatId)
+
+    isMortgaged.value
+    contractDuration.value
+    renewalIntent.value
+    repairingFixtures.value
+  } catch (error) {
+    console.log('계약 조건 업데이트 실패', error)
+  }
+}
+
 watch(
   [isMortgaged, contractDuration, renewalIntent, repairingFixtures],
   ([mort, dur, renew, fix]) => {
@@ -86,5 +99,11 @@ onMounted(() => {
     fetchContractStep1()
     isInitialized.value = true
   }
+
+  store.triggerSubmit = patchContractStep1
+})
+
+onBeforeMount(() => {
+  store.triggerSubmit = null
 })
 </script>
