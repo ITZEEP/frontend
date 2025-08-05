@@ -57,14 +57,20 @@ import { ref } from 'vue'
 import CheckIcon from '@/assets/icons/CheckIcon.vue'
 import XIcon from '@/assets/icons/XIcon.vue'
 
-defineProps({
+const props = defineProps({
   clause: Object,
 })
+
+const emit = defineEmits(['selection-changed'])
 
 // 선택 상태: 'check', 'x', null
 const selected = ref(null)
 
 const select = (type) => {
   selected.value = type
+  emit('selection-changed', {
+    id: props.clause.id,
+    selected: type === 'check' ? true : false,
+  })
 }
 </script>

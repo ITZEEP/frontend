@@ -272,11 +272,22 @@ export const getContractChatOnlineStatus = async (contractChatId) => {
   }
 }
 
+// 특약 정보 불러오기
 export const getSpecialContractForUser = async (contractChatId) => {
   try {
     const result = await apiRequest(`/special-contract/${contractChatId}`)
     return result.data.clauses
   } catch (error) {
     console.error('getSpecialContractForUser 실패:', error)
+  }
+}
+
+// 각 특약 승인/거절 여부 post
+export const postSpecialContractSelection = async (contractChatId, data) => {
+  try {
+    const result = await apiPost(`/special-contracts/${contractChatId}/submit-selection`, data)
+    return result
+  } catch (error) {
+    console.error('postSpecialContractSelection 실패:', error)
   }
 }

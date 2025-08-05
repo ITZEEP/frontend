@@ -7,10 +7,15 @@
       </div>
 
       <div class="flex flex-col gap-4 max-h-[65vh] overflow-y-auto">
-        <TermsReviewCard v-for="clause in clauses" :key="clause.id" :clause="clause" />
+        <TermsReviewCard
+          v-for="clause in clauses"
+          :key="clause.id"
+          :clause="clause"
+          @selection-changed="handleSelectionChange"
+        />
       </div>
 
-      <BaseButton variant="yellow" class="mt-6 w-full" @click="onConfirm">검토 완료</BaseButton>
+      <BaseButton variant="yellow" class="mt-6 w-full" @click="confirm">검토 완료</BaseButton>
     </div>
   </Modal>
 </template>
@@ -22,25 +27,45 @@ import TermsReviewCard from './TermsReviewCard.vue'
 import { useRoute } from 'vue-router'
 import { getSpecialContractForUser } from '@/apis/contractChatApi'
 import { onMounted, ref } from 'vue'
+import { postSpecialContractSelection } from '@/apis/contractChatApi'
+import { useModalStore } from '@/stores/modal'
 
 const route = useRoute()
 const contractChatId = route.query.id || route.params.id
-console.log('contractChatId: ' + contractChatId)
+
+const modalStore = useModalStore()
 
 const props = defineProps({
   remainingChances: Number,
   onClose: Function,
-  onConfirm: Function,
 })
 
 const clauses = ref([])
+const selections = ref({})
 
 onMounted(async () => {
   const result = await getSpecialContractForUser(contractChatId)
   clauses.value = result
-  console.log(clauses.value)
 })
 
-const onClose = () => props.onClose?.()
-const onConfirm = () => props.onConfirm?.()
+const handleSelectionChange = ({ id, selected }) => {
+  selections.value[id] = selected
+  console.log('제출 결과: ', selections.value)
+}
+
+const confirm = async () => {
+  try {
+    console.log('제출할 데이터:', selections.value)
+    const result = await postSpecialContractSelection(contractChatId, selections.value)
+    console.log(result)
+    modalStore.close()
+  } catch (error) {
+    console.error('제출 실패......', error)
+  }
+}
+
+const onClose = () => {
+  modalStore.close()
+  props.onClose?.()
+}
 </script>
