@@ -19,12 +19,26 @@
 import Modal from '@/components/common/BaseModal.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import TermsReviewCard from './TermsReviewCard.vue'
+import { useRoute } from 'vue-router'
+import { getSpecialContractForUser } from '@/apis/contractChatApi'
+import { onMounted, ref } from 'vue'
+
+const route = useRoute()
+const contractChatId = route.query.id || route.params.id
+console.log('contractChatId: ' + contractChatId)
 
 const props = defineProps({
-  clauses: Array,
   remainingChances: Number,
   onClose: Function,
   onConfirm: Function,
+})
+
+const clauses = ref([])
+
+onMounted(async () => {
+  const result = await getSpecialContractForUser(contractChatId)
+  clauses.value = result
+  console.log(clauses.value)
 })
 
 const onClose = () => props.onClose?.()

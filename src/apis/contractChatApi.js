@@ -271,3 +271,12 @@ export const getContractChatOnlineStatus = async (contractChatId) => {
     }
   }
 }
+
+export const getSpecialContractForUser = async (contractChatId) => {
+  try {
+    const result = await apiRequest(`/special-contract/${contractChatId}`)
+    return result.data.clauses
+  } catch (error) {
+    console.error('getSpecialContractForUser 실패:', error)
+  }
+}
