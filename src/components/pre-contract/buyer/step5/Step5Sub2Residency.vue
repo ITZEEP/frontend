@@ -83,7 +83,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, watchEffect } from 'vue'
 import ToggleRadio from '@/components/common/ToggleRadio.vue'
 import BaseInput from '@/components/common/BaseInput.vue'
 import { usePreContractStore } from '@/stores/preContract'
@@ -225,4 +225,7 @@ const updateTenantStep3 = async () => {
     console.error('step3 전세 저장 실패 ❌', error)
   }
 }
+watchEffect(() => {
+  store.setTriggerSubmit(5, 2, updateTenantStep3)
+})
 </script>

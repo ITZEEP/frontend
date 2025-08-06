@@ -60,7 +60,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, computed } from 'vue'
+import { ref, watch, onMounted, computed, watchEffect } from 'vue'
 import ToggleRadio from '@/components/common/ToggleRadio.vue'
 import { usePreContractStore } from '@/stores/preContract'
 import buyerApi from '@/apis/pre-contract-buyer.js'
@@ -133,4 +133,7 @@ const updateTenantStep2 = async () => {
     console.error('step2 애완동물 불가 저장 실패 ❌', error)
   }
 }
+watchEffect(() => {
+  store.setTriggerSubmit(5, 1, updateTenantStep2)
+})
 </script>
