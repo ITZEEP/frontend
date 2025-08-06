@@ -68,8 +68,6 @@ import FraudAnalysisCard from '@/components/mypage/fraud-analysis/FraudAnalysisC
 import FraudAnalysisCardSkeleton from '@/components/mypage/fraud-analysis/FraudAnalysisCardSkeleton.vue'
 import FraudAnalysisEmpty from '@/components/mypage/fraud-analysis/FraudAnalysisEmpty.vue'
 import FraudAnalysisError from '@/components/mypage/fraud-analysis/FraudAnalysisError.vue'
-import { useAlert } from '@/composables/useAlert'
-
 // 상태 관리
 const loading = ref(true)
 const error = ref(false)
@@ -77,7 +75,6 @@ const errorMessage = ref('')
 const analyses = ref([])
 const currentPage = ref(1)
 const itemsPerPage = 9
-const { showAlert } = useAlert()
 
 // 페이지네이션 계산
 const totalPages = computed(() => 
