@@ -30,6 +30,18 @@ import Step3DetailInfo from '@/components/homes/homecreate/Step3DetailInfo.vue'
 import Step4ImageUpload from '@/components/homes/homecreate/Step4ImageUpload.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 
+import { createListing } from '@/apis/listing.js'
+
+const handleSubmit = async () => {
+  try {
+    await createListing(form.value)
+    alert('등록 완료!')
+    router.push('/homes')
+  } catch (err) {
+    console.error('등록 실패:', err)
+  }
+}
+
 const stepComponents = [Step1BasicInfo, Step2PriceInfo, Step3DetailInfo, Step4ImageUpload]
 const route = useRoute()
 const router = useRouter()
@@ -91,9 +103,7 @@ function goToNextStep() {
   if (currentStep.value < stepComponents.length) {
     router.push({ query: { step: currentStep.value + 1 } })
   } else {
-    console.log('제출 데이터:', form.value)
-    alert('등록이 완료되었습니다.')
-    router.push('/homes')
+    handleSubmit()
   }
 }
 

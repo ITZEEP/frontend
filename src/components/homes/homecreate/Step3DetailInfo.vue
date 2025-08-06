@@ -111,16 +111,16 @@
     </div>
 
     <!-- 체크박스 -->
-    <div class="flex items-center gap-6">
-      <label class="inline-flex items-center space-x-2 cursor-pointer">
-        <input type="checkbox" v-model="form.isDetached" />
-        <span>반지하</span>
-      </label>
-      <label class="inline-flex items-center space-x-2 cursor-pointer">
-        <input type="checkbox" v-model="form.isRooftop" />
-        <span>옥탑</span>
-      </label>
-    </div>
+    <!--    <div class="flex items-center gap-6">-->
+    <!--      <label class="inline-flex items-center space-x-2 cursor-pointer">-->
+    <!--        <input type="checkbox" v-model="form.isDetached" />-->
+    <!--        <span>반지하</span>-->
+    <!--      </label>-->
+    <!--      <label class="inline-flex items-center space-x-2 cursor-pointer">-->
+    <!--        <input type="checkbox" v-model="form.isRooftop" />-->
+    <!--        <span>옥탑</span>-->
+    <!--      </label>-->
+    <!--    </div>-->
 
     <!-- 날짜 -->
     <div>

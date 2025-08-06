@@ -117,7 +117,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import UserVerification from '@/components/pre-contract/common/UserVerification.vue'
+import UserVerification from '@/components/common/UserVerification.vue'
 
 const files = ref([])
 const description = ref('')

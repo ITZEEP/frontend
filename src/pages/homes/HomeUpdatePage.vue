@@ -42,7 +42,7 @@
     <!-- 저장 및 취소 버튼 -->
     <div class="grid grid-cols-2 gap-4 h-12">
       <BaseButton variant="outline" @click="cancelUpdate" :disabled="isLoading">취소</BaseButton>
-      <BaseButton variant="primary" @click="updateListing" :disabled="isLoading">
+      <BaseButton variant="primary" @click="updateListingData" :disabled="isLoading">
         {{ isLoading ? '저장 중...' : '저장하기' }}
       </BaseButton>
     </div>
@@ -53,63 +53,45 @@
 import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-// 공통 버튼 컴포넌트
 import BaseButton from '@/components/common/BaseButton.vue'
-
-// 폼 컴포넌트들
 import BasicInfoForm from '@/components/homes/homeupdate/BasicInfoForm.vue'
 import PriceInfoForm from '@/components/homes/homeupdate/PriceInfoForm.vue'
 import RoomInfoForm from '@/components/homes/homeupdate/RoomInfoForm.vue'
 import FacilityInfoForm from '@/components/homes/homeupdate/FacilityInfoForm.vue'
 import ImageUploader from '@/components/homes/homeupdate/ImageUploader.vue'
 
+//  API 함수 가져오기
+import { fetchListingById, updateListing } from '@/apis/listing.js'
+
 const route = useRoute()
 const router = useRouter()
 const listingId = route.params.id
 
 const listing = ref({})
-const originalListing = ref({}) // 원본 데이터 복사본
-
+const originalListing = ref({})
 const isLoading = ref(false)
 const error = ref(null)
 
-onMounted(() => {
-  // 예시 데이터 로드 (실제 API 호출로 변경 필요)
-  listing.value = {
-    id: listingId,
-    address: '서울시 강남구 테헤란로 123',
-    type: '오피스텔',
-    deposit: 1000,
-    monthly: 45,
-    maintenance: 5,
-    netArea: 33.05,
-    grossArea: 42.97,
-    currentFloor: 10,
-    totalFloors: 13,
-    approvalDate: '2020-03-15',
-    heating: '개별난방',
-    parking: true,
-    elevator: true,
-    pet: false,
-    images: [
-      'https://source.unsplash.com/featured/?room',
-      'https://source.unsplash.com/featured/?apartment',
-    ],
+//  데이터 조회 (mounted)
+onMounted(async () => {
+  try {
+    isLoading.value = true
+    listing.value = await fetchListingById(listingId)
+    originalListing.value = JSON.parse(JSON.stringify(listing.value)) // 딥카피
+  } catch (err) {
+    error.value = '데이터를 불러오는 데 실패했습니다.'
+    console.error('조회 실패:', err)
+  } finally {
+    isLoading.value = false
   }
-  // 원본 복사본 저장 (딥카피)
-  originalListing.value = JSON.parse(JSON.stringify(listing.value))
 })
 
-const updateListing = async () => {
+//  저장 버튼 클릭 시 호출
+const updateListingData = async () => {
   try {
     isLoading.value = true
     error.value = null
-
-    console.log('저장된 매물:', listing.value)
-    // TODO: 실제 API 호출 구현
-    // await updateListingAPI(listing.value)
-
-    // 성공 시 목록 페이지로 이동
+    await updateListing(listingId, listing.value)
     router.push('/homes')
   } catch (err) {
     error.value = '저장 중 오류가 발생했습니다.'
@@ -119,14 +101,13 @@ const updateListing = async () => {
   }
 }
 
+// ✅ 취소 버튼
 const cancelUpdate = () => {
   const hasChanges = JSON.stringify(listing.value) !== JSON.stringify(originalListing.value)
-
   if (hasChanges) {
     const confirmed = confirm('작업 중인 내용이 있습니다. 정말 취소하시겠습니까?')
     if (!confirmed) return
   }
-
   router.push('/homes')
 }
 </script>
