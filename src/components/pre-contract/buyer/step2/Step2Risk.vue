@@ -27,6 +27,7 @@ onMounted(async () => {
     // 2. 불린값인지 확인
     if (typeof data === 'boolean') {
       isRisk.value = data
+      console.log('데이터:', data)
     }
   } catch (error) {
     console.error('risk_check 가져오기 실패 ❌', error)
