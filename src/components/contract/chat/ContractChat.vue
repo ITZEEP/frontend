@@ -136,8 +136,10 @@ import { useContractChat } from '@/hooks/chat/useContractChat'
 import ContractChatInput from './ContractChatInput.vue'
 import UserChatMessage from './messages/UserChatMessage.vue'
 import StepContainer from './StepContainer.vue'
+import { useSpecialContractStore } from '@/stores/useContractTermStore'
 
 const route = useRoute()
+const store = useSpecialContractStore()
 
 const props = defineProps({
   contractChatId: {
@@ -439,10 +441,13 @@ const handleSetStartPoint = async () => {
 // 특약 내보내기
 const handleExportMessages = async () => {
   try {
-    const response = await setEndPointAndExport(actualContractChatId.value)
+    const order = store.currentOrder
+    const response = await setEndPointAndExport(actualContractChatId.value, order)
     if (response.success) {
       exportedMessages.value = response.data
       showExportModal.value = true
+      store.markOrderSuccess(store.currentOrder)
+      await store.moveToNextOrder(actualContractChatId.value)
     } else {
       alert('특약 내보내기에 실패했습니다: ' + response.message)
     }

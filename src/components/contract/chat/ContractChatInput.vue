@@ -4,13 +4,6 @@
     <div
       class="w-full p-2 border-b flex flex-wrap gap-2 md:gap-4 md:flex-nowrap sm:gap-4 sm:flex-nowrap"
     >
-      <BaseButton
-        variant="outline"
-        @click="handleSetStartPoint"
-        :disabled="isProcessing || !canSendMessage"
-      >
-        {{ isProcessing ? '처리 중...' : '조율 시작' }}
-      </BaseButton>
       <BaseButton @click="handleExportRequest" :disabled="isProcessing || !canSendMessage">{{
         isProcessing ? '처리 중...' : '요청하기'
       }}</BaseButton>
@@ -19,7 +12,7 @@
       }}</BaseButton>
 
       <BaseButton @click="handleExportMessages" :disabled="isProcessing || !canSendMessage">
-        {{ isProcessing ? '내보내는 중...' : 'AI 수정 요청' }}
+        {{ isProcessing ? '내보내는 중...' : '수락 후 AI 수정 요청' }}
       </BaseButton>
     </div>
 
@@ -261,28 +254,6 @@ const handleBlur = () => {
 
   if (typingTimer.value) {
     clearTimeout(typingTimer.value)
-  }
-}
-
-// 특약 시작점 설정
-const handleSetStartPoint = async () => {
-  if (isProcessing.value || !props.canSendMessage) {
-    console.warn('시작점 설정 불가:', {
-      isProcessing: isProcessing.value,
-      canSendMessage: props.canSendMessage,
-    })
-    return
-  }
-
-  try {
-    isProcessing.value = true
-    emit('setStartPoint')
-  } catch (error) {
-    console.error('ContractChatInput: 시작점 설정 실패:', error)
-  } finally {
-    setTimeout(() => {
-      isProcessing.value = false
-    }, 1000)
   }
 }
 

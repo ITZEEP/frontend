@@ -26,6 +26,8 @@ async function apiRequest(url, options = {}) {
       method,
       url: fullUrl,
       headers,
+
+      timeout: 3000000,
     }
 
     if (options.data) {
@@ -179,7 +181,7 @@ export const requestEndPointExport = async (contractChatId) => {
 }
 
 // 특약 종료점 설정 및 내보내기
-export const setEndPointAndExport = async (contractChatId) => {
+export const setEndPointAndExport = async (contractChatId, order) => {
   if (!contractChatId) {
     return {
       success: false,
@@ -188,7 +190,7 @@ export const setEndPointAndExport = async (contractChatId) => {
   }
 
   try {
-    const result = await apiPost(`/${contractChatId}/end-point-export`)
+    const result = await apiPost(`/${contractChatId}/end-point-export?order=${order}`)
     return result
   } catch (error) {
     console.error('setEndPointAndExport 실패:', error)
@@ -289,5 +291,37 @@ export const postSpecialContractSelection = async (contractChatId, data) => {
     return result
   } catch (error) {
     console.error('postSpecialContractSelection 실패:', error)
+  }
+}
+
+// 미완료 특약 문서 목록 조회
+export const getIncompleteSpecialContracts = async (contractChatId) => {
+  try {
+    const result = await apiRequest(`/special-contract/${contractChatId}/incomplete`)
+    return result.data
+  } catch (error) {
+    console.error('미완료 특약 문서 목록 조회 실패: ', error)
+  }
+}
+
+// 특약 recentData 업데이트 (order에 맞는 특약 내용과 메시지 전달)
+export const putRecentData = async (contractChatId, order) => {
+  try {
+    const result = await apiRequest(`/special-contract/${contractChatId}/recent?order=${order}`, {
+      method: 'PUT',
+    })
+    return result
+  } catch (error) {
+    console.error('특약 최근 데이터 업데이트 실패: ', error)
+  }
+}
+
+// 특약 대화 종료 버튼 클릭 후 대화 내용 내보내기
+export const postEndPointAndExport = async (contractChatId, order) => {
+  try {
+    const result = await apiPost(`/${contractChatId}/end-point-export?order=${order}`)
+    return result
+  } catch (error) {
+    console.error('특약 종료 및 내보내기 실패: ', error)
   }
 }
