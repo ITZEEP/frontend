@@ -68,10 +68,37 @@
 <script setup>
 import { usePreContractStore } from '@/stores/preContract'
 import { onMounted } from 'vue'
+import fraudApi from '@/apis/fraud.js'
+import BasicInfoForm from '@/components/homes/homeupdate/BasicInfoForm.vue'
 
 const store = usePreContractStore()
 
-onMounted(() => {
+onMounted(async () => {
   store.canProceed = true
+
+  try {
+    const { data } = await fraudApi.getTodayRiskCheckSummary(homeId)
+    if (data.hasAnalysis == true) {
+      riskType.value = data.summary.riskType
+
+      // detailGroups 배열에서 각 title별로 분기
+      data.summary.detailGroups.forEach((group) => {
+        switch (group.title) {
+          case '건축 관련':
+            building.value = group.items[0].title
+            break
+          case '권리관계 정보':
+            ownership.value = group.items[0].title
+            break
+          case '기본 정보':
+            basic.value = group.items[0].title
+            break
+          case '법령 위험':
+            legal.value = group.items[0].title
+            break
+        }
+      })
+    }
+  } catch (error) {}
 })
 </script>
