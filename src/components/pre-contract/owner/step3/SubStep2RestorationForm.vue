@@ -65,7 +65,7 @@
 </template>
 
 <script setup>
-import { computed, ref, watch, onMounted } from 'vue'
+import { computed, ref, watch, onMounted, watchEffect } from 'vue'
 import ToggleRadio from '@/components/common/ToggleRadio.vue'
 import ToggleCheckbox from '@/components/common/ToggleCheckbox.vue'
 import { usePreContractStore } from '@/stores/preContract'
@@ -91,6 +91,21 @@ const hasPriorityExtension = ref(false)
 const hasAutoPriceAdjustment = ref(false)
 const allowJeonseRight = ref(false)
 const isInitialized = ref(false)
+
+const patchContractStep2 = async () => {
+  try {
+    await OwnerPreContractAPI.updateContractStep2(contractChatId, {
+      allowJeonseRightRegistration: allowJeonseRight.value,
+      hasAutoPriceAdjustment: hasAutoPriceAdjustment.value,
+      hasConditionLog: hasConditionLog.value,
+      hasPenalty: hasPenalty.value,
+      hasPriorityForExtension: hasPriorityExtension.value,
+      restoreCategories: restoreCategory.value,
+    })
+  } catch (error) {
+    console.log('계약 조건 Step2 업데이트 실패', error)
+  }
+}
 
 watch(
   [
@@ -134,5 +149,9 @@ onMounted(async () => {
     }
     isInitialized.value = true
   }
+})
+
+watchEffect(() => {
+  store.setTriggerSubmit(3, 2, patchContractStep2)
 })
 </script>

@@ -34,14 +34,14 @@
       v-model="repairingFixtures"
       :options="[
         { label: '임대인', value: 'OWNER' },
-        { label: '임차인', value: 'BUYER' },
+        { label: '임차인', value: 'TENANT' },
       ]"
     />
   </div>
 </template>
 
 <script setup>
-import { onBeforeMount, onMounted, ref, watch } from 'vue'
+import { onMounted, ref, watch, watchEffect } from 'vue'
 import ToggleRadio from '@/components/common/ToggleRadio.vue'
 import { usePreContractStore } from '@/stores/preContract'
 import { useRoute } from 'vue-router'
@@ -74,17 +74,18 @@ const fetchContractStep1 = async () => {
 
 const patchContractStep1 = async () => {
   try {
-    await OwnerPreContractAPI.updateContractStep1(contractChatId)
-
-    isMortgaged.value
-    contractDuration.value
-    renewalIntent.value
-    repairingFixtures.value
+    await OwnerPreContractAPI.updateContractStep1(contractChatId, {
+      mortgaged: isMortgaged.value,
+      contractDuration: contractDuration.value,
+      renewalIntent: renewalIntent.value,
+      responseRepairingFixtures: repairingFixtures.value,
+    })
   } catch (error) {
-    console.log('계약 조건 업데이트 실패', error)
+    console.log('계약 조건 Step1 업데이트 실패', error)
   }
 }
 
+// 모든 값 입력되어 있는지 확인
 watch(
   [isMortgaged, contractDuration, renewalIntent, repairingFixtures],
   ([mort, dur, renew, fix]) => {
@@ -95,15 +96,13 @@ watch(
 
 onMounted(() => {
   if (!isInitialized.value) {
-    store.canProceed = false
+    store.setCanProceed(false)
     fetchContractStep1()
     isInitialized.value = true
   }
-
-  store.triggerSubmit = patchContractStep1
 })
 
-onBeforeMount(() => {
-  store.triggerSubmit = null
+watchEffect(() => {
+  store.setTriggerSubmit(3, 1, patchContractStep1)
 })
 </script>

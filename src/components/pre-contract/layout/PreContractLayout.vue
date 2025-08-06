@@ -10,7 +10,7 @@
 
       <PreContractBtnGroup
         :step="props.currentStep"
-        :sub-step="subStep"
+        :subStep="subStep"
         :role="props.role"
         @next-sub-step="nextSubStep"
         @prev-sub-step="prevSubStep"

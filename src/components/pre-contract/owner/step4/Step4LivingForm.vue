@@ -70,7 +70,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, watchEffect } from 'vue'
 import { useRoute } from 'vue-router'
 import ToggleRadio from '@/components/common/ToggleRadio.vue'
 import BaseInput from '@/components/common/BaseInput.vue'
@@ -90,6 +90,22 @@ const ownerBankName = ref('')
 const ownerAccountNumber = ref('')
 const paymentDueDate = ref(null)
 const lateFeeInterestRate = ref(null)
+
+const patchLivingStep = async () => {
+  try {
+    await OwnerPreContractAPI.updateLivingStep1(contractChatId, {
+      hasNotice: hasNotice.value,
+      insuranceBurden: insuranceBurden.value,
+      lateFeeInterestRate: lateFeeInterestRate.value,
+      ownerAccountNumber: ownerAccountNumber.value,
+      ownerBankName: ownerBankName.value,
+      paymentDueDate: paymentDueDate.value,
+      requireRentGuaranteeInsurance: requireRentGuaranteeInsurance.value,
+    })
+  } catch (error) {
+    console.log('거주 조건 스텝 업데이트 실패', error)
+  }
+}
 
 watch(
   [
@@ -128,5 +144,9 @@ onMounted(async () => {
   } catch (err) {
     console.error('거주 조건 Step1 조회 실패', err)
   }
+})
+
+watchEffect(() => {
+  store.setTriggerSubmit(4, patchLivingStep)
 })
 </script>
