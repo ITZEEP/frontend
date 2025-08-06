@@ -217,7 +217,7 @@ const updateTenantStep3 = async () => {
 
   try {
     await buyerApi.updateTenantStep3(contractChatId, step3DTO)
-    alert('Step1 전세 정보가 저장되었습니다! ✅')
+    console.log('Step3 정보가 저장되었습니다! ✅')
   } catch (error) {
     console.error('step3 전세 저장 실패 ❌', error)
   }
