@@ -15,6 +15,7 @@ export const usePreContractStore = defineStore('preContract', {
     hasParking: false,
     triggerSubmit: null,
     triggerSubmitMap: reactive({}),
+    homeId: '',
   }),
   actions: {
     setLeaseType(type) {
@@ -66,6 +67,9 @@ export const usePreContractStore = defineStore('preContract', {
     },
     setHasParking(hasParking) {
       this.hasParking = hasParking
+    },
+    setHomeId(homeId) {
+      this.homeId = homeId
     },
   },
 })
