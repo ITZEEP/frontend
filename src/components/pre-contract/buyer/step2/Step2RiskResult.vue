@@ -45,28 +45,24 @@
       </div>
     </div>
 
-    <!-- 정보 박스 -->
-    <div class="grid grid-cols-2 gap-4 mb-10">
+    <!-- 정보 박스 (세로 정렬, 번호 매김) -->
+    <div class="space-y-4 mb-10">
       <div class="bg-white rounded-xl p-6 shadow text-gray-800">
-        <p class="text-base font-bold mb-2">등기부등본 확인</p>
-        <p class="text-sm">✅ {{ building }}</p>
+        <p class="text-base font-bold mb-1">1. 건축 관련</p>
+        <p class="text-sm whitespace-pre-wrap">{{ building }}</p>
       </div>
       <div class="bg-white rounded-xl p-6 shadow text-gray-800">
-        <p class="text-base font-bold mb-2">매물 검증</p>
-        <p class="text-sm">✅ {{ ownership }}</p>
+        <p class="text-base font-bold mb-1">2. 권리관계 정보</p>
+        <p class="text-sm whitespace-pre-wrap">{{ ownership }}</p>
       </div>
       <div class="bg-white rounded-xl p-6 shadow text-gray-800">
-        <p class="text-base font-bold mb-2">가격 검증</p>
-        <p class="text-sm">✅ {{ basic }}</p>
+        <p class="text-base font-bold mb-1">3. 기본 정보</p>
+        <p class="text-sm whitespace-pre-wrap">{{ basic }}</p>
       </div>
       <div class="bg-white rounded-xl p-6 shadow text-gray-800">
-        <p class="text-base font-bold mb-2">법령 위험</p>
-        <p class="text-sm">✅ {{ legal }}</p>
+        <p class="text-base font-bold mb-1">4. 법령 위험</p>
+        <p class="text-sm whitespace-pre-wrap">{{ legal }}</p>
       </div>
-    </div>
-
-    <div class="bg-yellow-50 text-yellow-800 text-sm px-4 py-2 rounded-md border border-yellow-200">
-      ✅ 추천 보장: 전세보증금 반환보증보험 (보증금의 90% 보장)
     </div>
   </div>
 </template>
@@ -105,22 +101,28 @@ onMounted(async () => {
 
       data.summary.detailGroups.forEach((group) => {
         console.log('전체 그룹 수:', data.summary.detailGroups.length)
-        data.summary.detailGroups.forEach((group) => {
-          console.log('🧩 group.title:', group.title)
+        console.log('🌿 group.title:', group.title)
+
+        const itemTexts = []
+        group.items.forEach((item) => {
+          const title = item.title || ''
+          const content = item.content || ''
+          itemTexts.push(`🔸 ${title}\n✅ ${content}`)
         })
-        const itemTexts = group.items.map((item) => item.content || item.title).join(' / ')
+        const joinedTexts = itemTexts.join('\n')
+
         switch (group.title) {
-          case '등기부등본 확인':
-            ownership.value = itemTexts
+          case '권리관계 정보':
+            ownership.value = joinedTexts
             break
-          case '매물 검증':
-            building.value = itemTexts
+          case '건축 관련':
+            building.value = joinedTexts
             break
-          case '가격 검증':
-            basic.value = itemTexts
+          case '기본 정보':
+            basic.value = joinedTexts
             break
           case '법령 위험':
-            legal.value = itemTexts
+            legal.value = joinedTexts
             break
           default:
             console.log('❓ 예상 밖 group.title:', group.title)
