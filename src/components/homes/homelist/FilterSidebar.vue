@@ -31,11 +31,9 @@
           :key="type"
           :class="[
             'px-3 py-1 border rounded-full text-sm',
-            filters.propertyType === type
-              ? 'bg-yellow-primary text-white'
-              : 'bg-white text-gray-700',
+            filters.houseType === type ? 'bg-yellow-primary text-white' : 'bg-white text-gray-700',
           ]"
-          @click="setPropertyType(type)"
+          @click="sethouseType(type)"
           type="button"
         >
           {{ type }}
@@ -106,13 +104,13 @@
       <h3 class="font-bold text-gray-800 mb-2">평수</h3>
       <input
         type="range"
-        v-model="filters.sizeRange"
+        v-model="filters.area"
         min="0"
         max="70"
         step="1"
         class="w-full custom-range"
       />
-      <div class="text-xs text-gray-500">최대: {{ filters.sizeRange }}평</div>
+      <div class="text-xs text-gray-500">최대: {{ filters.area }}평</div>
     </div>
 
     <!-- 방향 -->
@@ -124,11 +122,9 @@
           :key="dir"
           :class="[
             'px-3 py-1 border rounded-full text-sm',
-            filters.directions.includes(dir)
-              ? 'bg-yellow-primary text-white'
-              : 'bg-white text-gray-700',
+            filters.direction === dir ? 'bg-yellow-primary text-white' : 'bg-white text-gray-700',
           ]"
-          @click="toggleDirection(dir)"
+          @click="setDirection(dir)"
           type="button"
         >
           {{ dir }}
@@ -145,11 +141,9 @@
           :key="floor"
           :class="[
             'px-3 py-1 border rounded-full text-sm',
-            filters.floors.includes(floor)
-              ? 'bg-yellow-primary text-white'
-              : 'bg-white text-gray-700',
+            filters.floor === floor ? 'bg-yellow-primary text-white' : 'bg-white text-gray-700',
           ]"
-          @click="toggleFloor(floor)"
+          @click="setFloor(floor)"
           type="button"
         >
           {{ floor }}
@@ -190,21 +184,21 @@
 
 <script setup>
 import { ref } from 'vue'
-import { guToDong } from './gu-to-dong' // guToDong: { 구: [동, ...], ... }
+import { guToDong } from './gu-to-dong'
 
 const emit = defineEmits(['filter-change'])
 
 const filters = ref({
   city: '전체',
   district: '전체',
-  propertyType: '전체',
+  houseType: '전체',
   dealType: '월세',
   depositRange: 500,
   monthlyRange: 50,
   leaseRange: 10000,
-  sizeRange: 30,
-  directions: [],
-  floors: [],
+  area: 30, // 평 단위
+  direction: null,
+  floor: null,
   conditions: [],
 })
 
@@ -221,46 +215,76 @@ function onCityChange() {
   }
 }
 
-function toggleDirection(dir) {
-  const index = filters.value.directions.indexOf(dir)
-  if (index >= 0) filters.value.directions.splice(index, 1)
-  else filters.value.directions.push(dir)
-}
-
-function toggleFloor(floor) {
-  const index = filters.value.floors.indexOf(floor)
-  if (index >= 0) filters.value.floors.splice(index, 1)
-  else filters.value.floors.push(floor)
-}
-
-function resetFilters() {
-  filters.value = {
-    city: '전체',
-    district: '전체',
-    propertyType: '전체',
-    dealType: '월세',
-    depositRange: 500,
-    monthlyRange: 50,
-    leaseRange: 10000,
-    sizeRange: 30,
-    directions: [],
-    floors: [],
-    conditions: [],
-  }
-  districtList.value = []
-  emit('filter-change', filters.value)
-}
-
-function setPropertyType(type) {
-  filters.value.propertyType = type
+function sethouseType(type) {
+  filters.value.houseType = type
 }
 
 function setDealType(deal) {
   filters.value.dealType = deal
 }
 
+function setDirection(dir) {
+  filters.value.direction = filters.value.direction === dir ? null : dir
+}
+
+function setFloor(floor) {
+  filters.value.floor = filters.value.floor === floor ? null : floor
+}
+
+function resetFilters() {
+  filters.value = {
+    city: '전체',
+    district: '전체',
+    houseType: '전체',
+    dealType: '월세',
+    depositRange: 500,
+    monthlyRange: 50,
+    leaseRange: 10000,
+    area: 30,
+    direction: null,
+    floor: null,
+    conditions: [],
+  }
+  districtList.value = []
+  emit('filter-change', convertFiltersToDto(filters.value)) // 변환된 값 emit
+}
+
 function emitFilterChange() {
-  emit('filter-change', filters.value)
+  emit('filter-change', convertFiltersToDto(filters.value))
+}
+
+// 평 → ㎡ 단위 변환 및 DTO 필드 매핑
+function convertFiltersToDto(f) {
+  return {
+    city: f.city,
+    district: f.district,
+    houseType: f.houseType,
+    dealType: f.dealType,
+    deposit: f.depositRange,
+    monthlyRent: f.monthlyRange,
+    lease: f.leaseRange,
+    area: Math.round(f.area * 3.3058), // 평 → ㎡
+    direction: f.direction,
+    floor: convertFloor(f.floor),
+    options: f.conditions,
+  }
+}
+
+function convertFloor(label) {
+  switch (label) {
+    case '반지하':
+      return -1
+    case '1층':
+      return 1
+    case '2~5층':
+      return 3
+    case '6~9층':
+      return 7
+    case '10층 이상':
+      return 10
+    default:
+      return null
+  }
 }
 
 const directions = ['남향', '동향', '서향', '북향', '남동향', '남서향', '북동향', '북서향']

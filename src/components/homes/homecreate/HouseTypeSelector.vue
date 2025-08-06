@@ -6,23 +6,30 @@
     <div class="grid grid-cols-3 gap-2">
       <button
         v-for="type in houseTypes"
-        :key="type"
-        @click="selectType(type)"
+        :key="type.value"
+        @click="selectType(type.value)"
         :class="[
           'py-2 px-4 border rounded-md text-sm font-medium transition',
-          modelValue === type
+          modelValue === type.value
             ? 'bg-yellow-primary text-white border-yellow-primary'
             : 'bg-white text-gray-700 hover:bg-gray-50',
         ]"
       >
-        {{ type }}
+        {{ type.label }}
       </button>
     </div>
   </div>
 </template>
 
 <script setup>
-const houseTypes = ['오픈형 원룸', '분리형 원룸', '투룸', '오피스텔', '아파트', '단독/다가구주택']
+const houseTypes = [
+  { label: '오픈형 원룸', value: 'OPEN_ONE_ROOM' },
+  { label: '분리형 원룸', value: 'SEPARATE_ONE_ROOM' },
+  { label: '투룸', value: 'TWO_ROOM' },
+  { label: '오피스텔', value: 'OFFICETEL' },
+  { label: '아파트', value: 'APARTMENT' },
+  { label: '단독/다가구주택', value: 'DETACHED_HOUSE' },
+]
 
 defineProps({
   modelValue: String,
