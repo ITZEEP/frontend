@@ -569,7 +569,11 @@ onMounted(async () => {
         id: property.propertyId,
         title: property.address || '주소 미정',
         status: property.status ? property.status.toLowerCase() : 'active',
-        price: property.leaseType === 'JEONSE' ? 50000 : 8050,
+        price: {
+          leaseType: property.leaseType,
+          deposit: property.deposit,
+          monthlyRent: property.monthlyRent
+        },
         images: property.imageUrl ? [property.imageUrl] : [],
         viewCount: property.viewCount || 0,
         likeCount: property.likeCount || 0,
