@@ -35,6 +35,17 @@ import RoomDetails from '@/components/homes/homedetails/RoomDetails.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import TravelMap from '@/components/travel/TravelMap.vue'
 
+import { fetchListingById } from '@/apis/listing.js'
+
+onMounted(async () => {
+  try {
+    listing.value = await fetchListingById(id)
+    images.value = listing.value.images || []
+  } catch (err) {
+    console.error('매물 조회 실패:', err)
+  }
+})
+
 const route = useRoute()
 const router = useRouter()
 const id = Number(route.params.no)

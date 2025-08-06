@@ -35,11 +35,21 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 // 경로를 홈리스트 폴더에 맞춰서 임포트
 import FilterSidebar from '@/components/homes/homelist/FilterSidebar.vue'
 import ListingCard from '@/components/homes/homelist/ListingCard.vue'
+
+import { fetchListings } from '@/apis/listing.js'
+
+onMounted(async () => {
+  try {
+    listings.value = await fetchListings()
+  } catch (err) {
+    console.error('목록 조회 실패:', err)
+  }
+})
 
 const router = useRouter()
 
