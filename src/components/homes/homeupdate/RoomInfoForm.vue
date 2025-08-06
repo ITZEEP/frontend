@@ -2,7 +2,7 @@
   <div class="bg-white p-6 rounded-lg">
     <h2 class="text-lg font-semibold mb-4">기본 정보</h2>
 
-    <!-- 방 수 버튼 -->
+    <!-- 방 수 -->
     <div class="mb-4">
       <label class="block text-sm font-medium text-gray-700 mb-1">방 수</label>
       <div class="flex gap-2">
@@ -23,7 +23,7 @@
       </div>
     </div>
 
-    <!-- 욕실 수 버튼 -->
+    <!-- 욕실 수 -->
     <div class="mb-4">
       <label class="block text-sm font-medium text-gray-700 mb-1">욕실 수</label>
       <div class="flex gap-2">
@@ -44,7 +44,7 @@
       </div>
     </div>
 
-    <!-- 방향 버튼 -->
+    <!-- 방향 -->
     <div class="mb-4">
       <label class="block text-sm font-medium text-gray-700 mb-1">방향</label>
       <div class="flex flex-wrap gap-2">
@@ -54,10 +54,10 @@
           type="button"
           @click="selectedDirection = dir"
           :class="[
-            'px-4 py-2 rounded border',
             selectedDirection === dir
               ? 'bg-yellow-primary text-white border-yellow-primary'
               : 'bg-white border-gray-300',
+            'px-4 py-2 rounded border',
           ]"
         >
           {{ dir }}
@@ -65,7 +65,7 @@
       </div>
     </div>
 
-    <!-- 상세내용 -->
+    <!-- 상세 설명 -->
     <div>
       <label for="details" class="block text-sm font-medium text-gray-700 mb-1">상세 내용</label>
       <textarea
@@ -81,6 +81,7 @@
 
 <script setup>
 import { ref } from 'vue'
+// import axios from 'axios'  // 저장 기능 제거되었으므로 axios도 필요 없음
 
 const selectedRooms = ref(null)
 const selectedBathrooms = ref(null)
@@ -88,4 +89,6 @@ const selectedDirection = ref(null)
 const details = ref('')
 
 const directions = ['동향', '서향', '남향', '북향', '동남향', '동북향', '서남향', '서북향']
+
+// 저장 기능 제거됨 (submit 함수 필요 없음)
 </script>

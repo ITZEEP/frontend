@@ -10,9 +10,13 @@
 </template>
 
 <script setup>
-import { defineProps } from 'vue'
+import { defineProps, watchEffect } from 'vue'
 import ContractForm from './SubStep1ContractForm.vue'
 import RestorationForm from './SubStep2RestorationForm.vue'
 
-defineProps({ subStep: Number })
+const props = defineProps({ subStep: Number })
+
+watchEffect(() => {
+  console.log('[Step3ContractTerms] 현재 subStep:', props.subStep)
+})
 </script>

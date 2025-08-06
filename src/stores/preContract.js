@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { reactive } from 'vue'
 
 export const usePreContractStore = defineStore('preContract', {
   state: () => ({
@@ -6,13 +7,14 @@ export const usePreContractStore = defineStore('preContract', {
     subSteps: {
       // roll은 'owner' || 'buyer'
       'owner-3': 2,
-      'owner-4': 2,
       'buyer-5': 2,
     },
     currentSubSteps: {},
     canProceed: false,
-    riskCheck: false,
-    hasPet: false,
+    hasPet: true,
+    hasParking: false,
+    triggerSubmit: null,
+    triggerSubmitMap: reactive({}),
   }),
   actions: {
     setLeaseType(type) {
@@ -34,11 +36,33 @@ export const usePreContractStore = defineStore('preContract', {
     setCanProceed(status) {
       this.canProceed = status
     },
-    setRiskCheck(risk) {
-      this.riskCheck = risk;
-    },
     setHasPet(hasPet) {
-      this.hasPet = hasPet;
+      this.hasPet = hasPet
+    },
+    setHasParking(hasParking) {
+      this.hasParking = hasParking
+    },
+    setTriggerSubmit(step, subStepOrFn, maybeFn) {
+      const key = typeof subStepOrFn === 'function' ? `${step}` : `${step}-${subStepOrFn}`
+      const fn = typeof subStepOrFn === 'function' ? subStepOrFn : maybeFn
+
+      if (!this.triggerSubmitMap) this.triggerSubmitMap = {}
+      this.triggerSubmitMap[key] = fn
+    },
+
+    getTriggerSubmit(step, subStep) {
+      return (
+        (this.triggerSubmitMap && this.triggerSubmitMap[`${step}-${subStep}`]) ||
+        (this.triggerSubmitMap && this.triggerSubmitMap[`${step}`]) ||
+        null
+      )
+    },
+
+    clearTriggerSubmit(step, subStep) {
+      if (this.triggerSubmitMap) {
+        delete this.triggerSubmitMap[`${step}-${subStep}`]
+        delete this.triggerSubmitMap[`${step}`]
+      }
     },
   },
 })
