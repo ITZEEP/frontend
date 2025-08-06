@@ -21,6 +21,7 @@ export const useSpecialContractStore = defineStore('specialContract', () => {
   })
 
   const setOrder = (order) => {
+    console.log('[store.setOrder] 설정된 order:', order)
     currentOrder.value = order
   }
 
@@ -32,7 +33,12 @@ export const useSpecialContractStore = defineStore('specialContract', () => {
   }
 
   const moveToNextOrder = async (chatId) => {
+    console.log('[store.moveToNextOrder] 현재 currentOrder:', currentOrder.value)
+    console.log('[store.moveToNextOrder] 전체 orders:', contractOrders.value)
+
     const index = contractOrders.value.findIndex((c) => c.order === currentOrder.value)
+    console.log('[store.moveToNextOrder] index:', index)
+
     const next = contractOrders.value[index + 1]
 
     if (next) {

@@ -83,13 +83,17 @@ const startTermsFlow = async (contractChatId) => {
     console.log('미완료 특약 목록:', result)
     contracts.value = result
     store.setOrders(result)
+    console.log('[TermsReviewModal] setOrders:', result)
 
     // 첫 미완료 특약 처리
     if (contracts.value.length > 0) {
       const { order } = contracts.value[0]
+      console.log('[TermsReviewModal] firstOrder:', order)
+
       await putRecentData(contractChatId, order)
       await setStartPoint(contractChatId)
       store.setOrder(order)
+      console.log('[TermsReviewModal] setOrder 호출됨:', store.currentOrder)
     } else {
       store.clearOrder()
     }

@@ -446,10 +446,14 @@ const handleExportMessages = async () => {
     if (response.success) {
       exportedMessages.value = response.data
       showExportModal.value = true
+
+      console.log('[ContractChat] export 전 currentOrder:', store.currentOrder)
+
       store.markOrderSuccess(store.currentOrder)
       await store.moveToNextOrder(actualContractChatId.value)
     } else {
       alert('특약 내보내기에 실패했습니다: ' + response.message)
+      await setStartPoint(actualContractChatId.value)
     }
   } catch (error) {
     console.error('특약 내보내기 실패:', error)
