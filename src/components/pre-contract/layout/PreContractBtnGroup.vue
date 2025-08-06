@@ -53,7 +53,7 @@ const maxSubStep = computed(() => store.subSteps[subStepKey.value] || 1)
 const hasSubStep = computed(() => maxSubStep.value > 1)
 const isLastSubStep = computed(() => props.subStep === maxSubStep.value)
 
-const handleNextClick = () => {
+const handleNextClick = async () => {
   if (props.step === maxStep) {
     const id = route.params.id
     if (id) {
@@ -65,9 +65,10 @@ const handleNextClick = () => {
   }
 
   if (hasSubStep.value && !isLastSubStep.value) {
+    await goToStep(props.step)
     store.nextSubStep(props.step, props.role)
   } else {
-    goToStep(props.step + 1)
+    await goToStep(props.step + 1)
   }
 }
 
@@ -80,10 +81,21 @@ const handlePrevClick = () => {
   }
 }
 
-const goToStep = (newStep) => {
+const goToStep = async (newStep) => {
+  const trigger = store.getTriggerSubmit(props.step, props.subStep)
+  if (trigger) {
+    try {
+      await trigger()
+    } catch (e) {
+      console.error('triggerSubmit 실패:', e)
+      return
+    }
+  } else {
+    console.warn(`triggerSubmit(${props.step}-${props.subStep}) 없음`)
+  }
+
   if (newStep <= maxStep) {
     router.push({ query: { ...route.query, step: newStep } })
-    store.triggerSubmit?.()
   }
 }
 </script>
