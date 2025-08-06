@@ -42,14 +42,13 @@
     <div class="mb-4">
       <label class="block text-sm font-medium text-gray-700 mb-1">관리비 포함 항목</label>
       <div class="grid grid-cols-4 gap-2">
-        <label
-          v-for="item in ['전기료', '수도료', '인터넷', '케이블 TV', '가스료', '난방비']"
+        <BaseCheckbox
+          v-for="item in 관리비포함항목목록"
           :key="item"
-          class="flex items-center gap-1"
-        >
-          <input type="checkbox" v-model="관리비포함항목" :value="item" />
-          {{ item }}
-        </label>
+          :label="item"
+          :modelValue="관리비포함항목.includes(item)"
+          @update:modelValue="(checked) => updateArray(관리비포함항목, item, checked)"
+        />
       </div>
     </div>
 
@@ -70,6 +69,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import BaseCheckbox from '@/components/common/BaseCheckbox.vue'
 import BaseInput from '@/components/common/BaseInput.vue'
 
 const 거래유형 = ref('월세')
@@ -78,4 +78,15 @@ const 월세 = ref(null)
 const 관리비 = ref(null)
 const 관리비포함항목 = ref([])
 const 입주가능일 = ref('')
+
+const 관리비포함항목목록 = ['전기료', '수도료', '인터넷', '케이블 TV', '가스료', '난방비']
+
+function updateArray(arr, item, checked) {
+  if (checked && !arr.includes(item)) {
+    arr.push(item)
+  } else if (!checked && arr.includes(item)) {
+    const idx = arr.indexOf(item)
+    if (idx > -1) arr.splice(idx, 1)
+  }
+}
 </script>

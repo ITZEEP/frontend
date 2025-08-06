@@ -5,15 +5,16 @@
       role="article"
       aria-label="매물 카드"
     >
-      <img :src="listing.image" alt="매물 사진" class="w-full h-48 object-cover" />
+      <img :src="listing.imageUrls?.[0]" alt="매물 사진" class="w-full h-48 object-cover" />
 
       <div class="p-4 space-y-2">
-        <div class="text-yellow-500 font-semibold">{{ listing.type }}</div>
+        <div class="text-yellow-500 font-semibold">{{ convertleaseType(listing.leaseType) }}</div>
         <div class="text-lg font-bold">
-          월세 {{ formatNumber(listing.deposit) }} / {{ formatNumber(listing.monthly) }}
+          월세 {{ formatNumber(listing.depositPrice) }} / {{ formatNumber(listing.monthlyRent) }}
         </div>
         <div class="text-sm text-gray-600">
-          {{ listing.gu }} {{ listing.dong }} · {{ listing.area }}평 · {{ listing.floor }}층
+          {{ listing.gu }} {{ listing.dong }} · {{ convertToPyeong(listing.area) }}평 ·
+          {{ listing.homefloor }}층
         </div>
 
         <div class="flex gap-2 text-xs mt-2 text-gray-500 select-none">
@@ -39,5 +40,21 @@ function formatNumber(value) {
     return value.toLocaleString()
   }
   return value ?? '0'
+}
+
+function convertleaseType(type) {
+  switch (type) {
+    case 'monthlyRent':
+      return '월세'
+    case 'JEONSE':
+      return '전세'
+    default:
+      return type
+  }
+}
+
+function convertToPyeong(area) {
+  if (!area) return 0
+  return Math.round(area / 3.3058)
 }
 </script>

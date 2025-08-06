@@ -6,7 +6,9 @@
     <!-- 숫자 입력 섹션 -->
     <div class="grid grid-cols-2 gap-6">
       <div>
-        <label class="block mb-1 font-semibold">전용면적 <span class="text-red-600">*</span></label>
+        <label class="block mb-1 text-sm font-medium"
+          >전용면적 <span class="text-red-600">*</span></label
+        >
         <div class="relative">
           <input
             type="number"
@@ -22,7 +24,7 @@
         </div>
       </div>
       <div>
-        <label class="block mb-1 font-semibold">공급면적</label>
+        <label class="block mb-1 text-sm font-medium">공급면적</label>
         <div class="relative">
           <input
             type="number"
@@ -40,7 +42,9 @@
 
     <div class="grid grid-cols-2 gap-6">
       <div>
-        <label class="block mb-1 font-semibold">방 개수 <span class="text-red-600">*</span></label>
+        <label class="block mb-1 text-sm font-medium"
+          >방 개수 <span class="text-red-600">*</span></label
+        >
         <div class="relative">
           <input
             type="number"
@@ -56,7 +60,7 @@
         </div>
       </div>
       <div>
-        <label class="block mb-1 font-semibold"
+        <label class="block mb-1 text-sm font-medium"
           >욕실 개수 <span class="text-red-600">*</span></label
         >
         <div class="relative">
@@ -77,13 +81,15 @@
 
     <div class="grid grid-cols-2 gap-6">
       <div>
-        <label class="block mb-1 font-semibold">현재 층 <span class="text-red-600">*</span></label>
+        <label class="block mb-1 text-sm font-medium"
+          >현재 층 <span class="text-red-600">*</span></label
+        >
         <div class="relative">
           <input
             type="number"
             min="0"
             class="border rounded p-2 pr-12 w-full no-spin"
-            v-model.number="form.currentFloor"
+            v-model.number="form.homeFloor"
             required
             placeholder="0"
           />
@@ -93,13 +99,15 @@
         </div>
       </div>
       <div>
-        <label class="block mb-1 font-semibold">총 층수 <span class="text-red-600">*</span></label>
+        <label class="block mb-1 text-sm font-medium"
+          >총 층수 <span class="text-red-600">*</span></label
+        >
         <div class="relative">
           <input
             type="number"
             min="0"
             class="border rounded p-2 pr-12 w-full no-spin"
-            v-model.number="form.totalFloor"
+            v-model.number="form.buildingTotalFloors"
             required
             placeholder="0"
           />
@@ -125,7 +133,7 @@
     <!-- 날짜 -->
     <div>
       <label class="block mb-2 font-semibold">사용 승인일</label>
-      <input type="date" v-model="form.usageDate" class="border rounded p-2 w-full max-w-xs" />
+      <input type="date" v-model="form.buildDate" class="border rounded p-2 w-full max-w-xs" />
     </div>
 
     <!-- 방향 -->
@@ -133,13 +141,13 @@
       <legend class="font-semibold mb-2">방향</legend>
       <div class="grid grid-cols-4 gap-2 max-w-xl">
         <button
-          v-for="opt in orientationOptions"
+          v-for="opt in homeDirectionOptions"
           :key="opt.value"
           type="button"
-          @click="form.orientation = opt.value"
+          @click="form.homeDirection = opt.value"
           :class="[
             'py-2 px-4 border rounded text-center cursor-pointer w-full',
-            form.orientation === opt.value
+            form.homeDirection === opt.value
               ? 'bg-yellow-primary text-white border-yellow-primary'
               : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100',
           ]"
@@ -174,12 +182,12 @@ const form = reactive({
   supplyArea: 0,
   bedroomCount: 0,
   bathroomCount: 0,
-  currentFloor: 0,
-  totalFloor: 0,
+  homeFloor: 0,
+  buildingTotalFloors: 0,
   isDetached: false,
   isRooftop: false,
-  usageDate: '',
-  orientation: '',
+  buildDate: '',
+  homeDirection: '',
   options: {
     appliances: [],
     kitchen: [],
@@ -196,7 +204,7 @@ watchEffect(() => {
   emit('update:modelValue', { ...form })
 })
 
-const orientationOptions = [
+const homeDirectionOptions = [
   { label: '남향', value: '남향' },
   { label: '동향', value: '동향' },
   { label: '서향', value: '서향' },
