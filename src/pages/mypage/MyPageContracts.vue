@@ -81,7 +81,7 @@ const alertState = ref({
   message: '',
   type: 'alert',
   confirmText: '확인',
-  cancelText: '취소'
+  cancelText: '취소',
 })
 
 const alertResolve = ref(null)
@@ -94,7 +94,7 @@ const showAlert = (message, title = '알림') => {
       message,
       type: 'alert',
       confirmText: '확인',
-      cancelText: '취소'
+      cancelText: '취소',
     }
     alertResolve.value = resolve
   })
@@ -125,12 +125,17 @@ const contracts = ref([])
 // 상태 라벨
 const getStatusLabel = (status) => {
   const labels = {
-    completed: '완료',
-    progress: '진행중',
-    draft: '작성중',
-    cancelled: '취소',
+    STEP0: '사전조사',
+    STEP1: '정보확인',
+    STEP2: '금액조율',
+    ROUND0: '1차 특약조율',
+    ROUND1: '2차 특약조율',
+    ROUND2: '3차 특약조율',
+    ROUND3: '최종 특약선택',
+    STEP4: '적법성 검사',
+    COMPLETED: '완료',
   }
-  return labels[status] || status
+  return labels[status] || labels[status?.toUpperCase()] || status
 }
 
 // 날짜 포맷
@@ -197,9 +202,7 @@ onMounted(async () => {
       contracts.value = response.data.content.map((contract) => ({
         id: contract.contractId,
         title: `${contract.address || '주소 미정'} ${getBuildingTypeLabel(contract.buildingType)} 임대차 계약서`,
-        status: contract.status
-          ? contract.status.toLowerCase().replace('in_progress', 'progress')
-          : 'progress',
+        status: contract.status || 'STEP0',
         createdAt: contract.contractDate,
         fileUrl: contract.fileUrl,
         leaseType: contract.leaseType,
@@ -476,7 +479,8 @@ onMounted(async () => {
   line-height: 1.33;
 }
 
-.status-completed {
+.status-completed,
+.status-COMPLETED {
   background-color: #dcfce7;
   color: #166534;
 }
@@ -486,9 +490,29 @@ onMounted(async () => {
   color: #854d0e;
 }
 
-.status-draft {
+.status-draft,
+.status-STEP0 {
   background-color: #e0e7ff;
   color: #3730a3;
+}
+
+.status-STEP1,
+.status-STEP2 {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.status-ROUND0,
+.status-ROUND1,
+.status-ROUND2,
+.status-ROUND3 {
+  background-color: #f3e8ff;
+  color: #6b21a8;
+}
+
+.status-STEP4 {
+  background-color: #d1fae5;
+  color: #065f46;
 }
 
 .status-cancelled {

@@ -9,11 +9,7 @@
     </div>
 
     <div v-else>
-      <div
-        v-for="(contract, index) in contracts.slice(0, 3)"
-        :key="index"
-        class="contract-item"
-      >
+      <div v-for="(contract, index) in contracts.slice(0, 3)" :key="index" class="contract-item">
         <div class="contract-header">
           <h4 class="contract-title">{{ contract.title }}</h4>
           <span class="contract-status" :class="`status-${contract.status}`">
@@ -27,20 +23,13 @@
 
         <div class="contract-actions">
           <button class="view-btn">보기</button>
-          <button 
-            class="download-btn" 
-            :disabled="contract.status !== 'completed'"
-          >
-            다운로드
-          </button>
+          <button class="download-btn" :disabled="contract.status !== 'completed'">다운로드</button>
         </div>
       </div>
     </div>
 
     <div class="view-all-section">
-      <router-link to="/mypage/contracts" class="view-all-button">
-        전체보기
-      </router-link>
+      <router-link to="/mypage/contracts" class="view-all-button"> 전체보기 </router-link>
     </div>
   </div>
 </template>
@@ -51,22 +40,27 @@ import ContractsCardSkeleton from '@/components/mypage/skeleton/ContractsCardSke
 defineProps({
   contracts: {
     type: Array,
-    default: () => []
+    default: () => [],
   },
   loading: {
     type: Boolean,
-    default: false
-  }
+    default: false,
+  },
 })
 
 const getStatusLabel = (status) => {
   const labels = {
-    completed: '완료',
-    progress: '진행중',
-    draft: '작성중',
-    cancelled: '취소',
+    STEP0: '사전조사',
+    STEP1: '정보확인',
+    STEP2: '금액조율',
+    ROUND0: '1차 특약조율',
+    ROUND1: '2차 특약조율',
+    ROUND2: '3차 특약조율',
+    ROUND3: '최종 특약선택',
+    STEP4: '적법성 검사',
+    COMPLETED: '완료',
   }
-  return labels[status] || status
+  return labels[status] || labels[status?.toUpperCase()] || status
 }
 
 const formatDate = (dateString) => {
@@ -119,7 +113,8 @@ const formatDate = (dateString) => {
   @apply text-xs font-medium px-2 py-1 rounded;
 }
 
-.status-completed {
+.status-completed,
+.status-COMPLETED {
   @apply bg-green-100 text-green-800;
 }
 
@@ -127,8 +122,25 @@ const formatDate = (dateString) => {
   @apply bg-yellow-100 text-yellow-900;
 }
 
-.status-draft {
+.status-draft,
+.status-STEP0 {
   @apply bg-indigo-100 text-indigo-800;
+}
+
+.status-STEP1,
+.status-STEP2 {
+  @apply bg-blue-100 text-blue-800;
+}
+
+.status-ROUND0,
+.status-ROUND1,
+.status-ROUND2,
+.status-ROUND3 {
+  @apply bg-purple-100 text-purple-800;
+}
+
+.status-STEP4 {
+  @apply bg-emerald-100 text-emerald-800;
 }
 
 .status-cancelled {

@@ -552,9 +552,7 @@ onMounted(async () => {
       contracts.value = contractsResponse.data.content.map((contract) => ({
         id: contract.contractId,
         title: `${contract.address || '주소 미정'} (${getBuildingTypeLabel(contract.buildingType)})`,
-        status: contract.status
-          ? contract.status.toLowerCase().replace('in_progress', 'progress')
-          : 'progress',
+        status: contract.status || 'STEP0',
         createdAt: contract.contractDate,
         fileUrl: contract.fileUrl,
         leaseType: contract.leaseType,
