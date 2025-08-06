@@ -7,6 +7,7 @@ import contractRoutes from './contract'
 import homesRoutes from './homes'
 import riskCheckRoutes from './risk-check'
 import chat from './chat'
+import mypageRoutes from './mypage'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -17,6 +18,7 @@ const router = createRouter({
     ...homesRoutes, // ← /home/create 포함됨
     ...riskCheckRoutes,
     ...chat,
+    ...mypageRoutes,
   ],
 })
 

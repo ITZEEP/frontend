@@ -303,7 +303,16 @@ const categorizedAnalysisDetails = computed(() => {
 
 // Navigation
 const goBack = () => {
-  router.push('/risk-check')
+  // Check if the previous route was risk-check/confirm
+  const previousRoute = router.options.history.state.back
+  
+  if (previousRoute && previousRoute.includes('/risk-check/confirm')) {
+    // If coming from confirm page, go to risk-check home
+    router.push('/risk-check')
+  } else {
+    // Otherwise, use browser's back functionality
+    router.back()
+  }
 }
 
 const analyzeAnother = () => {
