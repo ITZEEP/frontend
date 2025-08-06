@@ -373,7 +373,7 @@ const handleLogout = async () => {
     try {
       await authStore.logout()
       await showAlert('로그아웃되었습니다.')
-      window.location.href = '/'
+      await router.push('/')
     } catch (error) {
       console.error('Logout error:', error)
       await showAlert('로그아웃에 실패했습니다.')
@@ -486,7 +486,7 @@ const handleEdit = (property) => {
 
 // 매물 삭제
 const handleDelete = async (property) => {
-  const confirmed = await showConfirm('정말로 이 매물을 삭제하시겠습니까a?', '매물 삭제')
+  const confirmed = await showConfirm('정말로 이 매물을 삭제하시겠습니까?', '매물 삭제')
   if (confirmed) {
     try {
       await myPageStore.deleteProperty(property.id)

@@ -1,5 +1,12 @@
 <template>
-  <div class="analysis-card" @click="handleClick">
+  <div 
+    class="analysis-card" 
+    @click="handleClick"
+    @keyup.enter="handleClick"
+    tabindex="0"
+    role="button"
+    aria-label="사기위험도 분석 상세보기"
+  >
     <div class="card-content">
       <div class="card-header">
         <h4 class="analysis-title">{{ analysis.title }}</h4>

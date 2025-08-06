@@ -18,8 +18,8 @@ export const useMyPageStore = defineStore('mypage', () => {
   const loadSummary = async () => {
     try {
       const response = await mypageAPI.getSummary()
-      if (response.data.success) {
-        summary.value = response.data.data
+      if (response.success) {
+        summary.value = response.data
       }
     } catch (error) {
       console.error('Load summary error:', error)
@@ -31,8 +31,8 @@ export const useMyPageStore = defineStore('mypage', () => {
   const loadRecentActivities = async () => {
     try {
       const response = await mypageAPI.getRecentActivities()
-      if (response.data.success) {
-        recentActivities.value = response.data.data
+      if (response.success) {
+        recentActivities.value = response.data
       }
     } catch (error) {
       console.error('Load recent activities error:', error)
@@ -43,9 +43,9 @@ export const useMyPageStore = defineStore('mypage', () => {
   // 계약서 목록 로드
   const loadContracts = async () => {
     try {
-      const response = await mypageAPI.getContracts()
-      if (response.data.success) {
-        contracts.value = response.data.data
+      const response = await mypageAPI.getMyContracts()
+      if (response.success) {
+        contracts.value = response.data
       }
     } catch (error) {
       console.error('Load contracts error:', error)
@@ -56,9 +56,9 @@ export const useMyPageStore = defineStore('mypage', () => {
   // 매물 목록 로드
   const loadProperties = async () => {
     try {
-      const response = await mypageAPI.getProperties()
-      if (response.data.success) {
-        properties.value = response.data.data
+      const response = await mypageAPI.getMyProperties()
+      if (response.success) {
+        properties.value = response.data
       }
     } catch (error) {
       console.error('Load properties error:', error)
@@ -69,9 +69,9 @@ export const useMyPageStore = defineStore('mypage', () => {
   // 사기 위험도 분석 목록 로드
   const loadFraudAnalyses = async () => {
     try {
-      const response = await mypageAPI.getFraudAnalyses()
-      if (response.data.success) {
-        fraudAnalyses.value = response.data.data
+      const response = await mypageAPI.getMyRiskAnalyses()
+      if (response.success) {
+        fraudAnalyses.value = response.data
       }
     } catch (error) {
       console.error('Load fraud analyses error:', error)
@@ -95,9 +95,9 @@ export const useMyPageStore = defineStore('mypage', () => {
       }
 
       const response = await mypageAPI.updateProfile(formData)
-      if (response.data.success) {
+      if (response.success) {
         // 업데이트된 사용자 정보 반환
-        return response.data.data
+        return response.data
       }
     } catch (error) {
       console.error('Update profile error:', error)
@@ -109,8 +109,8 @@ export const useMyPageStore = defineStore('mypage', () => {
   const changePassword = async (passwordData) => {
     try {
       const response = await mypageAPI.changePassword(passwordData)
-      if (response.data.success) {
-        return response.data.data
+      if (response.success) {
+        return response.data
       }
     } catch (error) {
       console.error('Change password error:', error)
@@ -122,7 +122,7 @@ export const useMyPageStore = defineStore('mypage', () => {
   const deleteContract = async (contractId) => {
     try {
       const response = await mypageAPI.deleteContract(contractId)
-      if (response.data.success) {
+      if (response.success) {
         // 목록에서 제거
         contracts.value = contracts.value.filter((c) => c.id !== contractId)
         summary.value.contractCount--
@@ -137,7 +137,7 @@ export const useMyPageStore = defineStore('mypage', () => {
   const deleteProperty = async (propertyId) => {
     try {
       const response = await mypageAPI.deleteProperty(propertyId)
-      if (response.data.success) {
+      if (response.success) {
         // 목록에서 제거
         properties.value = properties.value.filter((p) => p.id !== propertyId)
         summary.value.propertyCount--
@@ -152,7 +152,7 @@ export const useMyPageStore = defineStore('mypage', () => {
   const deleteFraudAnalysis = async (analysisId) => {
     try {
       const response = await mypageAPI.deleteFraudAnalysis(analysisId)
-      if (response.data.success) {
+      if (response.success) {
         // 목록에서 제거
         fraudAnalyses.value = fraudAnalyses.value.filter((a) => a.id !== analysisId)
         summary.value.analysisCount--
