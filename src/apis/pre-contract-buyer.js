@@ -1,16 +1,26 @@
-import { data } from 'autoprefixer'
 import api from './index'
 
 // 임차인 계약전 사전조서 API
 export const preContractAPI = {
-
   // 사기 위험도 검사 여부 확인
   getCheckRisk: async (contractChatId) => {
     try {
       const response = await api.get(`/api/pre-contract/${contractChatId}/buyer/check-risk`)
       return response.data
-    } catch (error) { // 오류를 캐치하고 throw해서 밖으로 던져주는 게 목적 👉 네트워크/서버 오류를 throw해서 호출자에게 전달
+    } catch (error) {
+      // 오류를 캐치하고 throw해서 밖으로 던져주는 게 목적 👉 네트워크/서버 오류를 throw해서 호출자에게 전달
       console.log('사기 위험도 검사 여부 확인 실패', error)
+      throw error
+    }
+  },
+
+  // 사기 위험도 내역 조회 API
+  getTodayRiskCheckSummary: async (homeId) => {
+    try {
+      const response = await api.get(`/api/fraud-risk/today-check/${homeId}`)
+      return response.data
+    } catch (error) {
+      console.log('백엔드 사기위험도 정보 조회 실패', error)
       throw error
     }
   },

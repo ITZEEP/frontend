@@ -76,7 +76,7 @@
 // 버튼을 눌렀을때 axios가 실행되게 하는걸 어디서 해야하나?
 // 라우터 쪽 확인해보기
 
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, watchEffect } from 'vue'
 import ToggleRadio from '@/components/common/ToggleRadio.vue'
 import BaseInput from '@/components/common/BaseInput.vue'
 import { usePreContractStore } from '@/stores/preContract'
@@ -157,4 +157,7 @@ const updateTenantStep1 = async () => {
     console.error('step1 전세 저장 실패 ❌', error)
   }
 }
+watchEffect(() => {
+  store.setTriggerSubmit(4, updateTenantStep1)
+})
 </script>
