@@ -132,7 +132,7 @@ const fetchExternalPropertyData = () => {
   if (leaseType === 'WOLSE') {
     const depositPrice = propertyInfo.propertyPrice || 0
     const monthlyRent = propertyInfo.monthlyRent || 0
-    priceDisplay = formatPrice('월세', deposit, monthly)
+    priceDisplay = formatPrice('월세', depositPrice, monthlyRent)
   } else if (leaseType === 'JEONSE') {
     const price = propertyInfo.propertyPrice || 0
     priceDisplay = formatPrice('전세', price)
