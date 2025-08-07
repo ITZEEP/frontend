@@ -10,6 +10,11 @@ export default [
     component: () => import('../pages/contract/ContractPage.vue'),
   },
   {
+    path: '/contract/:id/complete',
+    name: 'ContractComplete',
+    component: () => import('../pages/contract/ContractCompletePage.vue'),
+  },
+  {
     path: '/pre-contract/:id/:role',
     name: 'PreContract',
     component: () => import('../pages/pre-contract/PreContractPage.vue'),
