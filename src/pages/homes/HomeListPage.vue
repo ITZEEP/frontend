@@ -35,11 +35,21 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 // 경로를 홈리스트 폴더에 맞춰서 임포트
 import FilterSidebar from '@/components/homes/homelist/FilterSidebar.vue'
 import ListingCard from '@/components/homes/homelist/ListingCard.vue'
+
+import { fetchListings } from '@/apis/listing.js'
+
+onMounted(async () => {
+  try {
+    listings.value = await fetchListings()
+  } catch (err) {
+    console.error('목록 조회 실패:', err)
+  }
+})
 
 const router = useRouter()
 
@@ -57,6 +67,7 @@ const listings = ref([
     image: 'https://placehold.co/300x200',
     deposit: 1000,
     monthly: 80,
+    maintenance: 5,
     area: 25,
     floor: 2,
     gu: '송파구',
@@ -67,7 +78,7 @@ const listings = ref([
     verified: true,
     type: '월세',
     direction: '남향',
-    floorRange: '2~5층',
+    // floorRange: '2~5층',
     conditions: ['주차 가능', '엘리베이터'],
   },
   {
@@ -75,6 +86,7 @@ const listings = ref([
     image: 'https://placehold.co/300x200',
     deposit: 500,
     monthly: 50,
+    maintenance: 10,
     area: 15,
     floor: 3,
     gu: '강남구',
@@ -85,7 +97,7 @@ const listings = ref([
     verified: false,
     type: '전세',
     direction: '서향',
-    floorRange: '1~3층',
+    // floorRange: '1~3층',
     conditions: ['엘리베이터'],
   },
   // 추가 매물 ...

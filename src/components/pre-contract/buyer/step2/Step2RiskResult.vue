@@ -1,18 +1,27 @@
 <template>
   <div class="rounded-lg p-6">
-    <!-- 타이틀 -->
     <h2 class="text-xl font-semibold text-center text-gray-800 mb-1">사기 위험도 분석 확인</h2>
     <p class="text-sm text-center text-gray-500 mb-5">선택하신 매물의 안전성을 확인해주세요</p>
 
-    <!-- 상단 안전 등급 -->
+    <!-- 상단 위험도 박스 -->
     <div
-      class="flex items-center bg-green-100 text-green-800 rounded-md px-4 py-3 mb-8 justify-between"
+      :class="[
+        'flex items-center rounded-md px-4 py-3 mb-8 justify-between',
+        riskType === 'SAFE' && 'bg-green-100 text-green-800',
+        riskType === 'WARN' && 'bg-yellow-100 text-yellow-800',
+        riskType === 'DANGER' && 'bg-red-100 text-red-800',
+      ]"
     >
       <div class="flex items-center space-x-3">
         <!-- 아이콘 -->
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          class="h-6 w-6 text-green-600"
+          class="h-6 w-6"
+          :class="[
+            riskType === 'SAFE' && 'text-green-600',
+            riskType === 'WARN' && 'text-yellow-600',
+            riskType === 'DANGER' && 'text-red-600',
+          ]"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -26,39 +35,36 @@
         </svg>
         <div>
           <p class="font-bold">안전 등급</p>
-          <p class="text-sm">사기 위험도: 낮음</p>
+          <p class="text-sm">사기 위험도: {{ riskLabel }}</p>
         </div>
       </div>
-      <div class="text-right text-green-700 font-semibold text-base">
-        안전<br />
+      <div class="text-right font-semibold text-base">
+        {{ riskLabel }}
+        <br />
         <span class="text-xs text-gray-500">2025.01.14 분석</span>
       </div>
     </div>
 
     <!-- 정보 박스 -->
-    <div class="flex gap-4 mb-10">
-      <!-- 소유자 정보 박스 -->
-      <div class="flex-1 bg-white rounded-xl p-6 shadow text-gray-800">
-        <p class="text-base font-bold mb-2">소유자 정보</p>
-        <ul class="list-disc list-inside space-y-1 text-sm">
-          <li>등기부등본 상 소유자와 임대인 일치</li>
-          <li>실명 인증 완료</li>
-          <li>신용도 검증 완료</li>
-        </ul>
+    <div class="grid grid-cols-2 gap-4 mb-10">
+      <div class="bg-white rounded-xl p-6 shadow text-gray-800">
+        <p class="text-base font-bold mb-2">등기부등본 확인</p>
+        <p class="text-sm">✅ {{ building }}</p>
       </div>
-
-      <!-- 매물 정보 박스 -->
-      <div class="flex-1 bg-white rounded-xl p-6 shadow text-gray-800">
-        <p class="text-base font-bold mb-2">매물 정보</p>
-        <ul class="list-disc list-inside space-y-1 text-sm">
-          <li>국토교통부 매물 정보와 일치</li>
-          <li>권리침해 이력 없음</li>
-          <li>시세 적정성 확인</li>
-        </ul>
+      <div class="bg-white rounded-xl p-6 shadow text-gray-800">
+        <p class="text-base font-bold mb-2">매물 검증</p>
+        <p class="text-sm">✅ {{ ownership }}</p>
+      </div>
+      <div class="bg-white rounded-xl p-6 shadow text-gray-800">
+        <p class="text-base font-bold mb-2">가격 검증</p>
+        <p class="text-sm">✅ {{ basic }}</p>
+      </div>
+      <div class="bg-white rounded-xl p-6 shadow text-gray-800">
+        <p class="text-base font-bold mb-2">법령 위험</p>
+        <p class="text-sm">✅ {{ legal }}</p>
       </div>
     </div>
 
-    <!-- 하단 보험 추천 -->
     <div class="bg-yellow-50 text-yellow-800 text-sm px-4 py-2 rounded-md border border-yellow-200">
       ✅ 추천 보장: 전세보증금 반환보증보험 (보증금의 90% 보장)
     </div>
@@ -66,12 +72,63 @@
 </template>
 
 <script setup>
+import { ref, computed, onMounted } from 'vue'
 import { usePreContractStore } from '@/stores/preContract'
-import { onMounted } from 'vue'
+import buyerApi from '@/apis/pre-contract-buyer'
+
+const building = ref('')
+const ownership = ref('')
+const basic = ref('')
+const legal = ref('')
+
+const riskType = ref('')
+const riskLabel = computed(() => {
+  if (riskType.value === 'SAFE') return '안전'
+  if (riskType.value === 'WARN') return '주의'
+  if (riskType.value === 'DANGER') return '위험'
+  return '-'
+})
 
 const store = usePreContractStore()
 
-onMounted(() => {
+onMounted(async () => {
   store.canProceed = true
+
+  const raw = localStorage.getItem('home_id')
+  store.setHomeId(raw)
+
+  try {
+    const { data } = await buyerApi.getTodayRiskCheckSummary(store.homeId)
+    console.log('store.homeId:', store.homeId)
+    if (data.hasAnalysis === true) {
+      riskType.value = data.summary.riskType
+
+      data.summary.detailGroups.forEach((group) => {
+        console.log('전체 그룹 수:', data.summary.detailGroups.length)
+        data.summary.detailGroups.forEach((group) => {
+          console.log('🧩 group.title:', group.title)
+        })
+        const itemTexts = group.items.map((item) => item.content || item.title).join(' / ')
+        switch (group.title) {
+          case '등기부등본 확인':
+            ownership.value = itemTexts
+            break
+          case '매물 검증':
+            building.value = itemTexts
+            break
+          case '가격 검증':
+            basic.value = itemTexts
+            break
+          case '법령 위험':
+            legal.value = itemTexts
+            break
+          default:
+            console.log('❓ 예상 밖 group.title:', group.title)
+        }
+      })
+    }
+  } catch (error) {
+    console.error('사기 위험도 조회 실패 ❌', error)
+  }
 })
 </script>

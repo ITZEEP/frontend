@@ -1,5 +1,5 @@
 <script setup>
-import BaseCheckBox from '@/components/common/BaseCheckBox.vue'
+import BaseCheckBox from '@/components/common/BaseCheckbox.vue'
 
 const emit = defineEmits(['update:form'])
 
@@ -68,7 +68,7 @@ const utilityItems = {
     </p>
 
     <!-- 전세 -->
-    <div v-if="form.dealType === '전세'" class="space-y-4">
+    <div v-if="form.leaseType === '전세'" class="space-y-4">
       <!-- 전세금 -->
       <div>
         <label class="block mb-1 text-sm font-medium">
@@ -112,7 +112,7 @@ const utilityItems = {
     </div>
 
     <!-- 월세 -->
-    <div v-else-if="form.dealType === '월세'" class="space-y-4">
+    <div v-else-if="form.leaseType === '월세'" class="space-y-4">
       <!-- 보증금 -->
       <div>
         <label class="block mb-1 text-sm font-medium">

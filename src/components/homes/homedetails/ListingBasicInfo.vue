@@ -3,12 +3,15 @@
     <div class="text-yellow-500 font-semibold text-lg">{{ listing.type }}</div>
 
     <div class="text-2xl font-bold">
-      월세 {{ (listing.deposit ?? 0).toLocaleString() }} /
-      {{ (listing.monthly ?? 0).toLocaleString() }}
+      {{
+        listing.leaseType === '전세'
+          ? '전세 ' + formatNumber(listing.depositPrice)
+          : '월세 ' + formatNumber(listing.depositPrice) + ' / ' + formatNumber(listing.monthlyRent)
+      }}
     </div>
 
     <div class="text-yellow-500 font-semibold text-md">
-      관리비 {{ (listing.maintenance ?? 0).toLocaleString() }}원
+      관리비 {{ formatNumber(listing.maintenanceFee) }}원
     </div>
   </div>
 </template>
@@ -20,4 +23,11 @@ defineProps({
     required: true,
   },
 })
+
+function formatNumber(value) {
+  if (typeof value === 'number') {
+    return value.toLocaleString()
+  }
+  return value ?? '0'
+}
 </script>
