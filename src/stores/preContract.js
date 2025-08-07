@@ -64,15 +64,12 @@ export const usePreContractStore = defineStore('preContract', {
         delete this.triggerSubmitMap[`${step}-${subStep}`]
         delete this.triggerSubmitMap[`${step}`]
       }
-<<<<<<< HEAD
-=======
     },
     setHasParking(hasParking) {
       this.hasParking = hasParking
     },
     setHomeId(homeId) {
       this.homeId = homeId
->>>>>>> 1143f64103854ef595ccc1368124123f98613952
     },
   },
 })
