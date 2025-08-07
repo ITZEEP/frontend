@@ -69,36 +69,16 @@ const confirm = async () => {
     modalStore.close()
 
     console.log('[확인] 응답 메시지:', result.data.message)
+    console.log('[확인] AI 메시지 수신 여부:', store.aiMessageReceived)
 
     if (result.data.message === '특약 협상이 시작됩니다.') {
-      const aiReceived = await waitUntilAiMessageReceived()
-      console.log('[확인] AI 메시지 수신 여부 (지연 대기 후):', aiReceived)
-
-      if (aiReceived) {
-        console.log('[TermsReviewModal] AI 메시지 수신됨 → startTermsFlow 실행')
-        await startTermsFlow(contractChatId)
-        store.clearAiMessageFlag()
-      }
+      console.log('[TermsReviewModal] AI 메시지 수신됨 → startTermsFlow 실행')
+      await startTermsFlow(contractChatId)
+      store.clearAiMessageFlag()
     }
   } catch (error) {
     console.error('제출 실패:', error)
   }
-}
-
-const waitUntilAiMessageReceived = (timeout = 3000) => {
-  return new Promise((resolve) => {
-    const start = Date.now()
-    const check = () => {
-      if (store.aiMessageReceived) {
-        resolve(true)
-      } else if (Date.now() - start > timeout) {
-        resolve(false)
-      } else {
-        setTimeout(check, 100)
-      }
-    }
-    check()
-  })
 }
 
 // 미완료 특약 목록 조회 후 각 조항 별 정보 업데이트
@@ -118,15 +98,6 @@ const startTermsFlow = async (contractChatId) => {
       await postAiMessage(contractChatId, order)
 
       await putRecentData(contractChatId, order)
-
-      // const infoRes = await getContractInfo(contractChatId)
-      // const role = infoRes?.data?.role
-      // if (role === '임차인') {
-      //   console.log('[TermsReviewModal] 임차인이므로 setStartPoint 실행')
-      //   await setStartPoint(contractChatId)
-      // } else {
-      //   console.log('[TermsReviewModal] 임대인이므로 setStartPoint 생략')
-      // }
 
       store.setOrder(order)
       console.log('[TermsReviewModal] setOrder 호출됨:', store.currentOrder)

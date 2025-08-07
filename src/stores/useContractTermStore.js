@@ -1,4 +1,4 @@
-import { postAiMessage, putRecentData } from '@/apis/contractChatApi'
+import { putRecentData } from '@/apis/contractChatApi'
 import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
 
@@ -37,8 +37,6 @@ export const useSpecialContractStore = defineStore('specialContract', () => {
     console.log('[store.moveToNextOrder] 현재 currentOrder:', currentOrder.value)
     console.log('[store.moveToNextOrder] 전체 orders:', contractOrders.value)
 
-    await postAiMessage(chatId, currentOrder.value)
-
     const index = contractOrders.value.findIndex((c) => c.order === currentOrder.value)
     console.log('[store.moveToNextOrder] index:', index)
 
@@ -46,6 +44,7 @@ export const useSpecialContractStore = defineStore('specialContract', () => {
 
     if (next) {
       const nextOrder = next.order
+
       await putRecentData(chatId, nextOrder)
 
       // const res = await getContractInfo(chatId)
