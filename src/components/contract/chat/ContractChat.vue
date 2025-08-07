@@ -119,6 +119,12 @@
         계약 정보 다시 로드
       </button>
     </div>
+
+    <LoadingOverlay
+      :loading="isLoadingOverlayVisible"
+      message="AI가 특약 수정 중..."
+      sub-message="잠시만 기다려주세요"
+    />
   </div>
 </template>
 
@@ -137,9 +143,11 @@ import ContractChatInput from './ContractChatInput.vue'
 import UserChatMessage from './messages/UserChatMessage.vue'
 import StepContainer from './StepContainer.vue'
 import { useSpecialContractStore } from '@/stores/useContractTermStore'
+import LoadingOverlay from '@/components/common/LoadingOverlay.vue'
 
 const route = useRoute()
 const store = useSpecialContractStore()
+const isLoadingOverlayVisible = ref(false)
 
 const props = defineProps({
   contractChatId: {
@@ -449,8 +457,11 @@ const handleSetStartPoint = async () => {
 // 특약 내보내기
 const handleExportMessages = async () => {
   try {
+    isLoadingOverlayVisible.value = true
+
     const order = store.currentOrder
     const response = await setEndPointAndExport(actualContractChatId.value, order)
+
     if (response.success) {
       exportedMessages.value = response.data
       showExportModal.value = true
@@ -458,6 +469,7 @@ const handleExportMessages = async () => {
       console.log('[ContractChat] export 전 currentOrder:', store.currentOrder)
 
       store.markOrderSuccess(store.currentOrder)
+
       await store.moveToNextOrder(actualContractChatId.value)
     } else {
       alert('특약 내보내기에 실패했습니다: ' + response.message)
@@ -465,6 +477,8 @@ const handleExportMessages = async () => {
   } catch (error) {
     console.error('특약 내보내기 실패:', error)
     alert('특약 내보내기에 실패했습니다.')
+  } finally {
+    isLoadingOverlayVisible.value = false
   }
 }
 
