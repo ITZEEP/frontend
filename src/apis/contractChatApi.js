@@ -325,3 +325,12 @@ export const postEndPointAndExport = async (contractChatId, order) => {
     console.error('특약 종료 및 내보내기 실패: ', error)
   }
 }
+
+export const postAiMessage = async (contractChatId, order) => {
+  try {
+    const result = await apiPost(`/special-contract/${contractChatId}/ai?order=${order}`)
+    return result
+  } catch (error) {
+    console.error('미완료 특약 문서 목록 조회 실패: ', error)
+  }
+}

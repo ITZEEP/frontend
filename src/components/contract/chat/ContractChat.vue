@@ -235,7 +235,15 @@ const getLoadingMessage = () => {
 }
 
 // 🔧 추가: 메시지 발신자 이름 가져오기
+const AI_SENDER_ID = 9999 // JavaScript의 최대 안전 정수
+
+// 2. getMessageSenderName 함수 수정
 const getMessageSenderName = (message) => {
+  // AI 메시지 체크
+  if (message.senderId === AI_SENDER_ID) {
+    return 'AI 도우미 뀨'
+  }
+
   if (String(message.senderId) === String(currentUserId.value)) {
     return '나'
   }
@@ -453,7 +461,6 @@ const handleExportMessages = async () => {
       await store.moveToNextOrder(actualContractChatId.value)
     } else {
       alert('특약 내보내기에 실패했습니다: ' + response.message)
-      await setStartPoint(actualContractChatId.value)
     }
   } catch (error) {
     console.error('특약 내보내기 실패:', error)
@@ -469,6 +476,13 @@ watch(
       nextTick(() => {
         forceScrollToBottom()
       })
+    }
+
+    const latestMessage = newMessages[newMessages.length - 1]
+
+    if (latestMessage && latestMessage.senderId === 9999) {
+      console.log('[ContractChat] AI 메시지 감지됨 (senderId: 9999)')
+      store.markAiMessageReceived()
     }
   },
   { immediate: true, deep: true },
