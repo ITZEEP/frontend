@@ -55,10 +55,9 @@ const isLastSubStep = computed(() => props.subStep === maxSubStep.value)
 
 const handleNextClick = async () => {
   if (props.step === maxStep) {
+    await goToStep(props.step)
     const id = route.params.id
-    if (id) {
-      router.push(`/contract/${id}`)
-    } else {
+    if (!id) {
       console.warn('params에서 id를 찾을 수 없습니다.')
     }
     return
@@ -83,9 +82,11 @@ const handlePrevClick = () => {
 
 const goToStep = async (newStep) => {
   const trigger = store.getTriggerSubmit(props.step, props.subStep)
+
   if (trigger) {
     try {
-      await trigger()
+      const result = await trigger()
+      if (result === false) return
     } catch (e) {
       console.error('triggerSubmit 실패:', e)
       return
