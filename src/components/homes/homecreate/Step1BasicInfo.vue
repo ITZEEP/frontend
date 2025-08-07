@@ -36,6 +36,23 @@ const onAddressSelect = (selectedAddress) => {
   updateForm('addr1', selectedAddress)
   modalStore.close()
 }
+
+// 매물 종류
+const residenceTypeOptions = [
+  { label: '오픈형 원룸', value: 'OPEN_ONE_ROOM' },
+  { label: '분리형 원룸', value: 'SEPARATED_ONE_ROOM' },
+  { label: '투룸', value: 'TWO_ROOM' },
+  { label: '오피스텔', value: 'OFFICETEL' },
+  { label: '아파트', value: 'APARTMENT' },
+  { label: '단독주택', value: 'HOUSE' },
+  { label: '빌라', value: 'VILLA' },
+]
+
+// 거래 유형 (한글 라벨 + 영어 enum 값)
+const leaseTypeOptions = [
+  { label: '월세', value: 'WOLSE' },
+  { label: '전세', value: 'JEONSE' },
+]
 </script>
 
 <template>
@@ -49,25 +66,18 @@ const onAddressSelect = (selectedAddress) => {
       </label>
       <div class="grid grid-cols-3 gap-2">
         <button
-          v-for="type in [
-            '오픈형 원룸',
-            '분리형 원룸',
-            '투룸',
-            '오피스텔',
-            '아파트',
-            '단독/다가구주택',
-          ]"
-          :key="type"
+          v-for="option in residenceTypeOptions"
+          :key="option.value"
           :class="[
             'py-2 px-4 border rounded-md text-sm font-medium transition',
-            props.form.residenceType === type
+            props.form.residenceType === option.value
               ? 'bg-yellow-primary text-white border-yellow-primary'
               : 'bg-white text-gray-700 hover:bg-gray-50',
           ]"
-          @click="updateForm('residenceType', type)"
+          @click="updateForm('residenceType', option.value)"
           type="button"
         >
-          {{ type }}
+          {{ option.label }}
         </button>
       </div>
     </div>
@@ -79,18 +89,18 @@ const onAddressSelect = (selectedAddress) => {
       </label>
       <div class="flex gap-6">
         <BaseRadio
-          v-for="type in ['월세', '전세']"
-          :key="type"
-          :modelValue="props.form.leaseType"
-          :value="type"
-          :label="type"
+          v-for="option in leaseTypeOptions"
+          :key="option.value"
+          :value="option.value"
+          :label="option.label"
+          :modelValue="form.leaseType"
           name="leaseType"
           @update:modelValue="updateForm('leaseType', $event)"
         />
       </div>
     </div>
 
-    <!-- 주소 입력 -->
+    <!-- 주소 -->
     <div>
       <label class="block mb-1 text-sm font-medium text-gray-600">
         주소<span class="text-red-500">*</span>
@@ -114,7 +124,7 @@ const onAddressSelect = (selectedAddress) => {
       </div>
     </div>
 
-    <!-- 상세 주소 입력 -->
+    <!-- 상세 주소 -->
     <div>
       <label class="block mb-1 text-sm font-medium text-gray-600">상세 주소</label>
       <input
@@ -126,7 +136,7 @@ const onAddressSelect = (selectedAddress) => {
       />
     </div>
 
-    <!-- 모달: 주소 검색 -->
+    <!-- 주소 검색 모달 -->
     <BaseModal :closable="true" :maskCloseable="true">
       <SearchAddress @select="onAddressSelect" />
     </BaseModal>

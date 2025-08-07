@@ -9,7 +9,7 @@
             <NetAreaIcon class="text-yellow-primary" />
             전용면적
           </div>
-          <div class="text-black font-medium">{{ listing.area }}㎡</div>
+          <div class="text-black font-medium">{{ listing.exclusiveArea }}㎡</div>
         </div>
 
         <div>
@@ -17,7 +17,7 @@
             <GrossAreaIcon class="text-yellow-primary" />
             공급면적
           </div>
-          <div class="text-black font-medium">-</div>
+          <div class="text-black font-medium">{{ listing.supplyArea }}㎡</div>
         </div>
 
         <div>
@@ -25,15 +25,17 @@
             <FloorIcon class="text-yellow-primary" />
             현재층 / 총층
           </div>
-          <div class="text-black font-medium">{{ listing.floor }}층 / -층</div>
+          <div class="text-black font-medium">
+            {{ listing.homeFloor }}층 / {{ listing.buildingTotalFloors }}층
+          </div>
         </div>
 
         <div>
           <div class="flex items-center gap-1">
             <CalendarIcon class="text-yellow-primary" />
-            사용승인일 / 입주가능일
+            사용승인일
           </div>
-          <div class="text-black font-medium">- / -</div>
+          <div class="text-black font-medium">{{ listing.buildDate }}</div>
         </div>
 
         <div>
@@ -41,7 +43,7 @@
             <DirectionIcon class="text-yellow-primary" />
             방향
           </div>
-          <div class="text-black font-medium">{{ listing.direction ?? '-' }}</div>
+          <div class="text-black font-medium">{{ listing.homeDirection }}</div>
         </div>
 
         <div>
@@ -49,7 +51,9 @@
             <RoomIcon class="text-yellow-primary" />
             방 / 욕실 수
           </div>
-          <div class="text-black font-medium">- / -</div>
+          <div class="text-black font-medium">
+            {{ listing.roomCnt }}개 / {{ listing.bathroomCount }}개
+          </div>
         </div>
       </div>
     </section>
@@ -61,7 +65,7 @@
         <div class="flex justify-between items-center">
           <div class="font-semibold">월 관리비</div>
           <div class="text-yellow-primary font-bold text-lg">
-            {{ listing.maintenance ?? 0 }}만원
+            {{ listing.maintenanceFee ?? 0 }}만원
           </div>
         </div>
 
@@ -188,7 +192,7 @@ import FirewarningIcon from '@/assets/icons/FirewarningIcon.vue'
 import SohwagiIcon from '@/assets/icons/SohwagiIcon.vue'
 import HyungwansecuIcon from '@/assets/icons/HyungwansecuIcon.vue'
 
-defineProps({
+const { listing } = defineProps({
   listing: {
     type: Object,
     required: true,
