@@ -37,6 +37,24 @@
               {{ getRepairLabel(summary.contractStep1?.responseRepairingFixtures) }}
             </span>
           </div>
+          <div class="w-1/2">
+            미납 세금 여부:
+            <span class="text-gray-500">
+              {{ summary.contractStep1?.hasTaxArrears ? '예' : '아니오' }}
+            </span>
+          </div>
+          <div class="w-1/2">
+            미납 세금 금액:
+            <span class="text-gray-500">
+              {{ summary.contractStep1?.taxArrearsAmount?.toLocaleString() || 0 }} 원
+            </span>
+          </div>
+          <div class="w-1/2">
+            선순위 확정일자 여부:
+            <span class="text-gray-500">
+              {{ summary.contractStep1?.hasPriorFixedDate ? '예' : '아니오' }}
+            </span>
+          </div>
         </div>
       </section>
 
@@ -66,6 +84,22 @@
             자동 임대료 조정:
             <span class="text-gray-500">
               {{ summary.contractStep2?.hasAutoPriceAdjustment ? '있음' : '없음' }}
+            </span>
+          </div>
+
+          <!-- JEONSE인 경우만 표시 -->
+          <div class="w-1/2" v-if="rentType === 'JEONSE'">
+            전세권 설정 허용:
+            <span class="text-gray-500">
+              {{ summary.contractStep2?.allowJeonseRightRegistration ? '허용' : '불허' }}
+            </span>
+          </div>
+
+          <!-- 공통 -->
+          <div class="w-full">
+            원상복구 범위:
+            <span class="text-gray-500">
+              {{ summary.contractStep2?.restoreCategories?.join(', ') || '없음' }}
             </span>
           </div>
         </div>
@@ -100,27 +134,43 @@
               {{ summary.livingStep1?.ownerAccountNumber }}
             </span>
           </div>
-          <div class="w-1/2">
+
+          <!-- WOLSE인 경우만 표시 -->
+          <div class="w-1/2" v-if="rentType === 'WOLSE'">
             납부일:
-            <span class="text-gray-500"> 매월 {{ summary.livingStep1?.paymentDueDate }}일 </span>
+            <span class="text-gray-500">
+              매월 {{ summary.livingStep1?.paymentDueDate || '-' }}일
+            </span>
           </div>
-          <div class="w-1/2">
+          <div class="w-1/2" v-if="rentType === 'WOLSE'">
             연체이자율:
-            <span class="text-gray-500"> {{ summary.livingStep1?.lateFeeInterestRate }}% </span>
+            <span class="text-gray-500">
+              {{ summary.livingStep1?.lateFeeInterestRate ?? '-' }}%
+            </span>
           </div>
         </div>
       </section>
     </div>
+    <LoadingOverlay
+      :loading="isLoading"
+      message="계약서 저장 중..."
+      sub-message="잠시만 기다려주세요"
+    />
   </div>
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watchEffect } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { OwnerPreContractAPI } from '@/apis/preContractOwner'
-import { useRoute } from 'vue-router'
+import { usePreContractStore } from '@/stores/preContract'
+import LoadingOverlay from '@/components/common/LoadingOverlay.vue'
 
+const store = usePreContractStore()
 const route = useRoute()
+const router = useRouter()
 const contractChatId = route.query.id || route.params.id
+const rentType = localStorage.getItem('rent_type') // 'JEONSE' 또는 'WOLSE'
 
 const summary = ref({
   contractStep1: null,
@@ -128,6 +178,30 @@ const summary = ref({
   livingStep1: null,
   contractDocument: null,
 })
+
+const isLoading = ref(false)
+
+const saveMongo = async () => {
+  isLoading.value = true
+  try {
+    const res = await OwnerPreContractAPI.saveMongoDB(contractChatId)
+    if (!res.success) {
+      console.warn('Mongo 저장 실패:', res)
+      alert('저장에 실패했습니다. 다시 시도해주세요!')
+      return
+    }
+
+    const id = contractChatId
+    if (id) {
+      router.push(`/contract/${id}`)
+    }
+  } catch (error) {
+    console.error('Mongo 저장 중 오류:', error)
+    alert('저장에 실패했습니다. 다시 시도해주세요!')
+  } finally {
+    isLoading.value = false
+  }
+}
 
 onMounted(async () => {
   try {
@@ -168,6 +242,8 @@ const getBurdenLabel = (val) => {
   if (val === 'PARTIAL') return '일부 부담'
   return '-'
 }
-</script>
 
-<style scoped></style>
+watchEffect(() => {
+  store.setTriggerSubmit(6, saveMongo)
+})
+</script>
