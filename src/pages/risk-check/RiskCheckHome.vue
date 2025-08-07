@@ -302,21 +302,35 @@ const scrollToElement = async (element) => {
 </script>
 
 <template>
-  <div class="max-w-7xl mx-auto py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
     <!-- Header -->
-    <div class="flex items-center justify-between mb-8">
+    <div class="flex items-start justify-between mb-6 sm:mb-8">
       <div>
-        <h1 class="text-3xl font-bold text-gray-warm-700 mb-2">사기 위험도 분석</h1>
-        <p class="text-base text-gray-600">AI 기술로 매물의 사기 위험도를 정확하게 분석합니다</p>
+        <h1 class="text-2xl sm:text-3xl font-bold text-gray-warm-700 mb-1 sm:mb-2">사기 위험도 분석</h1>
+        <p class="text-sm sm:text-base text-gray-600">AI 기술로 매물의 사기 위험도를 정확하게 분석합니다</p>
       </div>
-      <BaseButton @click="handleCheckHistory" size="lg" variant="primary">
+      <BaseButton 
+        @click="handleCheckHistory" 
+        size="md" 
+        variant="primary"
+        class="hidden sm:flex"
+      >
         <IconClock class="w-4 h-4 mr-2 text-white" />
-        조회 기록 확인하기
+        <span class="text-sm sm:text-base">조회 기록 확인하기</span>
+      </BaseButton>
+      <!-- 모바일에서는 아이콘 버튼만 표시 -->
+      <BaseButton 
+        @click="handleCheckHistory" 
+        size="md" 
+        variant="primary"
+        class="sm:hidden px-3 py-2"
+      >
+        <IconClock class="w-5 h-5 text-white" />
       </BaseButton>
     </div>
 
     <!-- Property Type Selector -->
-    <div ref="propertyTypeSelectorRef" class="mb-8">
+    <div ref="propertyTypeSelectorRef" class="mb-6 sm:mb-8">
       <PropertyTypeSelector
         :selected-type="selectedPropertyType"
         @select-type="handlePropertyTypeSelect"
@@ -324,7 +338,7 @@ const scrollToElement = async (element) => {
     </div>
 
     <!-- Property Card (for registered properties) -->
-    <div v-if="selectedPropertyType === 'registered'" ref="propertyCardRef" class="mb-8">
+    <div v-if="selectedPropertyType === 'registered'" ref="propertyCardRef" class="mb-6 sm:mb-8">
       <PropertyCard 
         :selected-tab="selectedTab" 
         @select-tab="handleTabSelect"
@@ -333,7 +347,7 @@ const scrollToElement = async (element) => {
     </div>
 
     <!-- Property Info Form (for unregistered properties) -->
-    <div v-if="selectedPropertyType === 'unregistered'" class="mb-8">
+    <div v-if="selectedPropertyType === 'unregistered'" class="mb-6 sm:mb-8">
       <PropertyInfoForm 
         :property-info="propertyInfo"
         @update:property-info="handlePropertyInfoUpdate"
@@ -344,7 +358,7 @@ const scrollToElement = async (element) => {
     <div
       v-if="selectedPropertyType === 'registered' || selectedPropertyType === 'unregistered'"
       ref="documentUploadRef"
-      class="mb-8"
+      class="mb-6 sm:mb-8"
     >
       <DocumentUpload 
         :uploaded-files="uploadedFiles" 
@@ -358,17 +372,17 @@ const scrollToElement = async (element) => {
         size="lg"
         variant="primary"
         @click="startRiskAnalysis"
-        class="px-12 py-4 font-semibold relative overflow-hidden"
+        class="w-full sm:w-auto px-8 sm:px-12 py-3 sm:py-4 font-semibold relative overflow-hidden"
         :disabled="isAnalyzing"
       >
         <transition name="fade" mode="out-in">
-          <div v-if="!isAnalyzing" key="normal" class="flex items-center">
+          <div v-if="!isAnalyzing" key="normal" class="flex items-center justify-center">
             <IconSearch class="w-4 h-4 mr-2 text-white" />
-            AI 위험도 분석 시작
+            <span class="text-sm sm:text-base">AI 위험도 분석 시작</span>
           </div>
-          <div v-else key="loading" class="flex items-center">
+          <div v-else key="loading" class="flex items-center justify-center">
             <div class="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            분석 중...
+            <span class="text-sm sm:text-base">분석 중...</span>
           </div>
         </transition>
       </BaseButton>

@@ -90,7 +90,7 @@ const imageClasses = computed(() => {
 </script>
 
 <template>
-  <div class="relative inline-block">
+  <div class="relative block">
     <!-- 로딩 상태 -->
     <div 
       v-if="imageLoading && !isInvalidImage"

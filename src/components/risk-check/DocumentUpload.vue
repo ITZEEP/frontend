@@ -138,16 +138,16 @@ const closeFileTypeModal = () => {
 </script>
 
 <template>
-  <div class="bg-white rounded-2xl shadow-sm border border-gray-300 p-8">
-    <h2 class="text-xl font-semibold text-gray-warm-700 mb-6">서류 업로드</h2>
+  <div class="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-300 p-4 sm:p-6 lg:p-8">
+    <h2 class="text-lg sm:text-xl font-semibold text-gray-warm-700 mb-4 sm:mb-6">서류 업로드</h2>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
       <div>
-        <div class="flex items-center gap-2 mb-4">
-          <IconLink class="w-3.5 h-3.5 text-blue-600" />
+        <div class="flex items-center gap-2 mb-3 sm:mb-4">
+          <IconLink class="w-3 h-3 sm:w-3.5 sm:h-3.5 text-blue-600" />
           <a
             @click="openRegistrationSite"
-            class="text-sm text-blue-600 cursor-pointer hover:underline"
+            class="text-xs sm:text-sm text-blue-600 cursor-pointer hover:underline"
           >
             등기부등본 발급받기
           </a>
@@ -155,7 +155,7 @@ const closeFileTypeModal = () => {
 
         <div
           :class="[
-            'border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200',
+            'border-2 border-dashed rounded-lg sm:rounded-xl p-4 sm:p-6 lg:p-8 text-center transition-all duration-200',
             isDragging.등기부등본
               ? 'border-yellow-primary bg-yellow-50 scale-[1.02]'
               : 'border-gray-300 hover:border-gray-400',
@@ -176,7 +176,7 @@ const closeFileTypeModal = () => {
           <div class="relative">
             <IconDocument
               :class="[
-                'w-6 h-8 mx-auto mb-4 text-gray-500 transition-opacity',
+                'w-5 h-6 sm:w-6 sm:h-8 mx-auto mb-3 sm:mb-4 text-gray-500 transition-opacity',
                 isUploading.등기부등본 ? 'opacity-50' : '',
               ]"
             />
@@ -185,12 +185,12 @@ const closeFileTypeModal = () => {
               class="absolute inset-0 flex items-center justify-center"
             >
               <div
-                class="w-6 h-6 border-2 border-yellow-primary border-t-transparent rounded-full animate-spin"
+                class="w-5 h-5 sm:w-6 sm:h-6 border-2 border-yellow-primary border-t-transparent rounded-full animate-spin"
               ></div>
             </div>
           </div>
-          <h3 class="text-lg font-semibold text-gray-warm-700 mb-2">등기부등본</h3>
-          <p class="text-sm text-gray-600 mb-4">파일을 드래그하여 업로드</p>
+          <h3 class="text-base sm:text-lg font-semibold text-gray-warm-700 mb-1 sm:mb-2">등기부등본</h3>
+          <p class="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">파일을 드래그하여 업로드</p>
 
           <div class="flex justify-center">
             <BaseButton
@@ -220,11 +220,11 @@ const closeFileTypeModal = () => {
       </div>
 
       <div>
-        <div class="flex items-center gap-2 mb-4">
-          <IconLink class="w-3.5 h-3.5 text-blue-600" />
+        <div class="flex items-center gap-2 mb-3 sm:mb-4">
+          <IconLink class="w-3 h-3 sm:w-3.5 sm:h-3.5 text-blue-600" />
           <a
             @click="openBuildingRegisterSite"
-            class="text-sm text-blue-600 cursor-pointer hover:underline"
+            class="text-xs sm:text-sm text-blue-600 cursor-pointer hover:underline"
           >
             건축물대장 발급받기
           </a>
@@ -232,7 +232,7 @@ const closeFileTypeModal = () => {
 
         <div
           :class="[
-            'border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200',
+            'border-2 border-dashed rounded-lg sm:rounded-xl p-4 sm:p-6 lg:p-8 text-center transition-all duration-200',
             isDragging.건축물대장
               ? 'border-yellow-primary bg-yellow-50 scale-[1.02]'
               : 'border-gray-300 hover:border-gray-400',
@@ -253,7 +253,7 @@ const closeFileTypeModal = () => {
           <div class="relative">
             <IconBuilding
               :class="[
-                'w-7 h-9 mx-auto mb-4 text-gray-500 transition-opacity',
+                'w-6 h-7 sm:w-7 sm:h-9 mx-auto mb-3 sm:mb-4 text-gray-500 transition-opacity',
                 isUploading.건축물대장 ? 'opacity-50' : '',
               ]"
             />
@@ -262,12 +262,12 @@ const closeFileTypeModal = () => {
               class="absolute inset-0 flex items-center justify-center"
             >
               <div
-                class="w-6 h-6 border-2 border-yellow-primary border-t-transparent rounded-full animate-spin"
+                class="w-5 h-5 sm:w-6 sm:h-6 border-2 border-yellow-primary border-t-transparent rounded-full animate-spin"
               ></div>
             </div>
           </div>
-          <h3 class="text-lg font-semibold text-gray-warm-700 mb-2">건축물대장</h3>
-          <p class="text-sm text-gray-600 mb-4">파일을 드래그하여 업로드</p>
+          <h3 class="text-base sm:text-lg font-semibold text-gray-warm-700 mb-1 sm:mb-2">건축물대장</h3>
+          <p class="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">파일을 드래그하여 업로드</p>
 
           <div class="flex justify-center">
             <BaseButton
