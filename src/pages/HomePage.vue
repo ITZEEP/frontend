@@ -35,6 +35,25 @@
   </div>
 
   <div class="p-8">
+    <h1 class="text-2xl font-bold mb-4">전자 서명 컴포넌트 테스트</h1>
+    <BaseButton variant="primary" @click="showSignatureModal = true">서명 모달 열기</BaseButton>
+
+    <!-- 서명 모달 (간단하게 사용) -->
+    <SignatureModal v-model="showSignatureModal" title="전자 서명" @confirm="handleSignature" />
+
+    <!-- 저장된 서명 표시 -->
+    <div v-if="savedSignature" class="mt-4">
+      <h3 class="text-lg font-semibold mb-2">저장된 서명:</h3>
+      <div class="inline-block p-4 bg-gray-100 rounded-lg">
+        <img :src="savedSignature.dataUrl" alt="저장된 서명" class="max-w-full h-auto" />
+        <p class="text-sm text-gray-600 mt-2">
+          크기: {{ savedSignature.width }} × {{ savedSignature.height }}px
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="p-8">
     <h1 class="text-2xl font-bold mb-4">공통 스타일 유닛 테스트</h1>
     <!-- 컨테이너 박스 -->
     <div class="white-box">
@@ -60,9 +79,28 @@
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import BaseButton from '@/components/common/BaseButton.vue'
+import SignatureModal from '@/components/common/SignatureModal.vue'
 import { useModalStore } from '@/stores/modal'
 import Modal from '@/components/common/BaseModal.vue'
 
 const modalStore = useModalStore()
+
+// 서명 모달 상태
+const showSignatureModal = ref(false)
+const savedSignature = ref(null)
+
+// 서명 처리
+const handleSignature = (signatureData) => {
+  savedSignature.value = signatureData
+
+  // 콘솔에 파일 정보 출력
+  console.log('=== 서명 파일 정보 ===')
+  console.log('파일:', signatureData.file)
+  console.log('파일명:', signatureData.file.name)
+  console.log('파일 크기:', signatureData.file.size, 'bytes')
+  console.log('이미지 크기:', `${signatureData.width} x ${signatureData.height}px`)
+  console.log('Base64 길이:', signatureData.base64.length)
+}
 </script>
