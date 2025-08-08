@@ -145,7 +145,7 @@ const updateTenantStep1 = async () => {
 
   try {
     await buyerApi.updateTenantStep1(contractChatId, step1DTO)
-    console.info('Step1 전세 정보가 저장되었습니다! ✅')
+    console.log('Step1 전세 정보가 저장되었습니다! ✅')
   } catch (error) {
     // API 파일에서 에러를 받아서 사용자에게 알리거나 UI 반응을 주는 게 목적 👉 사용자에게 UI 반응(알림, 메시지 등)을 주기 위한 처리
     console.error('step1 전세 저장 실패 ❌', error)

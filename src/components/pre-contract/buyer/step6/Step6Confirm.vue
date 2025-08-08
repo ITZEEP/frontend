@@ -358,15 +358,19 @@ const lifeInfo = ref({
 })
 
 const saveMongoDB = async () => {
+  console.log('[saveMongoDB 실행됨] 🔥')
   try {
     const response = await buyerApi.saveMongoDB(contractChatId)
     console.log('성공 ✅', response.data)
+    console.log('[Mongo 저장 성공 ✅]', response.data)
   } catch (error) {
     console.error('실패 ❌', error)
+    console.error('[Mongo 저장 실패 ❌]', error)
   }
 }
 
 watchEffect(() => {
+  console.log('[triggerSubmit 등록] 6번 등록됨')
   store.setTriggerSubmit(6, saveMongoDB)
 })
 </script>

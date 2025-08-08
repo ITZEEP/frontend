@@ -155,9 +155,9 @@ watch(
       pet !== null &&
       info !== '' &&
       pets !== null &&
-      Number(pets) >= 0
+      Number(pets) >= 1
 
-    const parkingFilled = parking === true ? count !== null && Number(count) >= 0 : true
+    const parkingFilled = parking === true ? count !== null && Number(count) >= 1 : true
 
     const allFilled = basicFilled && parkingFilled
 

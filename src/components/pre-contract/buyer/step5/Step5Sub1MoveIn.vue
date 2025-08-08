@@ -109,7 +109,7 @@ watch(
   ],
   ([repair, clean, installation, parking, count]) => {
     const basicFilled = repair !== null && clean !== null && installation !== null
-    const parkingFilled = parking === true ? count !== null && Number(count) >= 0 : true
+    const parkingFilled = parking === true ? count !== null && Number(count) >= 1 : true
     const allFilled = basicFilled && parkingFilled
     store.setCanProceed(allFilled)
   },

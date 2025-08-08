@@ -172,7 +172,7 @@ watch(
       smoking !== null &&
       earlyRisk !== null &&
       nonUse !== '' &&
-      count !== '' &&
+      count >= 1 &&
       occup !== '' &&
       contact !== '' &&
       rel !== '' &&
