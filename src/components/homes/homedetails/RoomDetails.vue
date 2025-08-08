@@ -94,12 +94,12 @@
             <ElevatorIcon class="text-yellow-primary w-4 h-4 mb-1" />
             <span class="text-xs font-medium">엘리베이터</span>
           </div>
-          <div
-            class="flex flex-col items-center bg-gray-100 px-3 py-2 rounded-md shadow-sm text-gray-700"
-          >
-            <IndividualHeatingIcon class="text-yellow-primary w-4 h-4 mb-1" />
-            <span class="text-xs font-medium">개별난방</span>
-          </div>
+          <!--          <div-->
+          <!--            class="flex flex-col items-center bg-gray-100 px-3 py-2 rounded-md shadow-sm text-gray-700"-->
+          <!--          >-->
+          <!--            <IndividualHeatingIcon class="text-yellow-primary w-4 h-4 mb-1" />-->
+          <!--            <span class="text-xs font-medium">개별난방</span>-->
+          <!--          </div>-->
           <div
             class="flex flex-col items-center bg-gray-100 px-3 py-2 rounded-md shadow-sm text-gray-700"
           >
@@ -107,46 +107,86 @@
             <span class="text-xs font-medium">전체난방</span>
           </div>
           <div
-            v-if="listing.is_parking_available"
+            v-if="listing.isParkingAvailable"
             class="flex flex-col items-center bg-gray-100 px-3 py-2 rounded-md shadow-sm text-gray-700"
           >
             <ParkingIcon class="text-yellow-primary w-4 h-4 mb-1" />
             <span class="text-xs font-medium">주차가능</span>
           </div>
           <div
-            v-if="listing.is_pet"
+            v-if="listing.isPet"
             class="flex flex-col items-center bg-gray-100 px-3 py-2 rounded-md shadow-sm text-gray-700"
           >
-            <ParkingIcon class="text-yellow-primary w-4 h-4 mb-1" />
+            <DogIcon class="text-yellow-primary w-4 h-4 mb-1" />
             <span class="text-xs font-medium">반려동물</span>
           </div>
         </div>
       </div>
 
-      <div class="mb-6">
-        <h3 class="font-semibold mb-3 text-sm text-gray-600">내부 시설</h3>
-        <div class="grid grid-cols-6 gap-4 text-center text-xs">
+      <div
+        v-if="categorizedFacilities['가구'] && categorizedFacilities['가구'].length > 0"
+        class="mb-6"
+      >
+        <h3 class="font-semibold mb-3 text-sm text-gray-600">가구</h3>
+        <div class="grid grid-cols-5 gap-5 text-center text-xs">
           <div
-            v-for="(item, index) in internalFacilities"
-            :key="index"
+            v-for="item in categorizedFacilities['가구']"
+            :key="item.itemId"
             class="flex flex-col items-center bg-gray-100 px-3 py-2 rounded-md shadow-sm text-gray-700"
           >
-            <component :is="item.icon" class="text-yellow-primary w-4 h-4 mb-1" />
-            <span class="text-xs font-medium">{{ item.label }}</span>
+            <component :is="getIcon(item.itemName)" class="text-yellow-primary w-4 h-4 mb-1" />
+            <span class="text-xs font-medium">{{ item.itemName }}</span>
           </div>
         </div>
       </div>
 
-      <div>
+      <div
+        v-if="categorizedFacilities['가전제품'] && categorizedFacilities['가전제품'].length > 0"
+        class="mb-6"
+      >
+        <h3 class="font-semibold mb-3 text-sm text-gray-600">가전제품</h3>
+        <div class="grid grid-cols-6 gap-4 text-center text-xs">
+          <div
+            v-for="item in categorizedFacilities['가전제품']"
+            :key="item.itemId"
+            class="flex flex-col items-center bg-gray-100 px-3 py-2 rounded-md shadow-sm text-gray-700"
+          >
+            <component :is="getIcon(item.itemName)" class="text-yellow-primary w-4 h-4 mb-1" />
+            <span class="text-xs font-medium">{{ item.itemName }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div
+        v-if="categorizedFacilities['편의시설'] && categorizedFacilities['편의시설'].length > 0"
+        class="mb-6"
+      >
+        <h3 class="font-semibold mb-3 text-sm text-gray-600">편의시설</h3>
+        <div class="grid grid-cols-6 gap-4 text-center text-xs">
+          <div
+            v-for="item in categorizedFacilities['편의시설']"
+            :key="item.itemId"
+            class="flex flex-col items-center bg-gray-100 px-3 py-2 rounded-md shadow-sm text-gray-700"
+          >
+            <component :is="getIcon(item.itemName)" class="text-yellow-primary w-4 h-4 mb-1" />
+            <span class="text-xs font-medium">{{ item.itemName }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div
+        v-if="categorizedFacilities['보안시설'] && categorizedFacilities['보안시설'].length > 0"
+        class="mb-6"
+      >
         <h3 class="font-semibold mb-3 text-sm text-gray-600">보안 시설</h3>
         <div class="grid grid-cols-6 gap-4 text-center text-xs">
           <div
-            v-for="(item, index) in securityFacilities"
-            :key="index"
+            v-for="item in categorizedFacilities['보안시설']"
+            :key="item.itemId"
             class="flex flex-col items-center bg-gray-100 px-3 py-2 rounded-md shadow-sm text-gray-700"
           >
-            <component :is="item.icon" class="text-yellow-primary w-4 h-4 mb-1" />
-            <span class="text-xs font-medium">{{ item.label }}</span>
+            <component :is="getIcon(item.itemName)" class="text-yellow-primary w-4 h-4 mb-1" />
+            <span class="text-xs font-medium">{{ item.itemName }}</span>
           </div>
         </div>
       </div>
@@ -155,7 +195,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { computed } from 'vue'
 
 import NetAreaIcon from '@/assets/icons/NetAreaIcon.vue'
 import GrossAreaIcon from '@/assets/icons/GrossAreaIcon.vue'
@@ -164,11 +204,13 @@ import CalendarIcon from '@/assets/icons/CalendarIcon.vue'
 import DirectionIcon from '@/assets/icons/DirectionIcon.vue'
 import RoomIcon from '@/assets/icons/RoomIcon.vue'
 
+// 건물 시설
 import ElevatorIcon from '@/assets/icons/ElevatorIcon.vue'
 import IndividualHeatingIcon from '@/assets/icons/IndividualHeatingIcon.vue'
 import CenterHeatingIcon from '@/assets/icons/CenterHeatingIcon.vue'
 import ParkingIcon from '@/assets/icons/ParkingIcon.vue'
-
+// import DogIcon from '@/assets/icons/DogIcon.vue' // 반려동물 아이콘
+// 가전제품
 import AirconIcon from '@/assets/icons/AirconIcon.vue'
 import TvIcon from '@/assets/icons/TvIcon.vue'
 import LaunIcon from '@/assets/icons/launIcon.vue'
@@ -176,15 +218,18 @@ import RefrigIcon from '@/assets/icons/RefrigIcon.vue'
 import InductIcon from '@/assets/icons/InductIcon.vue'
 import GasrangeIcon from '@/assets/icons/GasrangeIcon.vue'
 import ElectronicrangeIcon from '@/assets/icons/ElectronicrangeIcon.vue'
+import WallairconIcon from '@/assets/icons/WallairconIcon.vue'
+import Builtinaorcon from '@/assets/icons/builtinaorcon.vue'
+
+// 가구
 import BathIcon from '@/assets/icons/BathIcon.vue'
 import SinkIcon from '@/assets/icons/SinkIcon.vue'
 import DeskIcon from '@/assets/icons/DeskIcon.vue'
 import ClosetIcon from '@/assets/icons/ClosetIcon.vue'
 import BootbacIcon from '@/assets/icons/BootbacIcon.vue'
 import ShoeseIcon from '@/assets/icons/ShoeseIcon.vue'
-import WallairconIcon from '@/assets/icons/WallairconIcon.vue'
-import Builtinaorcon from '@/assets/icons/builtinaorcon.vue'
-
+import SofaIcon from '@/assets/icons/SofaIcon.vue' // 소파 아이콘
+// 보안 시설
 import CctvIcon from '@/assets/icons/CctvIcon.vue'
 import InterphoneIcon from '@/assets/icons/InterphoneIcon.vue'
 import DoorlockIcon from '@/assets/icons/DoorlockIcon.vue'
@@ -202,33 +247,60 @@ const { listing } = defineProps({
   },
 })
 
-const internalFacilities = ref([
-  { icon: AirconIcon, label: '에어컨' },
-  { icon: TvIcon, label: 'TV' },
-  { icon: LaunIcon, label: '세탁기' },
-  { icon: RefrigIcon, label: '냉장고' },
-  { icon: InductIcon, label: '인덕션' },
-  { icon: GasrangeIcon, label: '가스렌지' },
-  { icon: ElectronicrangeIcon, label: '전자레인지' },
-  { icon: BathIcon, label: '욕조' },
-  { icon: SinkIcon, label: '싱크대' },
-  { icon: DeskIcon, label: '책상' },
-  { icon: ClosetIcon, label: '옷장' },
-  { icon: BootbacIcon, label: '붙박이장' },
-  { icon: ShoeseIcon, label: '신발장' },
-  { icon: WallairconIcon, label: '벽걸이 에어컨' },
-  { icon: Builtinaorcon, label: '빌트인 에어컨' },
-])
+// `itemName`과 아이콘 컴포넌트를 매핑하는 객체
+const iconMap = {
+  // 가전제품
+  에어컨: AirconIcon,
+  세탁기: LaunIcon,
+  냉장고: RefrigIcon,
+  인덕션: InductIcon,
+  가스렌지: GasrangeIcon,
+  전자레인지: ElectronicrangeIcon,
+  '벽걸이 에어컨': WallairconIcon,
+  '빌트인 에어컨': Builtinaorcon,
+  TV: TvIcon,
 
-const securityFacilities = ref([
-  { icon: CctvIcon, label: 'CCTV' },
-  { icon: InterphoneIcon, label: '인터폰' },
-  { icon: DoorlockIcon, label: '도어락' },
-  { icon: CardKeyIcon, label: '카드키' },
-  { icon: BangbumIcon, label: '방범창' },
-  { icon: SecurityIcon, label: '경비' },
-  { icon: FirewarningIcon, label: '화재경보기' },
-  { icon: SohwagiIcon, label: '소화기' },
-  { icon: HyungwansecuIcon, label: '현관보안' },
-])
+  // 가구
+  욕조: BathIcon,
+  싱크대: SinkIcon,
+  책상: DeskIcon,
+  옷장: ClosetIcon,
+  붙박이장: BootbacIcon,
+  신발장: ShoeseIcon,
+  소파: SofaIcon,
+
+  // 보안 시설
+  CCTV: CctvIcon,
+  인터폰: InterphoneIcon,
+  도어락: DoorlockIcon,
+  카드키: CardKeyIcon,
+  방범창: BangbumIcon,
+  경비: SecurityIcon,
+  화재경보기: FirewarningIcon,
+  소화기: SohwagiIcon,
+  현관보안: HyungwansecuIcon,
+
+  // 편의시설 (API 응답에 따라 추가)
+  엘리베이터: ElevatorIcon,
+  주차장: ParkingIcon,
+  개별난방: IndividualHeatingIcon,
+  전체난방: CenterHeatingIcon,
+}
+
+const getIcon = (itemName) => {
+  return iconMap[itemName] || null // 매핑되지 않은 경우 null 반환
+}
+
+const categorizedFacilities = computed(() => {
+  if (!listing.facilities || !Array.isArray(listing.facilities)) {
+    return {}
+  }
+  return listing.facilities.reduce((acc, item) => {
+    if (!acc[item.categoryType]) {
+      acc[item.categoryType] = []
+    }
+    acc[item.categoryType].push(item)
+    return acc
+  }, {})
+})
 </script>
