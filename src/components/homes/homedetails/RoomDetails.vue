@@ -70,11 +70,13 @@
         <div>
           <div class="text-gray-600 mb-2">관리비 포함 항목</div>
           <div class="flex flex-wrap gap-2">
-            <span class="bg-gray-100 text-xs px-3 py-1 rounded-full">전기료</span>
-            <span class="bg-gray-100 text-xs px-3 py-1 rounded-full">수도료</span>
-            <span class="bg-gray-100 text-xs px-3 py-1 rounded-full">가스료</span>
-            <span class="bg-gray-100 text-xs px-3 py-1 rounded-full">인터넷</span>
-            <span class="bg-gray-100 text-xs px-3 py-1 rounded-full">청소비</span>
+            <span
+              v-for="item in listing.maintenanceFeeItems"
+              :key="item.itemName"
+              class="bg-gray-100 text-xs px-3 py-1 rounded-full"
+            >
+              {{ item.itemName }}
+            </span>
           </div>
         </div>
       </div>

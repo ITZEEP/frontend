@@ -1,13 +1,11 @@
 <template>
   <div class="max-w-4xl mx-auto p-6">
-    <!-- 이미지 갤러리 -->
-    <ImageGallery :images="images" />
+    <ImageGallery v-if="images.length > 0" :images="images" />
 
     <div v-if="listing" class="mt-6 space-y-10">
       <ListingBasicInfo :listing="listing" />
       <RoomDetails :listing="listing" />
 
-      <!-- 매물 위치 지도 -->
       <TravelMap
         :title="listing.residenceType + ' 매물 위치'"
         :address="listing.addr1 + ' ' + listing.addr2"
@@ -17,6 +15,9 @@
       <div class="w-full flex gap-4">
         <BaseButton class="w-full" variant="primary" size="lg" @click="goChat">
           연락하기
+        </BaseButton>
+        <BaseButton class="w-full" variant="secondary" size="lg" @click="goRiskCheck">
+          <span class="w-full">사기위험도 분석</span>
         </BaseButton>
       </div>
     </div>
@@ -49,8 +50,10 @@ onMounted(async () => {
     const data = await fetchListingById(id)
     console.log('✅ 매물 상세 API 응답:', data)
 
-    listing.value = data
-    images.value = data.imageUrls || []
+    if (data) {
+      listing.value = data
+      images.value = data.imageUrls || []
+    }
   } catch (err) {
     console.error('매물 조회 실패:', err)
   }
@@ -58,5 +61,9 @@ onMounted(async () => {
 
 function goChat() {
   router.push('/chat')
+}
+
+function goRiskCheck() {
+  router.push('/risk-check')
 }
 </script>
