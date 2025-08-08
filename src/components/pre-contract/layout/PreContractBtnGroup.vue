@@ -55,20 +55,19 @@ const isLastSubStep = computed(() => props.subStep === maxSubStep.value)
 
 const handleNextClick = async () => {
   if (props.step === maxStep) {
+    await goToStep(props.step, true)
     const id = route.params.id
-    if (id) {
-      router.push(`/contract/${id}`)
-    } else {
+    if (!id) {
       console.warn('params에서 id를 찾을 수 없습니다.')
     }
     return
   }
 
   if (hasSubStep.value && !isLastSubStep.value) {
-    await goToStep(props.step)
+    await goToStep(props.step, true)
     store.nextSubStep(props.step, props.role)
   } else {
-    await goToStep(props.step + 1)
+    await goToStep(props.step + 1, true)
   }
 }
 
@@ -77,21 +76,24 @@ const handlePrevClick = () => {
     const key = subStepKey.value
     store.currentSubSteps[key] = props.subStep - 1
   } else if (props.step > 1) {
-    goToStep(props.step - 1)
+    goToStep(props.step - 1, false)
   }
 }
 
-const goToStep = async (newStep) => {
-  const trigger = store.getTriggerSubmit(props.step, props.subStep)
-  if (trigger) {
-    try {
-      await trigger()
-    } catch (e) {
-      console.error('triggerSubmit 실패:', e)
-      return
+const goToStep = async (newStep, shouldTrigger = true) => {
+  if (shouldTrigger) {
+    const trigger = store.getTriggerSubmit(props.step, props.subStep)
+    if (trigger) {
+      try {
+        const result = await trigger()
+        if (result === false) return
+      } catch (e) {
+        console.error('triggerSubmit 실패:', e)
+        return
+      }
+    } else {
+      console.warn(`triggerSubmit(${props.step}-${props.subStep}) 없음`)
     }
-  } else {
-    console.warn(`triggerSubmit(${props.step}-${props.subStep}) 없음`)
   }
 
   if (newStep <= maxStep) {
