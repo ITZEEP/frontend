@@ -33,34 +33,75 @@
 
       <div v-else>
         <!-- API에서 로드된 기존 메시지들 -->
-        <UserChatMessage
-          v-for="message in apiMessages"
-          :key="'api-' + message.id"
-          :name="getMessageSenderName(message)"
-          :message="message.content"
-          :time="formatMessageTime(message.sendTime)"
-          :userId="message.senderId"
-          :myUserId="currentUserId"
-          :isRead="message.isRead"
-          :sendStatus="'sent'"
-          @reply="handleReply"
-          @copy="handleCopy"
-        />
+        <template v-for="message in apiMessages" :key="'api-' + message.id">
+          <template v-if="message.senderId === AI_SENDER_ID">
+            <AiChatMessage :message="message.content" :buttons="[]" />
+          </template>
+
+          <template v-else-if="message.senderId === AI_SENDER_BUTTON">
+            <AiChatMessage
+              :message="message.content"
+              :buttons="[
+                {
+                  label: '특약 검토',
+                  action: 'openTermsReview',
+                },
+              ]"
+              @action="handleAiAction"
+            />
+          </template>
+
+          <template v-else>
+            <UserChatMessage
+              :name="getMessageSenderName(message)"
+              :message="message.content"
+              :time="formatMessageTime(message.sendTime)"
+              :userId="message.senderId"
+              :myUserId="currentUserId"
+              :isRead="message.isRead"
+              :sendStatus="'sent'"
+              @reply="handleReply"
+              @copy="handleCopy"
+            />
+          </template>
+        </template>
 
         <!-- 실시간 메시지들 (useContractChat 훅에서 가져옴) -->
-        <UserChatMessage
+        <template
           v-for="(message, index) in hookMessages"
           :key="'hook-' + (message.id || message.sendTime || index)"
-          :name="getMessageSenderName(message)"
-          :message="message.content"
-          :time="formatMessageTime(message.sendTime)"
-          :userId="message.senderId"
-          :myUserId="currentUserId"
-          :isRead="message.isRead"
-          :sendStatus="getMessageStatus(message)"
-          @reply="handleReply"
-          @copy="handleCopy"
-        />
+        >
+          <template v-if="message.senderId === AI_SENDER_ID">
+            <AiChatMessage :message="message.content" :buttons="[]" />
+          </template>
+
+          <template v-else-if="message.senderId === AI_SENDER_BUTTON">
+            <AiChatMessage
+              :message="message.content"
+              :buttons="[
+                {
+                  label: '특약 검토',
+                  action: 'openTermsReview',
+                },
+              ]"
+              @action="handleAiAction"
+            />
+          </template>
+
+          <template v-else>
+            <UserChatMessage
+              :name="getMessageSenderName(message)"
+              :message="message.content"
+              :time="formatMessageTime(message.sendTime)"
+              :userId="message.senderId"
+              :myUserId="currentUserId"
+              :isRead="message.isRead"
+              :sendStatus="getMessageStatus(message)"
+              @reply="handleReply"
+              @copy="handleCopy"
+            />
+          </template>
+        </template>
 
         <!-- 타이핑 상태 표시 -->
         <div v-if="isTyping" class="mb-4">
@@ -144,6 +185,11 @@ import UserChatMessage from './messages/UserChatMessage.vue'
 import StepContainer from './StepContainer.vue'
 import { useSpecialContractStore } from '@/stores/useContractTermStore'
 import LoadingOverlay from '@/components/common/LoadingOverlay.vue'
+import AiChatMessage from './messages/AiChatMessage.vue'
+import TermsReviewModal from '@/components/contract/modals/step3/TermsReviewModal.vue'
+import { useModalStore } from '@/stores/modal'
+
+const modalStore = useModalStore()
 
 const route = useRoute()
 const store = useSpecialContractStore()
@@ -244,14 +290,10 @@ const getLoadingMessage = () => {
 
 // 🔧 추가: 메시지 발신자 이름 가져오기
 const AI_SENDER_ID = 9999 // JavaScript의 최대 안전 정수
+const AI_SENDER_BUTTON = 9998
 
 // 2. getMessageSenderName 함수 수정
 const getMessageSenderName = (message) => {
-  // AI 메시지 체크
-  if (message.senderId === AI_SENDER_ID) {
-    return 'AI 도우미 뀨'
-  }
-
   if (String(message.senderId) === String(currentUserId.value)) {
     return '나'
   }
@@ -480,6 +522,19 @@ const handleExportMessages = async () => {
   } finally {
     isLoadingOverlayVisible.value = false
   }
+}
+
+const handleAiAction = (action) => {
+  if (action === 'openTermsReview') {
+    openTermsReview()
+  }
+}
+
+// 리뷰 검토 모달 열기
+const openTermsReview = () => {
+  modalStore.open(TermsReviewModal, {
+    onClose: () => modalStore.close(),
+  })
 }
 
 // Watch들
