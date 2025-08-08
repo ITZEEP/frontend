@@ -10,11 +10,6 @@ export default [
     component: () => import('../pages/auth/SignupPage.vue'),
   },
   {
-    path: '/auth/mypage',
-    name: 'mypage',
-    component: () => import('../pages/auth/MyPage.vue'),
-  },
-  {
     path: '/oauth/callback',
     name: 'oauth-callback',
     component: () => import('../pages/auth/OAuthCallback.vue'),
