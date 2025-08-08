@@ -31,6 +31,7 @@ import {
   getIncompleteSpecialContracts,
   putRecentData,
   postAiMessage,
+  postAutoNextRound,
 } from '@/apis/contractChatApi'
 import { onMounted, ref } from 'vue'
 import { useModalStore } from '@/stores/modal'
@@ -39,6 +40,7 @@ import { useSpecialContractStore } from '@/stores/useContractTermStore'
 const route = useRoute()
 const contractChatId = route.query.id || route.params.id
 const store = useSpecialContractStore()
+const round = ref()
 
 const modalStore = useModalStore()
 
@@ -53,7 +55,8 @@ const contracts = ref([])
 
 onMounted(async () => {
   const result = await getSpecialContractForUser(contractChatId)
-  clauses.value = result
+  clauses.value = result.clauses
+  round.value = result.round || 1
 })
 
 const handleSelectionChange = ({ id, selected }) => {
@@ -72,6 +75,11 @@ const confirm = async () => {
     console.log('[확인] AI 메시지 수신 여부:', store.aiMessageReceived)
 
     if (result.data.message === '특약 협상이 시작됩니다.') {
+      if (round.value >= 2) {
+        console.log(`[TermsReviewModal] round=${round.value} → postAutoNextRound 선행 호출`)
+        await postAutoNextRound(contractChatId)
+      }
+
       console.log('[TermsReviewModal] AI 메시지 수신됨 → startTermsFlow 실행')
       await startTermsFlow(contractChatId)
       store.clearAiMessageFlag()
