@@ -16,7 +16,7 @@
           v-for="item in items"
           :key="item"
           :label="item"
-          :modelValue="form[category].includes(item)"
+          :modelValue="(form[category] ?? []).includes(item)"
           @update:modelValue="(checked) => updateCheckbox(category, item, checked)"
         />
       </div>
@@ -26,38 +26,36 @@
 
 <script setup>
 import { reactive, watch } from 'vue'
-import BaseCheckBox from '@/components/common/BaseCheckBox.vue'
+import BaseCheckBox from '@/components/common/BaseCheckbox.vue'
 
-//  props 및 emit
+// props 및 emit
 const props = defineProps({
   modelValue: {
     type: Object,
-    default: () => ({
-      appliances: [],
-      kitchen: [],
-      heatingCooling: [],
-      furniture: [],
-      bathroom: [],
-      security: [],
-      etc: [],
-    }),
+    default: () => ({}),
   },
 })
 
 const emit = defineEmits(['update:modelValue'])
 
-//  양방향 바인딩용 로컬 form 상태
-const form = reactive({
-  appliances: [...props.modelValue.appliances],
-  kitchen: [...props.modelValue.kitchen],
-  heatingCooling: [...props.modelValue.heatingCooling],
-  furniture: [...props.modelValue.furniture],
-  bathroom: [...props.modelValue.bathroom],
-  security: [...props.modelValue.security],
-  etc: [...props.modelValue.etc],
+// 모든 카테고리 키
+const categories = [
+  'appliances',
+  'kitchen',
+  'heatingCooling',
+  'furniture',
+  'bathroom',
+  'security',
+  'etc',
+]
+
+// reactive form 초기화
+const form = reactive({})
+categories.forEach((key) => {
+  form[key] = [...(props.modelValue[key] ?? [])]
 })
 
-//  카테고리 → 한글 라벨
+// 카테고리 → 한글 라벨
 const categoryLabels = {
   appliances: '가전',
   kitchen: '주방',
@@ -68,7 +66,7 @@ const categoryLabels = {
   etc: '기타',
 }
 
-//  카테고리별 항목
+// 카테고리별 항목
 const utilityItems = {
   appliances: ['TV', '세탁기', '냉장고', '전자레인지'],
   kitchen: ['인덕션', '가스레인지', '싱크대'],
@@ -89,7 +87,7 @@ const utilityItems = {
   etc: ['엘리베이터', '주차', '반려동물 가능'],
 }
 
-//  체크박스 업데이트 핸들러
+// 체크박스 업데이트 핸들러
 function updateCheckbox(category, item, checked) {
   const list = form[category]
   const idx = list.indexOf(item)
@@ -98,21 +96,23 @@ function updateCheckbox(category, item, checked) {
   } else if (!checked && idx !== -1) {
     list.splice(idx, 1)
   }
-  emit('update:modelValue', { ...form })
+
+  // 깊은 복사해서 emit
+  emit('update:modelValue', JSON.parse(JSON.stringify(form)))
 }
 
-//  modelValue가 외부에서 변경되면 반영
+// 외부에서 modelValue 변경 시 내부 반영
 watch(
   () => props.modelValue,
   (newVal) => {
-    for (const key in newVal) {
-      form[key] = [...newVal[key]]
-    }
+    categories.forEach((key) => {
+      form[key] = [...(newVal[key] ?? [])]
+    })
   },
   { deep: true },
 )
 </script>
 
 <style scoped>
-/* Tailwind 사용 중이므로 커스텀 스타일은 불필요 */
+/* Tailwind 사용 중이므로 커스텀 스타일은 생략 */
 </style>

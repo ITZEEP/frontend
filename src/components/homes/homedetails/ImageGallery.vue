@@ -150,7 +150,7 @@ const prevImage = () => {
 }
 
 const handleImageError = (event) => {
-  event.target.src = '/fallback-image.png' // 대체 이미지 경로
+  event.target.src = '/fallback-image.png' // 대체 이미지 경로 (필요 시 수정)
 }
 
 const openReportModal = () => {
@@ -164,7 +164,7 @@ const closeReportModal = () => {
 
 const submitReport = () => {
   if (!selectedReason.value) return
-  // 여기에 서버 신고 API 호출 로직 추가 가능
+  // TODO: 서버 신고 API 호출 로직 추가 가능
   showReportModal.value = false
   showReportCompleteModal.value = true
   emit('report-submitted', selectedReason.value)
@@ -180,5 +180,5 @@ const toggleFavorite = () => {
 </script>
 
 <style scoped>
-/* 모달 배경 클릭 시 모달 닫기 위한 스타일 및 기타 필요한 스타일을 조정 가능 */
+/* 필요에 따라 스타일 조정 가능 */
 </style>
