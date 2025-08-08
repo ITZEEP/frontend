@@ -278,7 +278,7 @@ export const getContractChatOnlineStatus = async (contractChatId) => {
 export const getSpecialContractForUser = async (contractChatId) => {
   try {
     const result = await apiRequest(`/special-contract/${contractChatId}`)
-    return result.data.clauses
+    return result.data
   } catch (error) {
     console.error('getSpecialContractForUser 실패:', error)
   }
@@ -332,5 +332,15 @@ export const postAiMessage = async (contractChatId, order) => {
     return result
   } catch (error) {
     console.error('미완료 특약 문서 목록 조회 실패: ', error)
+  }
+}
+
+// 다음 라운드로 자동 진행
+export const postAutoNextRound = async (contractChatId) => {
+  try {
+    const result = await apiPost(`/special-contract/${contractChatId}/next-round-auto`)
+    return result
+  } catch (error) {
+    console.error('통과되지 않은 특약을 자동으로 다음 라운드 보내기 실패: ', error)
   }
 }
