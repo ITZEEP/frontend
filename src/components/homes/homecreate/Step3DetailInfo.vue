@@ -20,14 +20,14 @@ const handleChange = (key, value) => {
 }
 
 const homeDirectionOptions = [
-  { label: '남향', value: 'S' },
-  { label: '동향', value: 'E' },
-  { label: '서향', value: 'W' },
-  { label: '북향', value: 'N' },
-  { label: '남동향', value: 'SE' },
-  { label: '남서향', value: 'SW' },
-  { label: '북동향', value: 'NE' },
-  { label: '북서향', value: 'NW' },
+  { label: '남향', value: '남향' },
+  { label: '동향', value: '동향' },
+  { label: '서향', value: '서향' },
+  { label: '북향', value: '북향' },
+  { label: '남동향', value: '남동향' },
+  { label: '남서향', value: '남서향' },
+  { label: '북동향', value: '북동향' },
+  { label: '북서향', value: '북서향' },
 ]
 </script>
 

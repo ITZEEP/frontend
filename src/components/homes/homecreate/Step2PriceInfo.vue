@@ -98,7 +98,7 @@ function isChecked(label) {
       </div>
 
       <div>
-        <label class="block mb-1 text-sm font-medium">관리비 총액</label>
+        <label class="block mb-1 text-sm font-medium">관리비</label>
         <div class="relative w-full">
           <input
             type="text"
@@ -168,7 +168,7 @@ function isChecked(label) {
       </div>
 
       <div>
-        <label class="block mb-1 text-sm font-medium">관리비 총액</label>
+        <label class="block mb-1 text-sm font-medium">관리비 </label>
         <div class="relative w-full">
           <input
             type="text"

@@ -85,8 +85,24 @@ const handleSubmit = async () => {
         fee: 0,
       }))
 
+    // NaN 방지용 숫자 변환 함수
+    const safeNumber = (val) => {
+      const num = Number(val)
+      return isNaN(num) ? 0 : num
+    }
+
     const payload = {
       ...form,
+      depositPrice: safeNumber(form.depositPrice),
+      monthlyRent: safeNumber(form.monthlyRent),
+      maintenanceFee: safeNumber(form.maintenanceFee),
+      supplyArea: safeNumber(form.supplyArea),
+      exclusiveArea: safeNumber(form.exclusiveArea),
+      roomCnt: safeNumber(form.roomCnt),
+      bathroomCount: safeNumber(form.bathroomCount),
+      homeFloor: safeNumber(form.homeFloor),
+      buildingTotalFloors: safeNumber(form.buildingTotalFloors),
+
       options: Array.isArray(form.options) ? form.options.join(',') : '',
       images: form.images.map((img) => img.url),
       maintenanceFees: maintenanceFees,

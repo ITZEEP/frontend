@@ -6,7 +6,8 @@ const API_BASE_URL = '/api/homes'
 export async function fetchListings(params = {}) {
   try {
     const response = await api.get(API_BASE_URL, { params })
-    return response.data.data // 백엔드가 { success, data, ... } 형태라면 data만 반환
+    console.log('전체 매물 리스트 조회 응답:', response.data)
+    return response.data.content // content 배열만 반환하도록 변경
   } catch (error) {
     console.error('전체 매물 리스트 조회 실패', error)
     throw error

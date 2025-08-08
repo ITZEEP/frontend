@@ -1,6 +1,5 @@
 <template>
   <div class="p-6 bg-white rounded-lg shadow-md space-y-6 text-gray-800">
-    <!-- 매물 정보 -->
     <section>
       <h2 class="font-bold text-lg mb-4 border-b border-gray-300 pb-2">매물 정보</h2>
       <div class="grid grid-cols-2 md:grid-cols-3 gap-6 text-sm">
@@ -58,7 +57,6 @@
       </div>
     </section>
 
-    <!-- 관리비 정보 -->
     <section>
       <h2 class="font-bold text-lg mb-4 border-b border-gray-300 pb-2">관리비 정보</h2>
       <div class="space-y-3 text-sm">
@@ -72,25 +70,22 @@
         <div>
           <div class="text-gray-600 mb-2">관리비 포함 항목</div>
           <div class="flex flex-wrap gap-2">
+            <span class="bg-gray-100 text-xs px-3 py-1 rounded-full">전기료</span>
+            <span class="bg-gray-100 text-xs px-3 py-1 rounded-full">수도료</span>
+            <span class="bg-gray-100 text-xs px-3 py-1 rounded-full">가스료</span>
             <span class="bg-gray-100 text-xs px-3 py-1 rounded-full">인터넷</span>
-            <span class="bg-gray-100 text-xs px-3 py-1 rounded-full">TV</span>
-            <span class="bg-gray-100 text-xs px-3 py-1 rounded-full">수도</span>
-            <span class="bg-gray-100 text-xs px-3 py-1 rounded-full">주차</span>
-            <span class="bg-gray-100 text-xs px-3 py-1 rounded-full">난방</span>
-            <span class="bg-gray-100 text-xs px-3 py-1 rounded-full">청소</span>
+            <span class="bg-gray-100 text-xs px-3 py-1 rounded-full">청소비</span>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- 시설 정보 -->
     <section>
       <h2 class="font-bold text-lg mb-4 border-b border-gray-300 pb-2">시설 정보</h2>
 
-      <!-- 건물 시설 -->
       <div class="mb-6">
         <h3 class="font-semibold mb-3 text-sm text-gray-600">건물 시설</h3>
-        <div class="grid grid-cols-4 gap-4 text-center text-xs">
+        <div class="grid grid-cols-5 gap-5 text-center text-xs">
           <div
             class="flex flex-col items-center bg-gray-100 px-3 py-2 rounded-md shadow-sm text-gray-700"
           >
@@ -110,21 +105,22 @@
             <span class="text-xs font-medium">전체난방</span>
           </div>
           <div
+            v-if="listing.is_parking_available"
             class="flex flex-col items-center bg-gray-100 px-3 py-2 rounded-md shadow-sm text-gray-700"
           >
             <ParkingIcon class="text-yellow-primary w-4 h-4 mb-1" />
             <span class="text-xs font-medium">주차가능</span>
           </div>
-        </div>
-        <div
-          class="flex flex-col items-center bg-gray-100 px-3 py-2 rounded-md shadow-sm text-gray-700"
-        >
-          <CenterHeatingIcon class="text-yellow-primary w-4 h-4 mb-1" />
-          <span class="text-xs font-medium">반려동물</span>
+          <div
+            v-if="listing.is_pet"
+            class="flex flex-col items-center bg-gray-100 px-3 py-2 rounded-md shadow-sm text-gray-700"
+          >
+            <ParkingIcon class="text-yellow-primary w-4 h-4 mb-1" />
+            <span class="text-xs font-medium">반려동물</span>
+          </div>
         </div>
       </div>
 
-      <!-- 내부 시설 -->
       <div class="mb-6">
         <h3 class="font-semibold mb-3 text-sm text-gray-600">내부 시설</h3>
         <div class="grid grid-cols-6 gap-4 text-center text-xs">
@@ -139,7 +135,6 @@
         </div>
       </div>
 
-      <!-- 보안 시설 -->
       <div>
         <h3 class="font-semibold mb-3 text-sm text-gray-600">보안 시설</h3>
         <div class="grid grid-cols-6 gap-4 text-center text-xs">
