@@ -57,6 +57,9 @@ onMounted(async () => {
   const result = await getSpecialContractForUser(contractChatId)
   clauses.value = result.clauses
   round.value = result.round || 1
+
+  // store에 저장
+  store.setRound(round.value)
 })
 
 const handleSelectionChange = ({ id, selected }) => {
