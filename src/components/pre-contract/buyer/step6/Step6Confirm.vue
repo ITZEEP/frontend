@@ -277,59 +277,14 @@
 
 <script setup>
 import { ref, onMounted, watchEffect } from 'vue'
-import { ref, onMounted, watchEffect } from 'vue'
 import buyerApi from '@/apis/pre-contract-buyer.js'
 import { useRoute } from 'vue-router'
 import { usePreContractStore } from '@/stores/preContract'
-import { usePreContractStore } from '@/stores/preContract'
 
-const store = usePreContractStore()
 const store = usePreContractStore()
 const route = useRoute()
 const contractChatId = route.params.id
 
-// 몽고 DB로 보내기
-// const saveMongoDB = async () => {
-//   try {
-//     await buyerApi.saveMongoDB(contractChatId)
-//   } catch (error) {
-//     console.error('몽고 DB로 보내기 실패 ❌', error)
-//   }
-// }
-
-function translateValue(type, map) {
-  return map[type] || type
-}
-
-const enums = {
-  riskType: {
-    SAFE: '안전',
-    WARN: '주의',
-    DANGER: '위험',
-  },
-  contractDuration: {
-    YEAR_1: '1년',
-    YEAR_2: '2년',
-    YEAR_OVER_2: '2년 이상',
-  },
-  renewalIntent: {
-    YES: '예',
-    NO: '아니오',
-    UNDECIDED: '미정',
-  },
-  nonresidentialUsePlan: {
-    BUSINESS: '사업',
-    LODGING: '숙박',
-    NONE: '없음',
-  },
-  plan: {
-    true: '계획 있음',
-    false: '계획 없음',
-  },
-  needed: {
-    true: '필요',
-    false: '필요 없음',
-  },
 // const saveMongoDB = async () => {
 //   try {
 //     await buyerApi.saveMongoDB(contractChatId)
@@ -415,8 +370,6 @@ onMounted(async () => {
       applianceInstallationPlan: data.applianceInstallationPlan,
       hasParking: data.hasParking,
       parkingCount: data.parkingCount,
-      hasParking: data.hasParking,
-      parkingCount: data.parkingCount,
       hasPet: data.hasPet,
       petInfo: data.petInfo,
       petCount: data.petCount,
@@ -434,11 +387,6 @@ onMounted(async () => {
     console.error('전체 정보 조회 실패 ❌', err)
   }
 })
-
-function formatPrice(value) {
-  if (typeof value !== 'number') return value
-  return value.toLocaleString() + '원'
-}
 
 function formatPrice(value) {
   if (typeof value !== 'number') return value
@@ -477,8 +425,6 @@ const lifeInfo = ref({
   facilityRepairNeeded: null, // Boolean
   interiorCleaningNeeded: null, // Boolean
   applianceInstallationPlan: null, // Boolean
-  hasParking: null,
-  parkingCount: null,
   hasParking: null,
   parkingCount: null,
   hasPet: null, // Boolean
