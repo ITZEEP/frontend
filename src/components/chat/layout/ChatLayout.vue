@@ -1,7 +1,11 @@
 <template>
   <div class="flex h-full">
     <div class="w-1/3 border-r">
-      <ChatList @selectRoom="handleRoomSelection" ref="chatListRef" />
+      <ChatList
+        @selectRoom="handleRoomSelection"
+        :initial-room-id="initialRoomId"
+        ref="chatListRef"
+      />
     </div>
     <div class="flex-1">
       <!--  선택된 채팅방이 있을 때만 렌더링 -->
@@ -136,6 +140,13 @@ import { ref } from 'vue'
 import ChatList from '@/components/chat/chatList/ChatList.vue'
 import ChatRoom from '@/components/chat/chatRoom/ChatRoom.vue'
 import IconChatWait from '@/components/icons/IconChatWait.vue'
+
+defineProps({
+  initialRoomId: {
+    type: String,
+    default: null,
+  },
+})
 
 const selectedRoom = ref(null) //  초기값을 null로 설정
 const chatListRef = ref(null)

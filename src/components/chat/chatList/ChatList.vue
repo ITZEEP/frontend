@@ -63,6 +63,13 @@ import { ref, computed, onMounted, onUnmounted, nextTick, watch, provide } from 
 import ChatItem from './ChatItem.vue'
 import { getOwnerChatRooms, getBuyerChatRooms } from '@/apis/chatApi'
 
+const props = defineProps({
+  initialRoomId: {
+    type: String,
+    default: null,
+  },
+})
+
 const emit = defineEmits(['selectRoom'])
 
 const ownerRooms = ref([])
@@ -480,9 +487,61 @@ function setupFallbackMethod() {
   }
 }
 
+// 초기 채팅방 선택 함수
+async function selectInitialRoom() {
+  if (!props.initialRoomId) return
+
+  // 모든 채팅방에서 initialRoomId와 일치하는 방 찾기
+  const findAndSelectRoom = () => {
+    const allRooms = [...ownerRooms.value, ...buyerRooms.value]
+    const targetRoom = allRooms.find(
+      (room) => String(room.chatRoomId) === String(props.initialRoomId),
+    )
+
+    if (targetRoom) {
+      console.log('초기 채팅방 찾음:', targetRoom)
+      selectRoom(targetRoom)
+
+      // 해당 채팅방이 있는 탭으로 자동 전환
+      const isOwnerRoom = ownerRooms.value.some(
+        (room) => String(room.chatRoomId) === String(props.initialRoomId),
+      )
+      if (isOwnerRoom && selectedTab.value !== 'owner') {
+        selectedTab.value = 'owner'
+      } else if (!isOwnerRoom && selectedTab.value !== 'buyer') {
+        selectedTab.value = 'buyer'
+      }
+
+      return true
+    }
+    return false
+  }
+
+  // 즉시 시도
+  if (findAndSelectRoom()) return
+
+  // 데이터 로드 후 재시도 (최대 3초 대기)
+  let retryCount = 0
+  const maxRetries = 6
+  const retryInterval = setInterval(() => {
+    if (findAndSelectRoom() || retryCount >= maxRetries) {
+      clearInterval(retryInterval)
+      if (retryCount >= maxRetries) {
+        console.warn('초기 채팅방을 찾을 수 없습니다:', props.initialRoomId)
+      }
+    }
+    retryCount++
+  }, 500)
+}
+
 onMounted(async () => {
   await setCurrentUserId()
   await loadChatRooms()
+
+  // 초기 채팅방 선택
+  if (props.initialRoomId) {
+    await selectInitialRoom()
+  }
 
   if (currentUserId.value) {
     await setupWebSocketSubscriptions()

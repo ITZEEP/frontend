@@ -28,6 +28,9 @@ async function apiRequest(url, options = {}) {
 
     if (options.body) {
       config.data = JSON.parse(options.body)
+    } else if (options.method?.toLowerCase() === 'post' && !options.body) {
+      // POST 요청인데 body가 없으면 빈 객체 전송
+      config.data = {}
     }
 
     const response = await api(config)
@@ -49,9 +52,10 @@ export async function getBuyerChatRooms() {
 }
 
 export async function createChatRoom(propertyId) {
-  return apiRequest('/rooms', {
+  // propertyId를 query parameter로 전달
+  const url = propertyId ? `/rooms?propertyId=${propertyId}` : '/rooms'
+  return apiRequest(url, {
     method: 'POST',
-    body: JSON.stringify({ propertyId }),
   })
 }
 

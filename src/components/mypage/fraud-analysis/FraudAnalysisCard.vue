@@ -13,7 +13,7 @@
       </div>
       
       <div class="analysis-type">
-        {{ buildingType }}
+        {{ buildingType }} {{ transactionInfo }}
       </div>
       
       <div class="analysis-date">분석일: {{ formattedDate }}</div>
@@ -58,6 +58,26 @@ const buildingType = computed(() => {
     TWO_ROOM: '투룸'
   }
   return labels[props.analysis.buildingType] || props.analysis.buildingType
+})
+
+// 거래 정보
+const transactionInfo = computed(() => {
+  const type = props.analysis.transactionType
+  
+  if (type === '월세' && props.analysis.depositPrice != null && props.analysis.monthlyRent != null) {
+    const deposit = Math.floor(props.analysis.depositPrice / 10000)
+    const monthly = Math.floor(props.analysis.monthlyRent / 10000)
+    return `· 월세 ${deposit}/${monthly}만원`
+  } else if (type === '전세' && props.analysis.depositPrice != null) {
+    const price = Math.floor(props.analysis.depositPrice / 10000)
+    if (price >= 10000) {
+      const billion = Math.floor(price / 10000)
+      const remainder = price % 10000
+      return remainder === 0 ? `· 전세 ${billion}억원` : `· 전세 ${billion}억 ${remainder}만원`
+    }
+    return `· 전세 ${price}만원`
+  }
+  return type ? `· ${type}` : ''
 })
 
 // 위험도 라벨
