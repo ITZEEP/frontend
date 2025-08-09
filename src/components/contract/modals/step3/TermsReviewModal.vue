@@ -32,10 +32,12 @@ import {
   putRecentData,
   postAiMessage,
   postAutoNextRound,
+  getAllRoundsSpecialContract,
 } from '@/apis/contractChatApi'
 import { onMounted, ref } from 'vue'
 import { useModalStore } from '@/stores/modal'
 import { useSpecialContractStore } from '@/stores/useContractTermStore'
+import FinalClauseSelectModal from './FinalClauseSelectModal.vue'
 
 const route = useRoute()
 const contractChatId = route.query.id || route.params.id
@@ -72,12 +74,43 @@ const confirm = async () => {
     console.log('제출할 데이터:', selections.value)
 
     const result = await postSpecialContractSelection(contractChatId, selections.value)
+    const message = result?.data?.message
     modalStore.close()
 
     console.log('[확인] 응답 메시지:', result.data.message)
     console.log('[확인] AI 메시지 수신 여부:', store.aiMessageReceived)
 
-    if (result.data.message === '특약 협상이 시작됩니다.') {
+    if (message === '모든 특약이 완료되었습니다!') {
+      console.log('✅ 모든 특약 완료! → 최종안 선택 모달 오픈')
+
+      const res = await getAllRoundsSpecialContract(contractChatId)
+
+      if (res && res.rounds) {
+        const clausesByRound = {}
+
+        Object.entries(res.rounds).forEach(([key, roundData]) => {
+          if (roundData && roundData.clauses?.length > 0) {
+            const label = roundData.round === 1 ? '초안' : `${roundData.round - 1}회차`
+            clausesByRound[label] = roundData.clauses
+          }
+        })
+
+        modalStore.open(FinalClauseSelectModal, {
+          clausesByRound,
+          onClose: () => modalStore.close(),
+          onSelect: (selectedRound) => {
+            console.log('최종 선택된 라운드:', selectedRound)
+            modalStore.close()
+          },
+        })
+      } else {
+        console.warn('getAllRoundsSpecialContract 응답 없음 또는 비어있음')
+      }
+
+      return
+    }
+
+    if (message === '특약 협상이 시작됩니다.') {
       if (round.value >= 2) {
         console.log(`[TermsReviewModal] round=${round.value} → postAutoNextRound 선행 호출`)
         await postAutoNextRound(contractChatId)

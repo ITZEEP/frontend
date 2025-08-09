@@ -344,3 +344,13 @@ export const postAutoNextRound = async (contractChatId) => {
     console.error('통과되지 않은 특약을 자동으로 다음 라운드 보내기 실패: ', error)
   }
 }
+
+// 최종 특약 조율 완료 후 모든 라운드 정보
+export const getAllRoundsSpecialContract = async (contractChatId) => {
+  try {
+    const result = await apiRequest(`/special-contract/${contractChatId}/all-rounds`)
+    return result.data
+  } catch (error) {
+    console.error('최종 특약 확정 후 모든 라운드 정보 조회 실패: ', error)
+  }
+}

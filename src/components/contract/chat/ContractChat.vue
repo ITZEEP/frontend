@@ -51,6 +51,19 @@
             />
           </template>
 
+          <template v-else-if="message.senderId === AI_SENDER_COMPLETE">
+            <AiChatMessage
+              :message="message.content"
+              :buttons="[
+                {
+                  label: '특약 수정 과정 확인하기',
+                  action: 'openTermsReview',
+                },
+              ]"
+              @action="handleAiAction"
+            />
+          </template>
+
           <template v-else>
             <UserChatMessage
               :name="getMessageSenderName(message)"
@@ -291,6 +304,7 @@ const getLoadingMessage = () => {
 // 🔧 추가: 메시지 발신자 이름 가져오기
 const AI_SENDER_ID = 9999 // JavaScript의 최대 안전 정수
 const AI_SENDER_BUTTON = 9998
+const AI_SENDER_COMPLETE = 9997
 
 // 2. getMessageSenderName 함수 수정
 const getMessageSenderName = (message) => {
