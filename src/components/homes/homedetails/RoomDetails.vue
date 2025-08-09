@@ -117,7 +117,7 @@
             v-if="listing.isPet"
             class="flex flex-col items-center bg-gray-100 px-3 py-2 rounded-md shadow-sm text-gray-700"
           >
-            <DogIcon class="text-yellow-primary w-4 h-4 mb-1" />
+            <!--            <DogIcon class="text-yellow-primary w-4 h-4 mb-1" />-->
             <span class="text-xs font-medium">반려동물</span>
           </div>
         </div>
