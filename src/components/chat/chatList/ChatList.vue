@@ -151,7 +151,6 @@ async function loadChatRooms() {
   }
 }
 
-// 시간순 정렬 헬퍼 함수
 function sortRoomsByTime(rooms) {
   return rooms
     .filter((room) => room && room.chatRoomId)
@@ -162,17 +161,91 @@ function sortRoomsByTime(rooms) {
     })
 }
 
-// 방 선택 (현재 채팅방 ID 업데이트)
 function selectRoom(room) {
   if (!room || !room.chatRoomId) {
     console.error('유효하지 않은 채팅방:', room)
     return
   }
 
-  // 현재 선택된 채팅방 ID 업데이트
-  currentChatRoomId.value = room.chatRoomId
+  if (currentChatRoomId.value === room.chatRoomId) {
+    console.log('현재 채팅방 재클릭 - 채팅방 나가기')
 
-  emit('selectRoom', room)
+    emit('selectRoom', null)
+
+    setTimeout(() => {
+      handleLeaveChatRoom(room.chatRoomId)
+      cleanupChatRoomSubscriptions(room.chatRoomId)
+      currentChatRoomId.value = null
+    }, 100)
+
+    return
+  }
+
+  console.log('새 채팅방 선택:', room.chatRoomId)
+
+  if (currentChatRoomId.value) {
+    const previousRoomId = currentChatRoomId.value
+    emit('selectRoom', null)
+
+    setTimeout(() => {
+      handleLeaveChatRoom(previousRoomId)
+      cleanupChatRoomSubscriptions(previousRoomId)
+
+      // 새 채팅방 선택
+      currentChatRoomId.value = room.chatRoomId
+      markRoomAsRead(room.chatRoomId)
+      emit('selectRoom', room)
+    }, 100)
+  } else {
+    currentChatRoomId.value = room.chatRoomId
+    markRoomAsRead(room.chatRoomId)
+    emit('selectRoom', room)
+  }
+}
+
+async function cleanupChatRoomSubscriptions(chatRoomId) {
+  try {
+    const { default: websocketService } = await import('@/apis/websocket')
+
+    const topicsToCleanup = [
+      `/topic/chatroom/${chatRoomId}`,
+      `/topic/chatroom/${chatRoomId}/typing`,
+      `/topic/chatroom/${chatRoomId}/status`,
+    ]
+
+    topicsToCleanup.forEach((topic) => {
+      websocketService.offMessage(topic)
+      console.log('🧹 토픽 구독 정리:', topic)
+    })
+  } catch (error) {
+    console.error('채팅방 구독 정리 실패:', error)
+  }
+}
+
+async function handleLeaveChatRoom(chatRoomId) {
+  if (!currentUserId.value || !chatRoomId) return
+
+  try {
+    console.log('ChatList에서 명확한 채팅방 퇴장 처리:', {
+      userId: currentUserId.value,
+      chatRoomId: chatRoomId,
+    })
+
+    const { default: websocketService } = await import('@/apis/websocket')
+
+    websocketService.sendMessage('/app/user/online', {
+      userId: currentUserId.value,
+      isOnline: false,
+      chatRoomId: chatRoomId,
+    })
+
+    websocketService.sendMessage('/app/chat/leave', {
+      userId: currentUserId.value,
+      chatRoomId: chatRoomId,
+    })
+  } catch (error) {
+    console.error('채팅방 퇴장 알림 실패:', error)
+  }
 }
 
 // 재시도
@@ -180,7 +253,6 @@ function retryLoad() {
   loadChatRooms()
 }
 
-// 핵심 수정: 직접 객체 속성 변경으로 반응성 보장
 function updateRoomLastMessage(chatRoomId, message, timestamp, senderId, unreadCountFromBackend) {
   const roomIdStr = String(chatRoomId)
 
@@ -199,7 +271,8 @@ function updateRoomLastMessage(chatRoomId, message, timestamp, senderId, unreadC
   let wasUpdated = false
   const currentTime = Date.now()
 
-  // 핵심 수정: 직접 객체 속성 변경 + 정렬
+  const isCurrentRoom = String(currentChatRoomId.value) === roomIdStr
+
   const updateRoomList = (roomListRef, listName) => {
     const roomIndex = roomListRef.value.findIndex((room) => String(room.chatRoomId) === roomIdStr)
     if (roomIndex === -1) {
@@ -213,16 +286,31 @@ function updateRoomLastMessage(chatRoomId, message, timestamp, senderId, unreadC
       return false
     }
 
-    // 직접 속성 변경 (Vue 반응성 시스템이 감지)
-    targetRoom.lastMessage = message
-    targetRoom.lastMessageAt = timestamp || new Date().toISOString()
-    targetRoom.unreadMessageCount =
-      unreadCountFromBackend !== undefined
-        ? unreadCountFromBackend
-        : targetRoom.unreadMessageCount || 0
+    if (message && message !== targetRoom.lastMessage) {
+      targetRoom.lastMessage = message
+
+      if (timestamp) {
+        targetRoom.lastMessageAt = timestamp
+      } else if (!targetRoom.lastMessageAt) {
+        targetRoom.lastMessageAt = new Date().toISOString()
+      }
+    }
+
+    if (isCurrentRoom) {
+      targetRoom.unreadMessageCount = 0
+      console.log(`현재 접속 중인 채팅방 ${roomIdStr} - 읽지 않은 메시지 수 0으로 유지`)
+    } else {
+      targetRoom.unreadMessageCount =
+        unreadCountFromBackend !== undefined
+          ? unreadCountFromBackend
+          : (targetRoom.unreadMessageCount || 0) + 1
+      console.log(
+        `접속하지 않은 채팅방 ${roomIdStr} - 읽지 않은 메시지 수: ${targetRoom.unreadMessageCount}`,
+      )
+    }
+
     targetRoom._lastUpdated = currentTime
 
-    // 최신 메시지를 맨 위로 이동 (시간 순 정렬 유지)
     if (roomIndex !== 0) {
       const updatedRoom = roomListRef.value.splice(roomIndex, 1)[0]
       roomListRef.value.unshift(updatedRoom)
@@ -232,7 +320,6 @@ function updateRoomLastMessage(chatRoomId, message, timestamp, senderId, unreadC
     return true
   }
 
-  // 두 목록 모두 업데이트 시도
   if (updateRoomList(ownerRooms, '임대인')) {
     wasUpdated = true
   }
@@ -249,7 +336,6 @@ function updateRoomLastMessage(chatRoomId, message, timestamp, senderId, unreadC
   }
 }
 
-// 읽지 않은 메시지 수 초기화
 function markRoomAsRead(chatRoomId) {
   let wasMarked = false
   const currentTime = Date.now()
@@ -276,7 +362,6 @@ function markRoomAsRead(chatRoomId) {
   return wasMarked
 }
 
-// 웹소켓 메시지 핸들러
 function handleWebSocketMessage(message) {
   try {
     let data
@@ -294,7 +379,6 @@ function handleWebSocketMessage(message) {
       return
     }
 
-    // ChatRoomUpdateDto 구조 확인
     if (data.roomId !== undefined && data.lastMessage !== undefined) {
       updateRoomLastMessage(
         data.roomId,
@@ -303,9 +387,7 @@ function handleWebSocketMessage(message) {
         data.senderId,
         data.unreadCount,
       )
-    }
-    // 일반 채팅 메시지 처리
-    else if (data.chatRoomId && data.content) {
+    } else if (data.chatRoomId && data.content) {
       updateRoomLastMessage(
         data.chatRoomId,
         data.content,
@@ -313,9 +395,7 @@ function handleWebSocketMessage(message) {
         data.senderId,
         data.unreadCount,
       )
-    }
-    // 읽음 상태 업데이트 처리
-    else if (data.type === 'READ_STATUS' && data.chatRoomId) {
+    } else if (data.type === 'READ_STATUS' && data.chatRoomId) {
       markRoomAsRead(data.chatRoomId)
     } else {
       console.log('ℹ기타 메시지 타입:', data)
@@ -325,17 +405,14 @@ function handleWebSocketMessage(message) {
   }
 }
 
-// 현재 사용자 ID 설정 (API 호출로 변경)
 async function setCurrentUserId() {
   try {
-    // 먼저 localStorage에서 시도
     const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
     if (userInfo.userId || userInfo.id) {
       currentUserId.value = userInfo.userId || userInfo.id
       return
     }
 
-    // localStorage에 없으면 API 호출
     const { getCurrentUser } = await import('@/apis/chatApi')
     const response = await getCurrentUser()
 
@@ -350,7 +427,6 @@ async function setCurrentUserId() {
   }
 }
 
-// 반응성 강화를 위한 watch
 watch(
   [ownerRooms, buyerRooms],
   () => {
@@ -359,7 +435,6 @@ watch(
   { deep: true },
 )
 
-// 컴포넌트 외부에서 접근 가능한 메서드들
 defineExpose({
   updateRoomLastMessage,
   markRoomAsRead,
@@ -369,7 +444,6 @@ defineExpose({
   },
 })
 
-// 웹소켓 구독 설정
 async function setupWebSocketSubscriptions() {
   try {
     const { default: websocketService } = await import('@/apis/websocket')
@@ -377,14 +451,12 @@ async function setupWebSocketSubscriptions() {
       await websocketService.connect()
     }
 
-    // 사용자별 채팅방 목록 업데이트 토픽 구독
     const userTopic = `/topic/user/${currentUserId.value}/chatrooms`
     console.log('사용자 구독:', userTopic)
 
     websocketService.onMessage(userTopic, (message) => {
       console.log('사용자 토픽에서 메시지 수신:', message)
 
-      // ChatRoomUpdateDto 구조에 맞게 직접 처리
       if (message.roomId !== undefined && message.lastMessage !== undefined) {
         updateRoomLastMessage(
           message.roomId,
@@ -403,7 +475,6 @@ async function setupWebSocketSubscriptions() {
   }
 }
 
-// 대체 방법: 전역 함수 등록
 function setupFallbackMethod() {
   if (window) {
     window.updateChatRoomList = (chatRoomId, message, timestamp, senderId, unreadCount) => {
@@ -460,8 +531,8 @@ async function selectInitialRoom() {
 }
 
 onMounted(async () => {
-  await setCurrentUserId() // await 추가
-  await loadChatRooms() // await 추가
+  await setCurrentUserId()
+  await loadChatRooms()
 
   // 초기 채팅방 선택
   if (props.initialRoomId) {

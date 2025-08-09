@@ -2,14 +2,20 @@
   <div class="w-full">
     <div class="relative w-full">
       <img
+        v-if="images.length > 0"
         :src="images[currentIndex]"
         alt="매물 이미지"
         class="w-full h-80 object-cover rounded-md"
         @error="handleImageError"
         loading="lazy"
       />
+      <div
+        v-else
+        class="w-full h-80 bg-gray-200 flex items-center justify-center text-gray-500 rounded-md"
+      >
+        이미지 없음
+      </div>
 
-      <!-- 이전 버튼 -->
       <button
         @click="prevImage"
         @keydown.left.prevent="prevImage"
@@ -19,7 +25,6 @@
         ◀
       </button>
 
-      <!-- 다음 버튼 -->
       <button
         @click="nextImage"
         @keydown.right.prevent="nextImage"
@@ -30,7 +35,6 @@
       </button>
     </div>
 
-    <!-- 신고/찜하기 버튼 -->
     <div class="flex justify-end gap-2 mt-2">
       <button
         @click="openReportModal"
@@ -51,7 +55,6 @@
       </button>
     </div>
 
-    <!-- 신고 사유 선택 모달 -->
     <div
       v-if="showReportModal"
       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
@@ -93,7 +96,6 @@
       </div>
     </div>
 
-    <!-- 신고 완료 알림 모달 -->
     <div
       v-if="showReportCompleteModal"
       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
