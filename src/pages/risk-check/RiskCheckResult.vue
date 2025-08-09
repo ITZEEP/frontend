@@ -375,14 +375,14 @@ watch(dataNotFound, (newValue) => {
 </script>
 
 <template>
-  <div class="py-8 min-h-0 px-4">
+  <div class="py-4 sm:py-6 lg:py-8 min-h-0 px-3 sm:px-4">
     <div class="max-w-[1024px] mx-auto">
       <!-- Header -->
-      <div class="flex items-center gap-4 mb-8">
+      <div class="flex items-center gap-2 sm:gap-4 mb-4 sm:mb-6 lg:mb-8">
         <button @click="goBack" class="p-1 text-gray-600 hover:text-gray-800 transition-colors">
           <IconChevronLeft class="w-[17.5px] h-7" />
         </button>
-        <h1 class="text-3xl font-bold text-gray-warm-700">AI 위험도 분석 결과</h1>
+        <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-warm-700">AI 위험도 분석 결과</h1>
       </div>
 
       <!-- Loading State -->
