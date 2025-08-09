@@ -95,15 +95,28 @@ const updatePropertyInfo = () => {
     ...formData.value,
     propertyPrice: isJeonse.value
       ? calculateJeonsePrice()
-      : parseFormattedNumber(formData.value.propertyPrice) * MANWON_TO_WON,
-    monthlyRent: parseFormattedNumber(formData.value.monthlyRent) * MANWON_TO_WON,
+      : parseInt(formData.value.propertyPrice || 0) * MANWON_TO_WON,
+    monthlyRent: isWolse.value 
+      ? parseInt(formData.value.monthlyRent || 0) * MANWON_TO_WON
+      : 0,
   }
   emit('update:property-info', propertyInfo)
 }
 
 // Event Handlers
 const handleFormattedInput = (field) => (event) => {
-  formData.value[field] = formatPrice(event.target.value)
+  // 숫자가 아닌 문자 입력 방지
+  const value = event.target.value
+  const numericValue = value.replace(/[^0-9]/g, '')
+  
+  // 숫자만 입력되도록 처리
+  if (numericValue !== value.replace(/,/g, '')) {
+    event.target.value = formatPrice(numericValue)
+    formData.value[field] = formatPrice(numericValue)
+  } else {
+    formData.value[field] = formatPrice(value)
+  }
+  
   updatePropertyInfo()
 }
 
@@ -226,9 +239,10 @@ updatePropertyInfo()
           </label>
           <div class="relative">
             <BaseInput
-              :model-value="formData.propertyPrice"
-              placeholder="예: 5000"
-              @input="handleFormattedInput('propertyPrice')"
+              v-model="formData.propertyPrice"
+              type="number"
+              placeholder="5000"
+              @input="updatePropertyInfo"
               class="w-full pr-12"
             />
             <div class="absolute inset-y-0 right-0 flex items-center pr-3">
@@ -242,9 +256,10 @@ updatePropertyInfo()
           </label>
           <div class="relative">
             <BaseInput
-              :model-value="formData.monthlyRent"
-              placeholder="예: 50"
-              @input="handleFormattedInput('monthlyRent')"
+              v-model="formData.monthlyRent"
+              type="number"
+              placeholder="50"
+              @input="updatePropertyInfo"
               class="w-full pr-12"
             />
             <div class="absolute inset-y-0 right-0 flex items-center pr-3">
