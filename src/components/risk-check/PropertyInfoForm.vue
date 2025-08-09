@@ -1,7 +1,11 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import BaseInput from '@/components/common/BaseInput.vue'
+import BaseButton from '@/components/common/BaseButton.vue'
 import CustomSelect from '@/components/common/CustomSelect.vue'
+import BaseModal from '@/components/common/BaseModal.vue'
+import SearchAddress from '@/components/common/SearchAddress.vue'
+import { useModalStore } from '@/stores/modal'
 
 const props = defineProps({
   propertyInfo: {
@@ -11,6 +15,9 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:property-info'])
+
+const modalStore = useModalStore()
+const showAddressModal = ref(false)
 
 // Constants
 const LEASE_TYPE = {
@@ -144,6 +151,19 @@ watch(() => formData.value.leaseType, (newType, oldType) => {
   updatePropertyInfo()
 })
 
+// Address selection handler
+const handleAddressSelect = (address) => {
+  formData.value.address = address
+  showAddressModal.value = false
+  modalStore.close()
+  updatePropertyInfo()
+}
+
+const openAddressSearch = () => {
+  showAddressModal.value = true
+  modalStore.open()
+}
+
 // Initialize
 updatePropertyInfo()
 </script>
@@ -161,12 +181,27 @@ updatePropertyInfo()
         <label class="block text-sm font-medium text-gray-700 mb-2">
           주소 <span class="text-red-500">*</span>
         </label>
-        <BaseInput
-          v-model="formData.address"
-          placeholder="예: 서울특별시 강남구 테헤란로 123"
-          @input="updatePropertyInfo"
-          class="w-full"
-        />
+        <div class="flex gap-2">
+          <div class="flex-1 relative">
+            <BaseInput
+              v-model="formData.address"
+              placeholder="클릭하여 주소를 검색해주세요"
+              class="w-full cursor-pointer"
+              readonly
+              @click="openAddressSearch"
+              @keydown.prevent
+              @paste.prevent
+            />
+            <!-- 투명한 오버레이로 입력 완전 차단 -->
+            <div 
+              class="absolute inset-0 cursor-pointer" 
+              @click="openAddressSearch"
+            ></div>
+          </div>
+          <BaseButton variant="primary" @click="openAddressSearch">
+            주소 검색
+          </BaseButton>
+        </div>
       </div>
 
       <!-- 거래 유형과 주거 유형 -->
@@ -332,5 +367,10 @@ updatePropertyInfo()
       </div>
     </div>
   </div>
+
+  <!-- Address Search Modal -->
+  <BaseModal v-if="showAddressModal" @close="showAddressModal = false">
+    <SearchAddress @select="handleAddressSelect" />
+  </BaseModal>
 </template>
 
