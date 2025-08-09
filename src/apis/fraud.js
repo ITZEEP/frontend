@@ -1,6 +1,6 @@
 import api from './index'
 
-const REQUEST_TIMEOUT = 30000
+const REQUEST_TIMEOUT = 100000
 
 export const fraudApi = {
   // 위험도 체크 목록 조회
