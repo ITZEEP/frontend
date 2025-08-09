@@ -8,7 +8,7 @@
             <NetAreaIcon class="text-yellow-primary" />
             전용면적
           </div>
-          <div class="text-black font-medium">{{ listing.exclusiveArea }}㎡</div>
+          <div class="text-black font-medium">{{ listing?.exclusiveArea ?? 0 }}㎡</div>
         </div>
 
         <div>
@@ -16,7 +16,7 @@
             <GrossAreaIcon class="text-yellow-primary" />
             공급면적
           </div>
-          <div class="text-black font-medium">{{ listing.supplyArea }}㎡</div>
+          <div class="text-black font-medium">{{ listing?.supplyArea ?? 0 }}㎡</div>
         </div>
 
         <div>
@@ -25,7 +25,7 @@
             현재층 / 총층
           </div>
           <div class="text-black font-medium">
-            {{ listing.homeFloor }}층 / {{ listing.buildingTotalFloors }}층
+            {{ listing?.homeFloor }}층 / {{ listing?.buildingTotalFloors }}층
           </div>
         </div>
 
@@ -34,7 +34,7 @@
             <CalendarIcon class="text-yellow-primary" />
             사용승인일
           </div>
-          <div class="text-black font-medium">{{ listing.buildDate }}</div>
+          <div class="text-black font-medium">{{ listing?.buildDate }}</div>
         </div>
 
         <div>
@@ -51,7 +51,7 @@
             방 / 욕실 수
           </div>
           <div class="text-black font-medium">
-            {{ listing.roomCnt }}개 / {{ listing.bathroomCount }}개
+            {{ listing?.roomCnt }}개 / {{ listing?.bathroomCount }}개
           </div>
         </div>
       </div>
@@ -63,7 +63,7 @@
         <div class="flex justify-between items-center">
           <div class="font-semibold">월 관리비</div>
           <div class="text-yellow-primary font-bold text-lg">
-            {{ listing.maintenanceFee ?? 0 }}만원
+            {{ listing?.maintenanceFee ?? 0 }}만원
           </div>
         </div>
 
@@ -71,7 +71,7 @@
           <div class="text-gray-600 mb-2">관리비 포함 항목</div>
           <div class="flex flex-wrap gap-2">
             <span
-              v-for="item in listing.maintenanceFeeItems"
+              v-for="item in listing?.maintenanceFeeItems"
               :key="item.itemName"
               class="bg-gray-100 text-xs px-3 py-1 rounded-full"
             >
@@ -107,14 +107,14 @@
             <span class="text-xs font-medium">전체난방</span>
           </div>
           <div
-            v-if="listing.isParkingAvailable"
+            v-if="listing?.isParkingAvailable"
             class="flex flex-col items-center bg-gray-100 px-3 py-2 rounded-md shadow-sm text-gray-700"
           >
             <ParkingIcon class="text-yellow-primary w-4 h-4 mb-1" />
             <span class="text-xs font-medium">주차가능</span>
           </div>
           <div
-            v-if="listing.isPet"
+            v-if="listing?.isPet"
             class="flex flex-col items-center bg-gray-100 px-3 py-2 rounded-md shadow-sm text-gray-700"
           >
             <DogIcon class="text-yellow-primary w-4 h-4 mb-1" />
@@ -209,7 +209,6 @@ import ElevatorIcon from '@/assets/icons/ElevatorIcon.vue'
 import IndividualHeatingIcon from '@/assets/icons/IndividualHeatingIcon.vue'
 import CenterHeatingIcon from '@/assets/icons/CenterHeatingIcon.vue'
 import ParkingIcon from '@/assets/icons/ParkingIcon.vue'
-import DogIcon from '@/assets/icons/DogIcon.vue'
 
 // 가전제품
 import AirconIcon from '@/assets/icons/AirconIcon.vue'
@@ -300,7 +299,7 @@ const getIcon = (itemName) => {
 }
 
 const displayedHomeDirection = computed(() => {
-  const direction = listing.homeDirection
+  const direction = listing?.homeDirection
   if (!direction) {
     return ''
   }
@@ -312,7 +311,7 @@ const displayedHomeDirection = computed(() => {
 })
 
 const categorizedFacilities = computed(() => {
-  if (!listing.facilities || !Array.isArray(listing.facilities)) {
+  if (!listing?.facilities || !Array.isArray(listing?.facilities)) {
     return {}
   }
   return listing.facilities.reduce((acc, item) => {
