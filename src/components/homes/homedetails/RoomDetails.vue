@@ -42,7 +42,7 @@
             <DirectionIcon class="text-yellow-primary" />
             방향
           </div>
-          <div class="text-black font-medium">{{ listing.homeDirection }}</div>
+          <div class="text-black font-medium">{{ displayedHomeDirection }}</div>
         </div>
 
         <div>
@@ -94,12 +94,12 @@
             <ElevatorIcon class="text-yellow-primary w-4 h-4 mb-1" />
             <span class="text-xs font-medium">엘리베이터</span>
           </div>
-          <!--          <div-->
-          <!--            class="flex flex-col items-center bg-gray-100 px-3 py-2 rounded-md shadow-sm text-gray-700"-->
-          <!--          >-->
-          <!--            <IndividualHeatingIcon class="text-yellow-primary w-4 h-4 mb-1" />-->
-          <!--            <span class="text-xs font-medium">개별난방</span>-->
-          <!--          </div>-->
+          <div
+            class="flex flex-col items-center bg-gray-100 px-3 py-2 rounded-md shadow-sm text-gray-700"
+          >
+            <IndividualHeatingIcon class="text-yellow-primary w-4 h-4 mb-1" />
+            <span class="text-xs font-medium">개별난방</span>
+          </div>
           <div
             class="flex flex-col items-center bg-gray-100 px-3 py-2 rounded-md shadow-sm text-gray-700"
           >
@@ -117,7 +117,6 @@
             v-if="listing.isPet"
             class="flex flex-col items-center bg-gray-100 px-3 py-2 rounded-md shadow-sm text-gray-700"
           >
-            <!--            <DogIcon class="text-yellow-primary w-4 h-4 mb-1" />-->
             <span class="text-xs font-medium">반려동물</span>
           </div>
         </div>
@@ -245,6 +244,27 @@ const { listing } = defineProps({
     type: Object,
     required: true,
   },
+})
+
+// `homeDirection` 영문 값을 한글로 매핑하는 객체
+const homeDirectionMap = {
+  E: '동향',
+  W: '서향',
+  S: '남향',
+  N: '북향',
+  SE: '남동향',
+  SW: '남서향',
+  NE: '북동향',
+  NW: '북서향',
+}
+
+const displayedHomeDirection = computed(() => {
+  const direction = listing.homeDirection
+  if (!direction) {
+    return ''
+  }
+  const upperCaseDirection = direction.toUpperCase()
+  return homeDirectionMap[upperCaseDirection] || upperCaseDirection
 })
 
 // `itemName`과 아이콘 컴포넌트를 매핑하는 객체
