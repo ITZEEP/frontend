@@ -1,5 +1,5 @@
 <template>
-  <div class="w-3/5 bg-white rounded-lg overflow-auto flex flex-col gap-4 py-4 px-6">
+  <div class="w-3/5 max-h-[1002px] bg-white rounded-lg overflow-auto flex flex-col gap-4 py-4 px-6">
     <header class="flex flex-col justify-center gap-5 border-b pb-4">
       <h1 class="text-lg font-bold text-gray-800">부동산 임대차 계약서</h1>
       <!-- 프로그레스 바 -->
