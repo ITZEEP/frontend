@@ -39,7 +39,9 @@ const homeDirectionOptions = [
     <!-- 전용면적 & 공급면적 -->
     <div class="grid grid-cols-2 gap-6">
       <div>
-        <label class="block mb-1 text-sm font-medium">전용면적 *</label>
+        <label class="block mb-1 text-sm font-medium"
+          >전용면적 <span class="text-red-500">*</span></label
+        >
         <div class="relative">
           <input
             type="number"
@@ -73,7 +75,9 @@ const homeDirectionOptions = [
     <!-- 방/욕실 -->
     <div class="grid grid-cols-2 gap-6">
       <div>
-        <label class="block mb-1 text-sm font-medium">방 개수 *</label>
+        <label class="block mb-1 text-sm font-medium"
+          >방 개수 <span class="text-red-500">*</span></label
+        >
         <div class="relative">
           <input
             type="number"
@@ -88,7 +92,9 @@ const homeDirectionOptions = [
         </div>
       </div>
       <div>
-        <label class="block mb-1 text-sm font-medium">욕실 개수 *</label>
+        <label class="block mb-1 text-sm font-medium"
+          >욕실 개수 <span class="text-red-500">*</span></label
+        >
         <div class="relative">
           <input
             type="number"
@@ -107,7 +113,9 @@ const homeDirectionOptions = [
     <!-- 층 정보 -->
     <div class="grid grid-cols-2 gap-6">
       <div>
-        <label class="block mb-1 text-sm font-medium">현재 층 *</label>
+        <label class="block mb-1 text-sm font-medium"
+          >현재 층 <span class="text-red-500">*</span></label
+        >
         <input
           type="number"
           min="0"
@@ -119,7 +127,9 @@ const homeDirectionOptions = [
         />
       </div>
       <div>
-        <label class="block mb-1 text-sm font-medium">총 층수 *</label>
+        <label class="block mb-1 text-sm font-medium"
+          >총 층수 <span class="text-red-500">*</span></label
+        >
         <input
           type="number"
           min="0"
@@ -134,7 +144,9 @@ const homeDirectionOptions = [
 
     <!-- 사용 승인일 -->
     <div>
-      <label class="block mb-1 text-sm font-medium">사용 승인일</label>
+      <label class="block mb-1 text-sm font-medium"
+        >사용 승인일<span class="text-red-500">*</span></label
+      >
       <input
         type="date"
         class="border rounded p-2 w-full max-w-xs"

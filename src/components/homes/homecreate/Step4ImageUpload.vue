@@ -67,9 +67,7 @@
 
     <!-- 상세 설명 -->
     <div>
-      <label for="description" class="block font-semibold mb-1">
-        상세 설명 <span class="text-red-600">*</span>
-      </label>
+      <label for="description" class="block font-semibold mb-1"> 상세 설명 </label>
       <textarea
         id="description"
         v-model="description"
