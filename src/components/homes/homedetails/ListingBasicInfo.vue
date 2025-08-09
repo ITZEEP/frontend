@@ -11,7 +11,7 @@
     </div>
 
     <div class="text-yellow-500 font-semibold text-md">
-      관리비 {{ formatNumber(listing.maintenanceFee) }}원
+      관리비 {{ formatNumber(listing.maintenanceFee) }}만원
     </div>
   </div>
 </template>

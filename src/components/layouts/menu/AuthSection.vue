@@ -13,7 +13,7 @@
 
           <AlarmDropdown :is-visible="showDropdown" @close="showDropdown = false" />
         </div>
-        <BaseButton @click="router.push('/auth/mypage')" variant="primary" class="rounded-md">
+        <BaseButton @click="router.push('/mypage')" variant="primary" class="rounded-md">
           마이페이지
         </BaseButton>
       </div>

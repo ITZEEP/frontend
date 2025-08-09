@@ -60,7 +60,7 @@ const store = usePreContractStore()
 const router = useRouter()
 
 onMounted(() => {
-  store.canProceed = true
+  store.canProceed = false
 })
 
 function goToRisk() {

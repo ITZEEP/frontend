@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import BaseInput from '@/components/common/BaseInput.vue'
 import CustomSelect from '@/components/common/CustomSelect.vue'
 
@@ -12,21 +12,20 @@ const props = defineProps({
 
 const emit = defineEmits(['update:property-info'])
 
-// State
-const formData = ref({
-  address: props.propertyInfo.address || '',
-  propertyPrice: props.propertyInfo.propertyPrice || '',
-  monthlyRent: props.propertyInfo.monthlyRent || '',
-  leaseType: props.propertyInfo.leaseType || '',
-  residenceType: props.propertyInfo.residenceType || '',
-  registeredUserName: props.propertyInfo.registeredUserName || '',
-})
-
 // Constants
+const LEASE_TYPE = {
+  JEONSE: 'JEONSE',
+  WOLSE: 'WOLSE',
+}
+
+const BILLION_TO_WON = 100000000
+const MANWON_TO_WON = 10000
+const MAX_MANWON = 9999
+
 const leaseTypeOptions = [
   { value: '', label: '선택해주세요' },
-  { value: 'JEONSE', label: '전세' },
-  { value: 'WOLSE', label: '월세' },
+  { value: LEASE_TYPE.JEONSE, label: '전세' },
+  { value: LEASE_TYPE.WOLSE, label: '월세' },
 ]
 
 const residenceTypeOptions = [
@@ -39,53 +38,100 @@ const residenceTypeOptions = [
   { value: 'HOUSE', label: '주택' },
 ]
 
-// Computed
-const isValid = computed(() => {
-  return (
-    formData.value.address.trim().length > 0 &&
-    formData.value.leaseType.length > 0 &&
-    formData.value.residenceType.length > 0
-  )
+// State
+const formData = ref({
+  address: props.propertyInfo.address || '',
+  propertyPrice: props.propertyInfo.propertyPrice || '',
+  propertyPriceBillion: props.propertyInfo.propertyPriceBillion || '',
+  propertyPriceManwon: props.propertyInfo.propertyPriceManwon || '',
+  monthlyRent: props.propertyInfo.monthlyRent || '',
+  leaseType: props.propertyInfo.leaseType || '',
+  residenceType: props.propertyInfo.residenceType || '',
+  registeredUserName: props.propertyInfo.registeredUserName || '',
 })
+
+// Computed
+const isJeonse = computed(() => formData.value.leaseType === LEASE_TYPE.JEONSE)
+const isWolse = computed(() => formData.value.leaseType === LEASE_TYPE.WOLSE)
+
+const hasRequiredFields = computed(() => {
+  return formData.value.address.trim() &&
+    formData.value.leaseType &&
+    formData.value.residenceType &&
+    formData.value.registeredUserName.trim()
+})
+
+const hasRequiredPrice = computed(() => {
+  if (isJeonse.value) {
+    return formData.value.propertyPriceBillion || formData.value.propertyPriceManwon
+  }
+  if (isWolse.value) {
+    return formData.value.propertyPrice && formData.value.monthlyRent
+  }
+  return true
+})
+
+const isValid = computed(() => hasRequiredFields.value && hasRequiredPrice.value)
 
 // Utility Functions
 const formatPrice = (value) => {
   if (!value) return ''
-  const numericValue = value.replace(/[^0-9]/g, '')
+  const numericValue = String(value).replace(/[^0-9]/g, '')
   return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+}
+
+const parseFormattedNumber = (value) => {
+  return parseInt(String(value).replace(/,/g, '') || 0)
+}
+
+const calculateJeonsePrice = () => {
+  const billion = parseInt(formData.value.propertyPriceBillion || 0) * BILLION_TO_WON
+  const manwon = parseInt(formData.value.propertyPriceManwon || 0) * MANWON_TO_WON
+  return billion + manwon
 }
 
 const updatePropertyInfo = () => {
   const propertyInfo = {
     ...formData.value,
-    propertyPrice: formData.value.propertyPrice
-      ? parseInt(formData.value.propertyPrice.replace(/,/g, '')) * 10000 // 만원 단위를 원 단위로 변환
-      : 0,
-    monthlyRent: formData.value.monthlyRent
-      ? parseInt(formData.value.monthlyRent.replace(/,/g, '')) * 10000 // 만원 단위를 원 단위로 변환
-      : 0,
+    propertyPrice: isJeonse.value
+      ? calculateJeonsePrice()
+      : parseFormattedNumber(formData.value.propertyPrice) * MANWON_TO_WON,
+    monthlyRent: parseFormattedNumber(formData.value.monthlyRent) * MANWON_TO_WON,
   }
   emit('update:property-info', propertyInfo)
 }
 
 // Event Handlers
-const handlePriceInput = (event) => {
-  const formatted = formatPrice(event.target.value)
-  formData.value.propertyPrice = formatted
+const handleFormattedInput = (field) => (event) => {
+  formData.value[field] = formatPrice(event.target.value)
   updatePropertyInfo()
 }
 
-const handleMonthlyRentInput = (event) => {
-  const formatted = formatPrice(event.target.value)
-  formData.value.monthlyRent = formatted
+const handleManwonInput = () => {
+  const value = parseInt(formData.value.propertyPriceManwon || 0)
+  if (value > MAX_MANWON) {
+    formData.value.propertyPriceManwon = String(MAX_MANWON)
+  } else if (value < 0) {
+    formData.value.propertyPriceManwon = '0'
+  }
   updatePropertyInfo()
 }
 
-const handleInput = () => {
+// Watch for lease type changes to clear irrelevant price fields
+watch(() => formData.value.leaseType, (newType, oldType) => {
+  if (oldType && newType !== oldType) {
+    if (newType === LEASE_TYPE.JEONSE) {
+      formData.value.propertyPrice = ''
+      formData.value.monthlyRent = ''
+    } else if (newType === LEASE_TYPE.WOLSE) {
+      formData.value.propertyPriceBillion = ''
+      formData.value.propertyPriceManwon = ''
+    }
+  }
   updatePropertyInfo()
-}
+})
 
-// Initialization
+// Initialize
 updatePropertyInfo()
 </script>
 
@@ -105,7 +151,7 @@ updatePropertyInfo()
         <BaseInput
           v-model="formData.address"
           placeholder="예: 서울특별시 강남구 테헤란로 123"
-          @input="handleInput"
+          @input="updatePropertyInfo"
           class="w-full"
         />
       </div>
@@ -119,7 +165,7 @@ updatePropertyInfo()
           <CustomSelect
             v-model="formData.leaseType"
             :options="leaseTypeOptions"
-            @change="handleInput"
+            @change="updatePropertyInfo"
             class="w-full"
           />
         </div>
@@ -131,43 +177,58 @@ updatePropertyInfo()
           <CustomSelect
             v-model="formData.residenceType"
             :options="residenceTypeOptions"
-            @change="handleInput"
+            @change="updatePropertyInfo"
             class="w-full"
           />
         </div>
       </div>
 
       <!-- 전세금 (전세 선택 시) -->
-      <div v-if="formData.leaseType === 'JEONSE'">
+      <div v-if="isJeonse">
         <label class="block text-sm font-medium text-gray-700 mb-2">
-          전세금
-          <span class="text-xs text-gray-500 ml-1">(선택사항)</span>
+          전세금 <span class="text-red-500">*</span>
         </label>
-        <div class="relative">
-          <BaseInput
-            :model-value="formData.propertyPrice"
-            placeholder="예: 50000"
-            @input="handlePriceInput"
-            class="w-full pr-12"
-          />
-          <div class="absolute inset-y-0 right-0 flex items-center pr-3">
-            <span class="text-sm text-gray-500">만원</span>
+        <div class="grid grid-cols-2 gap-2">
+          <div class="relative">
+            <BaseInput
+              v-model="formData.propertyPriceBillion"
+              type="number"
+              placeholder="0"
+              @input="updatePropertyInfo"
+              class="w-full pr-8"
+            />
+            <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+              <span class="text-sm text-gray-500">억</span>
+            </div>
+          </div>
+          <div class="relative">
+            <BaseInput
+              v-model="formData.propertyPriceManwon"
+              type="number"
+              placeholder="0"
+              :max="MAX_MANWON"
+              @input="handleManwonInput"
+              class="w-full pr-12"
+            />
+            <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+              <span class="text-sm text-gray-500">만원</span>
+            </div>
           </div>
         </div>
+        <p class="mt-1 text-xs text-gray-500">예: 3억 5000만원 → 3억, 5000만원</p>
       </div>
 
       <!-- 보증금과 월세 (월세 선택 시) -->
-      <div v-if="formData.leaseType === 'WOLSE'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div v-if="isWolse" class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">
-            보증금
-            <span class="text-xs text-gray-500 ml-1">(선택사항)</span>
+            보증금 <span class="text-red-500">*</span>
           </label>
           <div class="relative">
             <BaseInput
               :model-value="formData.propertyPrice"
               placeholder="예: 5000"
-              @input="handlePriceInput"
+              @input="handleFormattedInput('propertyPrice')"
               class="w-full pr-12"
             />
             <div class="absolute inset-y-0 right-0 flex items-center pr-3">
@@ -177,14 +238,13 @@ updatePropertyInfo()
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">
-            월세
-            <span class="text-xs text-gray-500 ml-1">(선택사항)</span>
+            월세 <span class="text-red-500">*</span>
           </label>
           <div class="relative">
             <BaseInput
               :model-value="formData.monthlyRent"
               placeholder="예: 50"
-              @input="handleMonthlyRentInput"
+              @input="handleFormattedInput('monthlyRent')"
               class="w-full pr-12"
             />
             <div class="absolute inset-y-0 right-0 flex items-center pr-3">
@@ -197,13 +257,12 @@ updatePropertyInfo()
       <!-- 소유자명 -->
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-2">
-          소유자명
-          <span class="text-xs text-gray-500 ml-1">(선택사항)</span>
+          소유자명 <span class="text-red-500">*</span>
         </label>
         <BaseInput
           v-model="formData.registeredUserName"
           placeholder="예: 홍길동"
-          @input="handleInput"
+          @input="updatePropertyInfo"
           class="w-full"
         />
         <p class="mt-1 text-xs text-gray-500">

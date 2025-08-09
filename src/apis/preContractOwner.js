@@ -128,9 +128,9 @@ export const OwnerPreContractAPI = {
   },
 
   // 최종 정보 MongoDB 저장
-  saveMongoDB: async (contractChatId, data) => {
+  saveMongoDB: async (contractChatId) => {
     try {
-      const response = await api.post(`/api/pre-contract/${contractChatId}/owner/save-mongo`, data)
+      const response = await api.post(`/api/pre-contract/${contractChatId}/owner/save-mongo`)
       return response.data
     } catch (error) {
       console.log('최종 정보 MongoDB 저장 실패', error)
