@@ -119,6 +119,17 @@
               {{ message.content }}
             </div>
 
+            <div v-else-if="message.type === 'URLLINK'">
+              <a
+                :href="message.content"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="underline text-blue-500 hover:text-blue-700 break-all"
+              >
+                {{ message.content }}
+              </a>
+            </div>
+
             <div v-else-if="message.type === 'CONTRACT_REQUEST'">
               <BaseButton @click="handleAcceptContract">계약 요청 수락하기</BaseButton>
               <BaseButton>거절</BaseButton>
