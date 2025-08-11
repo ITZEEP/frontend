@@ -86,7 +86,7 @@ const handleFileChange = async (e) => {
     isUploading.value = true
     await new Promise((resolve) => setTimeout(resolve, 800))
 
-    model.value = structuredClone(file)
+    model.value = file
     fileName.value = file.name
   } catch (err) {
     errorMessage.value = '❗ 파일 업로드 중 오류가 발생했습니다. 다시 시도해주세요.'
