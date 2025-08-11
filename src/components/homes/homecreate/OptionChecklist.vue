@@ -39,15 +39,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue'])
 
 // 모든 카테고리 키
-const categories = [
-  'appliances',
-  'kitchen',
-  'heatingCooling',
-  'furniture',
-  'bathroom',
-  'security',
-  'etc',
-]
+const categories = ['appliances', 'furniture', 'security', 'convenience']
 
 // reactive form 초기화
 const form = reactive({})
@@ -55,36 +47,46 @@ categories.forEach((key) => {
   form[key] = [...(props.modelValue[key] ?? [])]
 })
 
-// 카테고리 → 한글 라벨
+// 카테고리 → 한글 라벨 (DB 기준)
 const categoryLabels = {
-  appliances: '가전',
-  kitchen: '주방',
-  heatingCooling: '냉난방',
+  appliances: '가전제품',
   furniture: '가구',
-  bathroom: '욕실',
-  security: '보안/안전',
-  etc: '기타',
+  security: '보안시설',
+  convenience: '편의시설',
 }
 
-// 카테고리별 항목
+// 카테고리별 항목 (DB 기준)
 const utilityItems = {
-  appliances: ['TV', '세탁기', '냉장고', '전자레인지'],
-  kitchen: ['인덕션', '가스레인지', '싱크대'],
-  heatingCooling: ['에어컨', '벽걸이 에어컨', '빌트인 에어컨', '개별난방', '전체 난방'],
-  furniture: ['책상', '옷장', '붙박이장', '신발장'],
-  bathroom: ['욕조'],
+  appliances: [
+    '에어컨',
+    '세탁기',
+    '냉장고',
+    '전자레인지',
+    'TV',
+    '인덕션',
+    '가스레인지',
+    '벽걸이 에어컨',
+    '빌트인 에어컨',
+  ],
+  furniture: ['침대', '책상', '옷장', '소파', '욕조', '싱크대', '붙박이장', '신발장'],
   security: [
-    '현관 보안',
+    '도어락',
     'CCTV',
     '인터폰',
-    '도어락',
     '카드키',
     '방범창',
     '경비',
-    '화재 경보기',
+    '화재경보기',
     '소화기',
+    '현관보안',
   ],
-  etc: ['엘리베이터', '주차', '반려동물 가능'],
+  convenience: [
+    '엘리베이터',
+    '주차장',
+    '택배보관함',
+    '전체난방',
+    '반려동물 가능', // '반려동물 가능'은 DB에 없지만 추가했습니다.
+  ],
 }
 
 // 체크박스 업데이트 핸들러
