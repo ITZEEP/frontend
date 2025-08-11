@@ -16,8 +16,8 @@
       </ul>
     </div>
 
-    <!-- 파일 업로드 및 버튼 -->
-    <div v-if="!isConfirmed" class="w-full flex flex-col items-center gap-4">
+    <!-- 파일 업로드 및 버튼 (저장값 체크 전엔 표시 안 함) -->
+    <div v-if="checkedSaved && !isConfirmed" class="w-full flex flex-col items-center gap-4">
       <UploadContractBox v-model="uploadedFile" />
       <BaseButton :disabled="isButtonDisabled" variant="primary" @click="extractSpecialTerms">
         특약 내용 추출하기
@@ -25,14 +25,15 @@
     </div>
 
     <!-- 확정된 특약 조항 목록 -->
-    <div v-else class="w-full max-w-xl space-y-2 white-box">
+    <div v-else-if="checkedSaved" class="w-full max-w-xl space-y-2 white-box">
       <p class="text-gray-700 font-semibold">확정된 특약사항</p>
       <ul class="list-disc list-inside text-sm text-gray-600 space-y-1">
         <li v-for="(term, index) in confirmedTerms" :key="index">{{ term }}</li>
       </ul>
     </div>
 
-    <LoadingOverlay :loading="isLoading" message="특약 내용 추출 중입니다" />
+    <!-- 로딩 -->
+    <LoadingOverlay :loading="!checkedSaved || isLoading" message="특약 내용 추출 중입니다" />
 
     <!-- 특약 확인 모달 -->
     <TermsConfirmModal :extractedTerms="extractedTerms" @confirm="handleConfirm" />
@@ -40,7 +41,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watchEffect } from 'vue'
+import { ref, computed, watchEffect, onMounted } from 'vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import UploadContractBox from './UploadContractBox.vue'
 import LoadingOverlay from '@/components/common/LoadingOverlay.vue'
@@ -51,21 +52,26 @@ import { OwnerPreContractAPI } from '@/apis/preContractOwner'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
+
+// 공통 상태
 const uploadedFile = ref(null)
 const isLoading = ref(false)
 const extractedTerms = ref([])
 const confirmedTerms = ref([])
 const isConfirmed = ref(false)
-const contractChatId = computed(() => String(route.query.id ?? route.params.id ?? ''))
+const checkedSaved = ref(false)
+const shouldSave = ref(false)
 
+const contractChatId = computed(() => String(route.query.id ?? route.params.id ?? ''))
 const lastAnalyze = ref(null)
 
 const modalStore = useModalStore()
 const precontractStore = usePreContractStore()
 const isButtonDisabled = computed(() => !uploadedFile.value)
 
+// 1) 특약 추출
 const extractSpecialTerms = async () => {
-  if (!uploadedFile.value) return
+  if (!uploadedFile.value || !contractChatId.value) return
 
   isLoading.value = true
   try {
@@ -73,9 +79,7 @@ const extractSpecialTerms = async () => {
       contractChatId.value,
       uploadedFile.value,
     )
-
     lastAnalyze.value = res
-
     extractedTerms.value = res?.data?.data?.parsed_data?.special_terms ?? []
 
     if (!extractedTerms.value.length) {
@@ -83,7 +87,6 @@ const extractSpecialTerms = async () => {
       modalStore.close()
       return
     }
-
     modalStore.open()
   } catch (e) {
     console.error('특약 분석 실패', e)
@@ -94,14 +97,21 @@ const extractSpecialTerms = async () => {
   }
 }
 
+// 2) 모달에서 확정
 const handleConfirm = (terms) => {
   confirmedTerms.value = [...terms]
   isConfirmed.value = true
+  shouldSave.value = true
   modalStore.close()
   precontractStore.setCanProceed(true)
 }
 
+// 3) Mongo 저장
 const handleSaveContractMongo = async () => {
+  if (!shouldSave.value) {
+    return
+  }
+
   try {
     const parsed = lastAnalyze.value?.data?.data?.parsed_data
     const meta = lastAnalyze.value?.data?.data
@@ -116,20 +126,51 @@ const handleSaveContractMongo = async () => {
       source: parsed?.source ?? 'text',
     }
 
-    // 저장 요청
     const resp = await OwnerPreContractAPI.saveContractDocument(contractChatId.value, payload)
-
     if (resp?.success) {
       alert('계약서가 성공적으로 저장되었습니다.')
+      shouldSave.value = false
+      await loadSavedContractDocument()
     }
-
     return resp
   } catch (error) {
     console.log(error)
   }
 }
 
+const loadSavedContractDocument = async () => {
+  if (!contractChatId.value) return
+  try {
+    const resp = await OwnerPreContractAPI.getContractDocument(contractChatId.value)
+    // 응답 래핑 케이스 모두 대응
+    const doc = resp?.data?.data ?? resp?.data ?? resp
+
+    if (Array.isArray(doc?.specialTerms) && doc.specialTerms.length > 0) {
+      confirmedTerms.value = doc.specialTerms
+      extractedTerms.value = [...doc.specialTerms]
+      isConfirmed.value = true
+      shouldSave.value = false
+    } else {
+      isConfirmed.value = false
+      shouldSave.value = false
+    }
+  } catch (e) {
+    console.log('특약 문서 로드 실패', e)
+    isConfirmed.value = false
+  } finally {
+    checkedSaved.value = true
+  }
+}
+
 watchEffect(() => {
   precontractStore.setTriggerSubmit(5, handleSaveContractMongo)
+})
+
+onMounted(async () => {
+  if (contractChatId.value) {
+    await loadSavedContractDocument()
+  } else {
+    checkedSaved.value = true
+  }
 })
 </script>
