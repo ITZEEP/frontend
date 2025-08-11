@@ -111,10 +111,11 @@ const handleSubmit = async () => {
     console.log('최종 제출 데이터:', payload)
     await createListing(payload)
     alert('매물 등록 완료')
-    router.push('/')
+    router.push('/homes/create/verification')
   } catch (e) {
     console.error('등록 실패', e)
     alert('매물 등록 실패')
+    router.push('/homes/create/verification')
   }
 }
 </script>
