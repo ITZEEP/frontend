@@ -156,6 +156,7 @@ const fetchInternalPropertyData = async () => {
 
   if (response.success && response.data) {
     console.log('API 응답 데이터:', response.data)
+    console.log('homeId:', response.data.homeId)
     currentAnalysis.value = response.data
 
     const price =
@@ -463,7 +464,11 @@ watch(dataNotFound, (newValue) => {
 
         <!-- Recommended Services -->
         <div class="mb-8">
-          <RecommendedServices @analyze-another="analyzeAnother" />
+          <RecommendedServices 
+            :property-id="currentAnalysis?.homeId"
+            :is-external="isExternalProperty"
+            @analyze-another="analyzeAnother" 
+          />
         </div>
       </template>
     </div>

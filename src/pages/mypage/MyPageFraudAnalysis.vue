@@ -99,7 +99,10 @@ const changePage = (page) => {
 const mapAnalysisData = (analysis) => ({
   id: analysis.analysisId,
   title: analysis.address || analysis.propertyAddress || '주소 미정',
-  buildingType: analysis.buildingType,
+  buildingType: analysis.buildingType || analysis.residenceType,
+  transactionType: analysis.transactionType,
+  depositPrice: analysis.depositPrice,
+  monthlyRent: analysis.monthlyRent,
   riskLevel: analysis.riskType === 'SAFE' ? 'low' : 
              analysis.riskType === 'WARN' ? 'medium' : 'high',
   createdAt: analysis.analysisDate,

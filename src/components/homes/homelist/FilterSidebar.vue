@@ -1,6 +1,5 @@
 <template>
   <aside class="w-full md:w-64 bg-white px-4 py-6 border-r border-gray-200 space-y-6">
-    <!-- 지역 선택 -->
     <div>
       <h3 class="font-bold text-gray-800 mb-2">지역선택</h3>
       <select
@@ -22,7 +21,6 @@
       </select>
     </div>
 
-    <!-- 매물종류 -->
     <div>
       <h3 class="font-bold text-gray-800 mb-2">매물종류</h3>
       <div class="flex flex-wrap gap-2">
@@ -41,7 +39,6 @@
       </div>
     </div>
 
-    <!-- 거래유형 -->
     <div>
       <h3 class="font-bold text-gray-800 mb-2">거래유형</h3>
       <div class="flex flex-wrap gap-2 mb-4">
@@ -59,7 +56,6 @@
         </button>
       </div>
 
-      <!-- 월세 -->
       <div v-if="filters.dealType === '월세'">
         <label class="text-sm font-semibold">보증금</label>
         <input
@@ -84,7 +80,6 @@
         <div class="text-xs text-gray-500">최대: {{ filters.monthlyRange }}만원</div>
       </div>
 
-      <!-- 전세 -->
       <div v-else-if="filters.dealType === '전세'">
         <label class="text-sm font-semibold">전세가</label>
         <input
@@ -99,7 +94,6 @@
       </div>
     </div>
 
-    <!-- 평수 -->
     <div>
       <h3 class="font-bold text-gray-800 mb-2">평수</h3>
       <input
@@ -113,7 +107,6 @@
       <div class="text-xs text-gray-500">최대: {{ filters.area }}평</div>
     </div>
 
-    <!-- 방향 -->
     <div>
       <h3 class="font-bold text-gray-800 mb-2">방향</h3>
       <div class="flex flex-wrap gap-2">
@@ -132,7 +125,6 @@
       </div>
     </div>
 
-    <!-- 층수 -->
     <div>
       <h3 class="font-bold text-gray-800 mb-2">층수</h3>
       <div class="flex flex-wrap gap-2">
@@ -151,7 +143,6 @@
       </div>
     </div>
 
-    <!-- 매물조건 -->
     <div>
       <h3 class="font-bold text-gray-800 mb-2">매물조건</h3>
       <div class="flex flex-col gap-1">
@@ -162,7 +153,6 @@
       </div>
     </div>
 
-    <!-- 버튼 -->
     <div class="pt-4 space-y-2">
       <button
         class="w-full bg-yellow-primary hover:bg-yellow-500 text-white py-2 rounded font-bold"
@@ -246,45 +236,11 @@ function resetFilters() {
     conditions: [],
   }
   districtList.value = []
-  emit('filter-change', convertFiltersToDto(filters.value)) // 변환된 값 emit
+  emit('filter-change', filters.value)
 }
 
 function emitFilterChange() {
-  emit('filter-change', convertFiltersToDto(filters.value))
-}
-
-// 평 → ㎡ 단위 변환 및 DTO 필드 매핑
-function convertFiltersToDto(f) {
-  return {
-    city: f.city,
-    district: f.district,
-    houseType: f.houseType,
-    dealType: f.dealType,
-    deposit: f.depositRange,
-    monthlyRent: f.monthlyRange,
-    lease: f.leaseRange,
-    area: Math.round(f.area * 3.3058), // 평 → ㎡
-    direction: f.direction,
-    floor: convertFloor(f.floor),
-    options: f.conditions,
-  }
-}
-
-function convertFloor(label) {
-  switch (label) {
-    case '반지하':
-      return -1
-    case '1층':
-      return 1
-    case '2~5층':
-      return 3
-    case '6~9층':
-      return 7
-    case '10층 이상':
-      return 10
-    default:
-      return null
-  }
+  emit('filter-change', filters.value)
 }
 
 const directions = ['남향', '동향', '서향', '북향', '남동향', '남서향', '북동향', '북서향']

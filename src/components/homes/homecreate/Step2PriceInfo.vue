@@ -39,8 +39,7 @@ const utilityItems = {
   gas: '가스료',
   water: '수도료',
   internet: '인터넷',
-  cableTV: '케이블TV',
-  heating: '난방비',
+  cleaning: '청소비',
 }
 
 // 관리비 항목 토글
@@ -98,7 +97,9 @@ function isChecked(label) {
       </div>
 
       <div>
-        <label class="block mb-1 text-sm font-medium">관리비</label>
+        <label class="block mb-1 text-sm font-medium"
+          >관리비<span class="text-red-500">*</span></label
+        >
         <div class="relative w-full">
           <input
             type="text"
@@ -168,7 +169,9 @@ function isChecked(label) {
       </div>
 
       <div>
-        <label class="block mb-1 text-sm font-medium">관리비 </label>
+        <label class="block mb-1 text-sm font-medium"
+          >관리비 <span class="text-red-500">*</span></label
+        >
         <div class="relative w-full">
           <input
             type="text"

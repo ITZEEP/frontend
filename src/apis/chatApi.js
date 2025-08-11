@@ -3,7 +3,6 @@ import api from '@/apis'
 const API_BASE_URL = '/api/chat'
 
 function getAuthToken() {
-  // 🔧 수정: localStorage 키 통일
   return localStorage.getItem('accessToken') || localStorage.getItem('access-token')
 }
 
@@ -29,6 +28,9 @@ async function apiRequest(url, options = {}) {
 
     if (options.body) {
       config.data = JSON.parse(options.body)
+    } else if (options.method?.toLowerCase() === 'post' && !options.body) {
+      // POST 요청인데 body가 없으면 빈 객체 전송
+      config.data = {}
     }
 
     const response = await api(config)
@@ -39,6 +41,8 @@ async function apiRequest(url, options = {}) {
   }
 }
 
+const apiPost = (url, data = {}) => apiRequest(url, { method: 'POST', data })
+
 export async function getOwnerChatRooms() {
   return apiRequest('/rooms/owner')
 }
@@ -48,9 +52,10 @@ export async function getBuyerChatRooms() {
 }
 
 export async function createChatRoom(propertyId) {
-  return apiRequest('/rooms', {
+  // propertyId를 query parameter로 전달
+  const url = propertyId ? `/rooms?propertyId=${propertyId}` : '/rooms'
+  return apiRequest(url, {
     method: 'POST',
-    body: JSON.stringify({ propertyId }),
   })
 }
 
@@ -261,4 +266,102 @@ export async function getChatRoomInfo(chatRoomId) {
     console.error('채팅방 정보 조회 실패:', error)
     throw error
   }
+}
+
+export async function requestContract(chatRoomId) {
+  try {
+    const result = await apiPost(`/rooms/${chatRoomId}/contract-request`)
+    return result
+  } catch (error) {
+    console.error('계약 요청 실패', error)
+    throw error
+  }
+}
+
+export async function acceptContract(chatRoomId) {
+  try {
+    const result = await apiPost(`/rooms/${chatRoomId}/contract-accept`)
+    return result
+  } catch (error) {
+    console.error('계약 수락 실패', error)
+    throw error
+  }
+}
+// 알림 목록 조회
+export async function getNotifications(page = 0, size = 10, type = '') {
+  const queryParams = new URLSearchParams({ page, size, type }).toString()
+  return apiRequest(`/notifications?${queryParams}`)
+}
+
+// 최신 알림 조회
+export async function getRecentNotifications(limit = 5) {
+  const queryParams = new URLSearchParams({ limit }).toString()
+  return apiRequest(`/notifications/recent?${queryParams}`)
+}
+
+// 읽지 않은 알림 수 조회
+export async function getUnreadNotificationCount() {
+  return apiRequest('/notifications/unread-count')
+}
+
+// 특정 알림 읽음 처리
+export async function markNotificationAsRead(notiId) {
+  return apiRequest(`/notifications/${notiId}/read`, {
+    method: 'POST',
+  })
+}
+
+// 여러 알림 읽음 처리
+export async function markMultipleNotificationsAsRead(notificationIds) {
+  return apiRequest('/notifications/read', {
+    method: 'POST',
+    body: JSON.stringify({ ids: notificationIds }),
+  })
+}
+
+// 모든 알림 읽음 처리
+export async function markAllNotificationsAsRead() {
+  return apiRequest('/notifications/read-all', {
+    method: 'POST',
+  })
+}
+
+// 특정 알림 삭제
+export async function deleteNotification(notiId) {
+  return apiRequest(`/notifications/${notiId}`, {
+    method: 'DELETE',
+  })
+}
+
+// 여러 알림 삭제
+export async function deleteMultipleNotifications(notificationIds) {
+  return apiRequest('/notifications', {
+    method: 'DELETE',
+    body: JSON.stringify({ ids: notificationIds }),
+  })
+}
+
+// 모든 알림 삭제
+export async function deleteAllNotifications() {
+  return apiRequest('/notifications/all', {
+    method: 'DELETE',
+  })
+}
+
+// 백그라운드 알림 저장
+export async function saveBackgroundNotification(notificationData) {
+  return apiRequest('/notifications/save-background', {
+    method: 'POST',
+    body: JSON.stringify(notificationData),
+  })
+}
+
+// 알림 통계 조회
+export async function getNotificationStats() {
+  return apiRequest('/notifications/stats')
+}
+
+// 알림 타입별 통계 조회
+export async function getNotificationStatsByType() {
+  return apiRequest('/notifications/stats/types')
 }
