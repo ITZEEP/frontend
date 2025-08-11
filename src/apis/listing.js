@@ -1,15 +1,19 @@
+// api/listing.js
+
 import api from './index'
 
 const API_BASE_URL = '/api/homes'
 
-// 1. 전체 매물 리스트 조회 (필터 옵션 포함 가능)
+// 1. 전체 매물 리스트 조회 및 검색 (필터 옵션 포함)
 export async function fetchListings(params = {}) {
   try {
     const response = await api.get(API_BASE_URL, { params })
-    console.log('전체 매물 리스트 조회 응답:', response.data)
-    return response.data.content // content 배열만 반환하도록 변경
+    console.log('매물 목록 조회/검색 응답:', response.data)
+
+    // API 응답 구조에 맞게 `response.data.data`를 반환하도록 수정
+    return response.data.data
   } catch (error) {
-    console.error('전체 매물 리스트 조회 실패', error)
+    console.error('매물 리스트 조회/검색 실패', error)
     throw error
   }
 }
@@ -30,17 +34,21 @@ export async function createListing(listingData) {
   try {
     const formData = new FormData()
 
+    // FormData에 데이터를 추가하는 로직 개선
     for (const key in listingData) {
       const value = listingData[key]
 
-      if (Array.isArray(value)) {
-        if (key === 'images') {
-          value.forEach((file) => formData.append(key, file))
-        } else {
-          formData.append(key, JSON.stringify(value))
-        }
+      if (key === 'images' && Array.isArray(value)) {
+        value.forEach((file) => formData.append(key, file))
       } else if (value !== null && value !== undefined) {
-        formData.append(key, value)
+        if (typeof value === 'object' && !Array.isArray(value)) {
+          formData.append(key, JSON.stringify(value))
+        } else if (Array.isArray(value)) {
+          // 배열은 JSON.stringify로 변환하여 전송
+          formData.append(key, JSON.stringify(value))
+        } else {
+          formData.append(key, value)
+        }
       }
     }
 
