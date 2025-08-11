@@ -253,15 +253,18 @@ const handleVerify = async () => {
     isLoading.value = true
 
     if (props.mode === 'home') {
-      // 매물 등록 (issuedDate: number, ssn 숫자)
+      // 매물 등록 (모든 값 string)
       const body = {
         birthDate: birthDate.value, // '1990-01-01'
-        issuedDate: Number(yyyymmdd(issueDate.value)), // 20250508
+        issuedDate: yyyymmdd(issueDate.value), // '20250508' (문자열)
         name: username.value,
-        ssnBack: Number(ssnBackRaw.value), // 원본 숫자 7자리
-        ssnFront: Number(ssnFront.value), // 원본 숫자 6자리
+        ssnBack: ssnBackRaw.value, // '1234567' (문자열)
+        ssnFront: ssnFront.value, // '900101' (문자열)
       }
-      const res = await VerificationAPI.verificationHome(props.homeId, body)
+      const res = await VerificationAPI.verificationHome(
+        String(props.homeId), // homeId도 문자열 변환
+        body,
+      )
       store.setCanProceed(true)
       emit('verified', { mode: props.mode, res })
       return
@@ -280,9 +283,9 @@ const handleVerify = async () => {
 
     let res
     if (props.mode === 'pre-start') {
-      res = await VerificationAPI.verificationPreContractStart(props.contractChatId, base)
+      res = await VerificationAPI.verificationPreContractStart(String(props.contractChatId), base)
     } else if (props.mode === 'pre-end') {
-      res = await VerificationAPI.verificationPreContractEnd(props.contractChatId, base)
+      res = await VerificationAPI.verificationPreContractEnd(String(props.contractChatId), base)
     } else {
       throw new Error(`지원하지 않는 mode: ${props.mode}`)
     }
