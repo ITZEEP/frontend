@@ -77,17 +77,14 @@
       label="임대인에게 추가로 요청하실 사항이 있다면 작성해 주세요."
       placeholder="임대인에게 추가로 요청하실 사항이 있다면 작성해 주세요."
     />
-
-    <BaseButton @click="updateTenantStep3"> 테스트 버튼 </BaseButton>
   </div>
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, watchEffect } from 'vue'
 import ToggleRadio from '@/components/common/ToggleRadio.vue'
 import BaseInput from '@/components/common/BaseInput.vue'
 import { usePreContractStore } from '@/stores/preContract'
-import BaseButton from '@/components/common/BaseButton.vue'
 import buyerApi from '@/apis/pre-contract-buyer.js'
 import { useRoute } from 'vue-router'
 
@@ -175,7 +172,7 @@ watch(
       smoking !== null &&
       earlyRisk !== null &&
       nonUse !== '' &&
-      count !== '' &&
+      count >= 1 &&
       occup !== '' &&
       contact !== '' &&
       rel !== '' &&
@@ -220,9 +217,12 @@ const updateTenantStep3 = async () => {
 
   try {
     await buyerApi.updateTenantStep3(contractChatId, step3DTO)
-    alert('Step1 전세 정보가 저장되었습니다! ✅')
+    console.log('Step3 정보가 저장되었습니다! ✅')
   } catch (error) {
     console.error('step3 전세 저장 실패 ❌', error)
   }
 }
+watchEffect(() => {
+  store.setTriggerSubmit(5, 2, updateTenantStep3)
+})
 </script>

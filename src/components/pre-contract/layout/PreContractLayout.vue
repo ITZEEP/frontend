@@ -3,14 +3,14 @@
     <PreContractHeader />
     <div class="flex flex-col items-center justify-center px-4 py-10">
       <div class="w-full max-w-[880px]">
-        <div class="bg-white rounded-xl shadow-md p-8 mt-4">
+        <div class="bg-white rounded-xl shadow-md px-32 py-16 mt-4">
           <slot :subStep="subStep" />
         </div>
       </div>
 
       <PreContractBtnGroup
         :step="props.currentStep"
-        :sub-step="subStep"
+        :subStep="subStep"
         :role="props.role"
         @next-sub-step="nextSubStep"
         @prev-sub-step="prevSubStep"

@@ -15,6 +15,11 @@ export default [
     component: () => import('../pages/homes/HomeCreatePage.vue'),
   },
   {
+    path: '/homes/create/verification',
+    name: 'homes/create/verification',
+    component: () => import('../pages/homes/HomeUserVerification.vue'),
+  },
+  {
     path: '/homes/update/:no',
     name: 'homes/update',
     component: () => import('../pages/homes/HomeUpdatePage.vue'),

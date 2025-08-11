@@ -79,53 +79,17 @@
         {{ description.length }}/{{ maxLength }}
       </div>
     </div>
-
-    <!-- 본인 인증 안내 -->
-    <div
-      class="flex items-center gap-3 bg-yellow-50 border border-yellow-400 rounded p-4 text-yellow-800 text-sm"
-      role="alert"
-    >
-      <p class="flex-1">
-        매물 등록을 위해 실명 인증이 필요합니다.<br />
-        본인 인증을 완료해주세요.
-      </p>
-      <button
-        type="button"
-        class="bg-yellow-400 text-yellow-900 font-semibold px-4 py-1 rounded hover:bg-yellow-500"
-        @click="showVerification = true"
-      >
-        인증하기
-      </button>
-    </div>
-
-    <!-- 본인 인증 모달 -->
-    <div
-      v-if="showVerification"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-    >
-      <div class="bg-white rounded-lg p-6 w-full max-w-md relative shadow-lg">
-        <button
-          @click="showVerification = false"
-          class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-xl"
-        >
-          ×
-        </button>
-        <UserVerification @verified="handleVerified" />
-      </div>
-    </div>
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
-import UserVerification from '@/components/common/UserVerification.vue'
 
 const files = ref([])
 const description = ref('')
 const maxFiles = 5
 const maxSizeMB = 10
 const maxLength = 1000
-const showVerification = ref(false)
 
 let idCounter = 0
 
@@ -163,10 +127,5 @@ function addFiles(fileList) {
 function removeFile(index) {
   URL.revokeObjectURL(files.value[index].url)
   files.value.splice(index, 1)
-}
-
-function handleVerified() {
-  showVerification.value = false
-  alert('인증이 완료되었습니다.')
 }
 </script>

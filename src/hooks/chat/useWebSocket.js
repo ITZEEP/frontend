@@ -3,12 +3,17 @@ import websocketService from '@/apis/websocket'
 
 export function useWebSocket() {
   const isConnected = ref(false)
-  const connectionStatus = ref('disconnected') // 'connecting', 'connected', 'disconnected'
+  const connectionStatus = ref('disconnected')
 
   const connect = async () => {
-    connectionStatus.value = 'connecting'
-    await websocketService.connect() // 연결 완료까지 기다림
-    connectionStatus.value = 'connected'
+    try {
+      connectionStatus.value = 'connecting'
+      await websocketService.connect()
+      connectionStatus.value = 'connected'
+    } catch (error) {
+      console.error('WebSocket 연결 실패:', error)
+      connectionStatus.value = 'disconnected'
+    }
   }
 
   const disconnect = () => {
@@ -24,6 +29,23 @@ export function useWebSocket() {
     return websocketService.sendChatMessage(chatRoomId, senderId, receiverId, content, type)
   }
 
+  // 🔧 계약 채팅 메시지 전송 메서드 추가
+  const sendContractChatMessage = (
+    contractChatId,
+    senderId,
+    receiverId,
+    content,
+    type = 'TEXT',
+  ) => {
+    return websocketService.sendContractChatMessage(
+      contractChatId,
+      senderId,
+      receiverId,
+      content,
+      type,
+    )
+  }
+
   // 연결 상태 감지
   websocketService.onConnection((connected) => {
     isConnected.value = connected
@@ -37,5 +59,6 @@ export function useWebSocket() {
     disconnect,
     sendMessage,
     sendChatMessage,
+    sendContractChatMessage,
   }
 }

@@ -6,6 +6,7 @@ class WebSocketService {
   constructor() {
     this.stompClient = null
     this.isConnected = ref(false)
+    this.isConnecting = ref(false)
     this.messageHandlers = new Map()
     this.connectionHandlers = []
     this.pendingSubscriptions = [] // 대기 중인 구독들
@@ -13,13 +14,37 @@ class WebSocketService {
 
   connect() {
     return new Promise((resolve, reject) => {
-      const socket = new SockJS('http://localhost:8080/ws') // 추후 env 파일에서 가져오도록 수정 예정
+      if (this.isConnected.value) {
+        console.log('이미 WebSocket이 연결되어 있습니다.')
+        resolve()
+        return
+      }
+
+      if (this.isConnecting.value) {
+        console.log('WebSocket 연결이 이미 진행 중입니다.')
+        const checkConnection = () => {
+          if (this.isConnected.value) {
+            resolve()
+          } else if (!this.isConnecting.value) {
+            reject(new Error('연결 실패'))
+          } else {
+            setTimeout(checkConnection, 100)
+          }
+        }
+        checkConnection()
+        return
+      }
+
+      this.isConnecting.value = true
+
+      const socket = new SockJS('http://localhost:8080/ws')
       this.stompClient = new Client({
         webSocketFactory: () => socket,
         reconnectDelay: 5000,
         debug: (str) => console.log('[STOMP]', str),
         onConnect: () => {
           this.isConnected.value = true
+          this.isConnecting.value = false
 
           // 대기 중인 구독들을 실행
           this.pendingSubscriptions.forEach(({ topic, handler }) => {
@@ -33,10 +58,12 @@ class WebSocketService {
         },
         onDisconnect: () => {
           this.isConnected.value = false
+          this.isConnecting.value = false
           this.connectionHandlers.forEach((handler) => handler(false))
         },
         onStompError: (frame) => {
           console.error('STOMP 에러:', frame)
+          this.isConnecting.value = false
           reject(frame)
         },
       })
@@ -79,15 +106,69 @@ class WebSocketService {
     return success
   }
 
+  // websocketService.js에 추가
+  notifyEnterChatRoom(userId, chatRoomId) {
+    return this.sendMessage('/app/chat/enter', {
+      userId,
+      chatRoomId,
+    })
+  }
+
+  notifyLeaveChatRoom(userId) {
+    return this.sendMessage('/app/chat/leave', {
+      userId,
+    })
+  }
+
+  setUserOffline(userId) {
+    return this.sendMessage('/app/user/offline', {
+      userId,
+    })
+  }
+
+  sendContractChatMessage(contractChatId, senderId, receiverId, content, type = 'TEXT') {
+    const success = this.sendMessage('/app/contract/chat/send', {
+      contractChatId,
+      senderId,
+      receiverId,
+      content,
+      type,
+    })
+    return success
+  }
+
+  notifyContractChatEnter(userId, contractChatId) {
+    return this.sendMessage('/app/contract/chat/enter', {
+      userId,
+      contractChatId,
+    })
+  }
+
+  notifyContractChatLeave(userId, contractChatId) {
+    return this.sendMessage('/app/contract/chat/leave', {
+      userId,
+      contractChatId,
+    })
+  }
+
+  notifyContractUserOffline(userId, contractChatId) {
+    return this.sendMessage('/app/contract/user/offline', {
+      userId,
+      contractChatId,
+    })
+  }
+
   onMessage(topic, handler) {
     if (!this.stompClient) {
-      console.warn('TOMP 클라이언트가 초기화되지 않았습니다.')
+      console.warn('STOMP 클라이언트가 초기화되지 않았습니다.')
       return
     }
 
     // 연결 상태를 더 정확히 체크
     if (!this.isConnected.value || !this.stompClient.connected) {
-      this.pendingSubscriptions.push({ topic, handler })
+      if (!this.pendingSubscriptions.find((p) => p.topic === topic)) {
+        this.pendingSubscriptions.push({ topic, handler })
+      }
       return
     }
 
@@ -96,7 +177,6 @@ class WebSocketService {
   }
 
   subscribeToTopic(topic, handler) {
-    // 연결 상태 재확인
     if (!this.stompClient || !this.stompClient.connected || !this.isConnected.value) {
       console.warn('구독 불가 - STOMP 연결 상태 불안정:', {
         hasClient: !!this.stompClient,
@@ -107,6 +187,12 @@ class WebSocketService {
         this.pendingSubscriptions.push({ topic, handler })
       }
       return
+    }
+
+    // 🔧 이미 구독된 토픽인지 확인
+    if (this.messageHandlers.has(topic)) {
+      console.log('이미 구독된 토픽:', topic)
+      return this.messageHandlers.get(topic)
     }
 
     try {
@@ -129,6 +215,7 @@ class WebSocketService {
       console.error('에러 스택:', error.stack)
     }
   }
+
   offMessage(topic) {
     const subscription = this.messageHandlers.get(topic)
     if (subscription) {
@@ -144,6 +231,8 @@ class WebSocketService {
   disconnect() {
     if (this.stompClient) {
       this.stompClient.deactivate()
+      this.isConnected.value = false
+      this.isConnecting.value = false
     }
   }
 
