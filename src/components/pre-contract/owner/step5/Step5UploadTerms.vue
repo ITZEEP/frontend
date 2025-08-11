@@ -167,6 +167,8 @@ watchEffect(() => {
 })
 
 onMounted(async () => {
+  precontractStore.setCanProceed(true)
+
   if (contractChatId.value) {
     await loadSavedContractDocument()
   } else {
