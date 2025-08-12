@@ -354,3 +354,70 @@ export const getAllRoundsSpecialContract = async (contractChatId) => {
     console.error('최종 특약 확정 후 모든 라운드 정보 조회 실패: ', error)
   }
 }
+
+// 최종 계약서 특약 조회
+export const getFinalContract = async (contractChatId) => {
+  try {
+    const result = await apiRequest(`/final-contract/${contractChatId}`)
+    return result.data
+  } catch (error) {
+    console.error('최종 계약서 조회 실패: ', error)
+  }
+}
+
+// 최종 특약 수정
+// 요청 (임대인)
+export const postFinalModificationRequest = async (contractChatId, data) => {
+  try {
+    return await apiPost(`/final-contract/${contractChatId}/modification-request`, data)
+  } catch (error) {
+    console.error('최종 특약 수정 요청 (임대인) 실패: ', error)
+  }
+}
+
+// 응답 (임차인)
+export const postFinalModificationResponse = async (contractChatId, data) => {
+  try {
+    return await apiPost(`/final-contract/${contractChatId}/modification-response`, data)
+  } catch (error) {
+    console.error('최종 특약 수정 응답 (임차인) 실패: ', error)
+  }
+}
+
+// 최종 특약 삭제
+// 요청 (임대인)
+export const postFinalDeletionRequest = async (contractChatId, clauseOrder) => {
+  try {
+    return await apiPost(`/final-contract/${contractChatId}/deletion-request/${clauseOrder}`)
+  } catch (error) {
+    console.error('최종 특약 삭제 요청 (임대인) 실패: ', error)
+  }
+}
+
+// 수락 응답 (임차인)
+export const postFinalDeletionResponse = async (contractChatId, data) => {
+  try {
+    return await apiPost(`/final-contract/${contractChatId}/deletion-response`, data)
+  } catch (error) {
+    console.error('최종 특약 삭제 요청 응답 (임차인) 실패: ', error)
+  }
+}
+
+// 최종 특약 확정
+// 요청 (임대인)
+export const postFinalConfirmRequest = async (contractChatId) => {
+  try {
+    return await apiPost(`/${contractChatId}/final-contract/request-confirmation`)
+  } catch (error) {
+    console.error('최종 특약 확정 요청 (임대인) 실패: ', error)
+  }
+}
+
+// 응답 (임차인)
+export const postFinalConfirmResponse = async (contractChatId, data) => {
+  try {
+    return await apiPost(`/${contractChatId}/final-contract/accept-confirmation`, data)
+  } catch (error) {
+    console.error('최종 특약 확정 요청 응답 (임차인) 실패: ', error)
+  }
+}
