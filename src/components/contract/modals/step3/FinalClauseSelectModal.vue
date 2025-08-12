@@ -1,7 +1,12 @@
 <template>
   <Modal :closable="true" :maskCloseable="true" :maxWidth="'max-w-[1200px]'" @close="onClose">
     <div class="p-6">
-      <h2 class="text-xl font-semibold mb-4">최종 특약 조항 확인</h2>
+      <header class="w-full flex justify-between">
+        <h2 class="text-xl font-semibold mb-4">최종 특약 조항 확인</h2>
+        <p class="text-sm text-red-500">
+          최종 특약은 마지막 회차로 저장되지만, 대화 후 임대인의 요청으로 수정이 가능합니다.
+        </p>
+      </header>
 
       <div v-if="loading" class="text-center text-gray-500 py-8">불러오는 중...</div>
 
