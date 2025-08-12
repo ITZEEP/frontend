@@ -1,4 +1,3 @@
-<!-- src/components/contract/steps/Step3Terms.vue -->
 <template>
   <div class="w-full h-[728px] flex flex-col gap-4 overflow-y-auto">
     <h2 class="text-base font-semibold">
@@ -13,6 +12,7 @@
     <!-- 전체 완료인 경우: 최종 계약서 특약 -->
     <div v-if="isAllDone">
       <div v-if="finalClauses.length === 0">최종 특약이 없습니다.</div>
+
       <ul v-else class="space-y-4 bg-gray-100 p-4 rounded-md flex flex-col">
         <li
           v-for="clause in finalClauses"
@@ -20,26 +20,90 @@
           class="flex flex-col gap-2 bg-white p-4 rounded-md shadow-sm"
         >
           <div class="flex justify-between items-start">
-            <div>
-              <p class="text-sm font-medium">
-                {{ clause.order ?? clause.id ?? clause.clauseId }}.
-                {{ clause.title ?? clause.name }}
-              </p>
-              <p class="text-sm text-gray-600 whitespace-pre-wrap mt-1">
-                {{ clause.content ?? clause.text }}
-              </p>
-            </div>
-            <div class="flex items-center gap-3">
-              <button class="text-yellow-primary hover:text-yellow-500" title="수정">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button class="text-gray-500 hover:text-red-400" title="삭제">
-                <i class="fas fa-trash"></i>
-              </button>
+            <div class="flex-1">
+              <div class="w-full flex justify-between items-center">
+                <!-- 제목 -->
+                <p class="text-sm font-medium mb-1">
+                  {{ clause.order ?? clause.id ?? clause.clauseId }}.
+                  <template v-if="isOwner && isEditing(clause.order)">
+                    <input
+                      v-model="editTitleMap[clause.order]"
+                      type="text"
+                      class="border rounded px-2 py-1 w-96 text-sm"
+                      :placeholder="clause.title ?? clause.name ?? '제목'"
+                    />
+                  </template>
+                  <template v-else>
+                    {{ clause.title ?? clause.name }}
+                  </template>
+                </p>
+                <!-- 임대인만 수정/삭제 버튼 노출 -->
+                <div v-if="isOwner" class="flex items-center gap-3 ml-4 shrink-0">
+                  <button
+                    class="text-yellow-primary hover:text-yellow-500"
+                    title="수정"
+                    @click="toggleEdit(clause)"
+                  >
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button
+                    class="text-gray-500 hover:text-red-500"
+                    title="삭제"
+                    :disabled="deleting[clause.order]"
+                    @click="confirmDelete(clause.order)"
+                  >
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- 내용 -->
+              <div>
+                <template v-if="isOwner && isEditing(clause.order)">
+                  <div class="flex items-center gap-2">
+                    <textarea
+                      v-model="editContentMap[clause.order]"
+                      type="text"
+                      class="border rounded px-2 py-1 w-full text-sm"
+                      :placeholder="clause.content ?? clause.text ?? '내용'"
+                    ></textarea>
+                    <BaseButton
+                      class="w-14"
+                      size="sm"
+                      :loading="saving[clause.order]"
+                      :disabled="saving[clause.order]"
+                      @click="submitModification(clause.order)"
+                    >
+                      수정 요청
+                    </BaseButton>
+                    <button
+                      class="text-xs w-10 text-gray-500 hover:underline"
+                      @click="cancelEdit(clause.order)"
+                    >
+                      취소
+                    </button>
+                  </div>
+                </template>
+                <template v-else>
+                  <p class="text-sm text-gray-600 whitespace-pre-wrap mt-1">
+                    {{ clause.content ?? clause.text }}
+                  </p>
+                </template>
+              </div>
             </div>
           </div>
         </li>
-        <BaseButton>특약 최종 확정하기</BaseButton>
+
+        <!-- 임대인만 최종 확정 버튼 노출 -->
+        <!-- 임대인만 최종 확정 버튼 노출 -->
+        <BaseButton
+          v-if="isOwner"
+          :loading="confirming"
+          :disabled="confirming"
+          @click="confirmFinal"
+        >
+          특약 최종 확정하기
+        </BaseButton>
       </ul>
     </div>
 
@@ -48,14 +112,14 @@
       <div v-if="clauses.length === 0">조율 중인 특약이 없습니다.</div>
       <ul v-else class="space-y-4 bg-gray-100 p-4 rounded-md flex flex-col">
         <li
-          v-for="(clause, index) in clauses"
+          v-for="clause in clauses"
           :key="clause.id"
           class="flex flex-col gap-2 bg-white p-4 rounded-md shadow-sm"
         >
           <div class="flex justify-between items-start">
             <div>
               <div class="w-full flex justify-between">
-                <p class="text-sm font-medium">{{ index + 1 }}. {{ clause.title }}</p>
+                <p class="text-sm font-medium">{{ clause.id }}. {{ clause.title }}</p>
                 <button
                   class="text-xs text-blue-600 hover:underline"
                   @click="toggleDetails(clause.id)"
@@ -98,7 +162,14 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { getSpecialContractForUser, getFinalContract } from '@/apis/contractChatApi'
+import {
+  getSpecialContractForUser,
+  getFinalContract,
+  getContractInfo,
+  postFinalModificationRequest,
+  postFinalDeletionRequest,
+  postFinalConfirmRequest,
+} from '@/apis/contractChatApi'
 import { useSpecialContractStore } from '@/stores/useContractTermStore'
 import BaseButton from '@/components/common/BaseButton.vue'
 
@@ -109,6 +180,14 @@ const props = defineProps({
 const clauses = ref([])
 const finalClauses = ref([])
 const openDetails = ref({})
+const role = ref('')
+
+/* inline-edit 상태 */
+const editing = ref({})
+const editTitleMap = ref({})
+const editContentMap = ref({})
+const saving = ref({})
+const deleting = ref({})
 
 const route = useRoute()
 const store = useSpecialContractStore()
@@ -131,12 +210,14 @@ const isAllDone = computed(() => {
   return false
 })
 
+// "임대인" 문자열이 포함되면 true
+const isOwner = computed(() => (role.value || '').includes('임대인'))
+
 const fetchClauses = async (id) => {
   if (!id) return
   const res = await getSpecialContractForUser(id)
   const list = res?.clauses || []
   clauses.value = list
-  // 펼침 상태 초기화
   openDetails.value = {}
   list.forEach((c) => (openDetails.value[c.id] = false))
 }
@@ -151,28 +232,110 @@ const fetchFinalClauses = async (id) => {
     : []
 }
 
+const fetchRole = async (id) => {
+  try {
+    const res = await getContractInfo(String(id))
+    role.value = res?.data?.role || ''
+  } catch (e) {
+    console.error('[Step3Terms] getContractInfo 실패:', e)
+    role.value = ''
+  }
+}
+
 const toggleDetails = (id) => {
   openDetails.value[id] = !openDetails.value[id]
 }
 
-/**
- * 최초 로드 & id/isAllDone 변경 시 데이터 로드
- * (기존 watchEffect의 키 충돌 방지를 위해 명시적 watch로 분리)
- */
+/* ----- inline-edit helpers ----- */
+const isEditing = (order) => !!editing.value[order]
+
+const toggleEdit = (clause) => {
+  const order = clause.order ?? clause.id ?? clause.clauseId
+  if (!order) return
+  if (!editing.value[order]) {
+    editTitleMap.value[order] = clause.title ?? clause.name ?? ''
+    editContentMap.value[order] = clause.content ?? clause.text ?? ''
+    editing.value[order] = true
+  } else {
+    // 편집 모드 종료
+    editing.value[order] = false
+  }
+}
+
+const cancelEdit = (order) => {
+  editing.value[order] = false
+}
+
+/* 수정 요청 */
+const submitModification = async (order) => {
+  if (!contractChatId.value || saving.value[order]) return
+  const payload = {
+    clauseOrder: Number(order),
+    newTitle: editTitleMap.value[order] ?? '',
+    newContent: editContentMap.value[order] ?? '',
+  }
+
+  try {
+    saving.value[order] = true
+    await postFinalModificationRequest(contractChatId.value, payload)
+
+    await fetchFinalClauses(contractChatId.value)
+    editing.value[order] = false
+  } catch (e) {
+    console.error('[Step3Terms] 최종 특약 수정 요청 실패:', e)
+  } finally {
+    saving.value[order] = false
+  }
+}
+
+const confirmDelete = async (order) => {
+  if (!contractChatId.value || deleting.value[order]) return
+  const ok = window.confirm('해당 최종 특약을 삭제 요청하시겠습니까?')
+  if (!ok) return
+
+  try {
+    deleting.value[order] = true
+    await postFinalDeletionRequest(contractChatId.value, Number(order))
+
+    await fetchFinalClauses(contractChatId.value)
+  } catch (e) {
+    console.error('[Step3Terms] 최종 특약 삭제 요청 실패:', e)
+  } finally {
+    deleting.value[order] = false
+  }
+}
+
+const confirming = ref(false)
+
+const confirmFinal = async () => {
+  if (!contractChatId.value) return
+  try {
+    confirming.value = true
+    const res = await postFinalConfirmRequest(String(contractChatId.value))
+    if (res?.success) {
+      alert('최종 확정 요청을 보냈습니다. 임차인의 승인 대기 중입니다.')
+    } else {
+      alert(res?.message || '최종 확정 요청에 실패했습니다.')
+    }
+  } catch (e) {
+    console.error('[Step3Terms] 최종 확정 요청 실패:', e)
+    alert('최종 확정 요청 중 오류가 발생했습니다.')
+  } finally {
+    confirming.value = false
+  }
+}
+
 watch(
-  [contractChatId, isAllDone],
+  [contractChatId, isAllDone, () => store.finalContractVersion],
   async ([id, done]) => {
     if (!id) return
+    await fetchRole(id)
     if (done) await fetchFinalClauses(id)
     else await fetchClauses(id)
   },
   { immediate: true },
 )
 
-/**
- * ✅ currentRound 변경 시 초안/라운드 특약 다시 조회
- * (isAllDone이 false일 때만 의미 있으므로 가드)
- */
 watch(
   () => store.currentRound,
   async () => {

@@ -1,4 +1,3 @@
-<!-- src/components/contract/ContractChat.vue -->
 <template>
   <div class="h-full flex flex-col">
     <!-- 상단 헤더 -->
@@ -65,7 +64,7 @@
           v-for="(message, index) in hookMessages"
           :key="'hook-' + (message.id || message.sendTime || index)"
         >
-          <!-- ✅ AI 메시지는 규칙 기반 버튼으로 처리 -->
+          <!--  AI 메시지는 규칙 기반 버튼으로 처리 -->
           <template v-if="isAi(message)">
             <AiChatMessage
               :message="message.content"
@@ -125,16 +124,16 @@
     <div v-else class="border-t bg-gray-50 p-4 text-center text-gray-500">
       <div class="mb-2">{{ getLoadingMessage() }}</div>
       <div class="text-xs mt-2 text-gray-400 space-y-1">
-        <div>✅ 사용자 ID: {{ currentUserId || 'Loading...' }}</div>
-        <div>✅ 계약 ID: {{ actualContractChatId || 'Loading...' }}</div>
+        <div>사용자 ID: {{ currentUserId || 'Loading...' }}</div>
+        <div>계약 ID: {{ actualContractChatId || 'Loading...' }}</div>
         <div :class="contractReceiverId ? 'text-green-600' : 'text-red-500'">
-          {{ contractReceiverId ? '✅' : '❌' }} 상대방 ID: {{ contractReceiverId || 'Loading...' }}
+          {{ contractReceiverId ? '' : '❌' }} 상대방 ID: {{ contractReceiverId || 'Loading...' }}
         </div>
         <div :class="hookIsReady ? 'text-green-600' : 'text-orange-500'">
-          {{ hookIsReady ? '✅' : '🔄' }} 훅 준비상태: {{ hookIsReady ? '준비됨' : '준비중' }}
+          {{ hookIsReady ? '' : '🔄' }} 훅 준비상태: {{ hookIsReady ? '준비됨' : '준비중' }}
         </div>
         <div :class="isInputReady ? 'text-green-600' : 'text-red-500'">
-          {{ isInputReady ? '✅' : '❌' }} 입력 준비: {{ isInputReady ? '완료' : '대기중' }}
+          {{ isInputReady ? '' : '❌' }} 입력 준비: {{ isInputReady ? '완료' : '대기중' }}
         </div>
       </div>
 
@@ -164,6 +163,8 @@ import {
   setStartPoint,
   setEndPointAndExport,
   getContractInfo,
+  postFinalDeletionResponse,
+  postFinalConfirmResponse,
 } from '@/apis/contractChatApi'
 import { getCurrentUser } from '@/apis/chatApi'
 import { useContractChat } from '@/hooks/chat/useContractChat'
@@ -176,8 +177,8 @@ import AiChatMessage from './messages/AiChatMessage.vue'
 import TermsReviewModal from '@/components/contract/modals/step3/TermsReviewModal.vue'
 import { useModalStore } from '@/stores/modal'
 import FinalClauseSelectModal from '@/components/contract/modals/step3/FinalClauseSelectModal.vue'
+import { postFinalModificationResponse } from '@/apis/contractChatApi'
 
-/* ✅ 추가: 규칙 기반 버튼/액션 연결 */
 import { getAiButtonsForMessage, AI_SENDER } from '@/config/chat/aiUiRegistry'
 import { createActionDispatchers } from '@/config/chat/aiActionHandlers'
 
@@ -192,7 +193,6 @@ const props = defineProps({
     type: [String, Number],
     required: false,
   },
-  // 필요 시 외부에서 단계 주입 가능. 없으면 3으로 사용 (기존 로직 영향 X)
   currentStep: {
     type: [Number, String],
     required: false,
@@ -226,6 +226,7 @@ const showExportModal = ref(false)
 const exportedMessages = ref([])
 const userLoaded = ref(false)
 const contractData = ref({})
+const isOwner = computed(() => (contractData.value?.role || '').includes('임대인'))
 
 // 계약 상대방 ID
 const contractReceiverId = computed(() => {
@@ -456,11 +457,76 @@ const handleExportMessages = async () => {
   }
 }
 
-/* ✅ 규칙 기반 버튼 계산 */
+/* 규칙 기반 버튼 계산 */
 const currentStepValue = computed(() => Number(props.currentStep) || 3)
-const aiButtons = (message) => getAiButtonsForMessage(currentStepValue.value, message)
+const aiButtons = (message) => {
+  const base = getAiButtonsForMessage(currentStepValue.value, message)
+  if (!Array.isArray(base)) return []
+  if (!isOwner.value) return base
+  // 임대인 화면에서는 수정/삭제/최종확정 응답 버튼 숨김
+  return base.filter(
+    (b) =>
+      !/^step3\.(modification|deletion|finalConfirm)\.(accept|reject)$/.test(
+        String(b?.action || ''),
+      ),
+  )
+}
 
-/* ✅ 액션 디스패처: 현재처럼 모달 열기 함수는 그대로 사용 */
+const respondModification = async (accepted) => {
+  try {
+    const cid = Number(actualContractChatId.value)
+    const body = { accepted: !!accepted }
+
+    const res = await postFinalModificationResponse(cid, body)
+    if (res?.success) {
+      alert(accepted ? '수정 요청을 수락했습니다.' : '수정 요청을 거절했습니다.')
+      store.bumpFinalContractVersion()
+    } else {
+      alert(res?.message || '수정 요청 응답 처리에 실패했습니다.')
+    }
+  } catch (e) {
+    console.error('[ContractChat] respondModification 실패:', e)
+    alert('수정 요청 응답 처리 중 오류가 발생했습니다.')
+  }
+}
+
+const responseDeletion = async (accepted) => {
+  try {
+    const cid = Number(actualContractChatId.value)
+    const body = { accepted: !!accepted }
+
+    const res = await postFinalDeletionResponse(cid, body)
+
+    if (res?.success) {
+      alert(accepted ? '삭제 요청을 수락했습니다.' : '삭제 요청을 거절했습니다.')
+      store.bumpFinalContractVersion()
+    } else {
+      alert(res?.message || '삭제 요청 응답 처리에 실패했습니다.')
+    }
+  } catch (e) {
+    console.error('[ContractChat] responseDeletion 실패:', e)
+    alert('수정 요청 응답 처리 중 오류가 발생했습니다.')
+  }
+}
+
+const responseFinalConfirm = async (accepted) => {
+  try {
+    const cid = Number(actualContractChatId.value)
+    const body = { accepted: !!accepted }
+    const res = await postFinalConfirmResponse(cid, body)
+    if (res?.success) {
+      alert(accepted ? '최종 확정 요청을 수락했습니다.' : '최종 확정 요청을 거절했습니다.')
+      // 최종 특약 뷰 갱신 트리거 (Step3Terms에서 watch 중)
+      store.bumpFinalContractVersion()
+    } else {
+      alert(res?.message || '최종 확정 요청 응답 처리에 실패했습니다.')
+    }
+  } catch (e) {
+    console.error('[ContractChat] responseFinalConfirm 실패:', e)
+    alert('최종 확정 요청 응답 처리 중 오류가 발생했습니다.')
+  }
+}
+
 const openTermsReview = () => {
   modalStore.open(TermsReviewModal, { onClose: () => modalStore.close() })
 }
@@ -468,13 +534,19 @@ const openFinalClause = () => {
   modalStore.open(FinalClauseSelectModal, { onClose: () => modalStore.close() })
 }
 
-// 필요 시 추가 액션(내보내기 결과/서명 등)을 여기서 더 정의 가능
 const openExportResult = () => {
   console.log('[ContractChat] openExportResult')
 }
 
 const dispatchAction = createActionDispatchers({
-  step3: { openTermsReview, openFinalClause, openExportResult },
+  step3: {
+    openTermsReview,
+    openFinalClause,
+    openExportResult,
+    respondModification,
+    responseDeletion,
+    responseFinalConfirm,
+  },
 })
 
 const handleAiAction = (payload) => {
