@@ -1,3 +1,4 @@
+//
 <template>
   <aside class="w-full md:w-64 bg-white px-4 py-6 border-r border-gray-200 space-y-6">
     <div>
@@ -245,7 +246,7 @@ function emitFilterChange() {
 
 const directions = ['남향', '동향', '서향', '북향', '남동향', '남서향', '북동향', '북서향']
 const floors = ['반지하', '1층', '2~5층', '6~9층', '10층 이상']
-const conditions = ['주차 가능', '반려동물 가능', '대출 가능', '엘리베이터', '옥탑', '복층', '신축']
+const conditions = ['주차 가능', '반려동물 가능', '엘리베이터']
 </script>
 
 <style>

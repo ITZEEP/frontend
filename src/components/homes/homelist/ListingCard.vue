@@ -6,8 +6,8 @@
       aria-label="매물 카드"
     >
       <img
-        v-if="listing.imageUrl"
-        :src="listing.imageUrl"
+        v-if="listing.imageUrls && listing.imageUrls.length > 0"
+        :src="listing.imageUrls[0]"
         alt="매물 사진"
         class="w-full h-48 object-cover"
       />
@@ -82,6 +82,26 @@ defineProps({
 
 function formatNumber(value) {
   if (typeof value === 'number') {
+    // 억 단위 처리
+    if (value >= 100000000) {
+      const billion = Math.floor(value / 100000000)
+      const remainder = value % 100000000
+      if (remainder > 0) {
+        return `${billion}억 ${remainder.toLocaleString()}`
+      } else {
+        return `${billion}억`
+      }
+    }
+    // 천만 단위 처리
+    if (value >= 10000) {
+      const tenThousand = Math.floor(value / 10000)
+      const remainder = value % 10000
+      if (remainder > 0) {
+        return `${tenThousand}만 ${remainder.toLocaleString()}`
+      } else {
+        return `${tenThousand}만`
+      }
+    }
     return value.toLocaleString()
   }
   return value ?? '0'
@@ -89,6 +109,7 @@ function formatNumber(value) {
 
 function convertToPyeong(area) {
   if (!area) return 0
+  // 제곱미터(m²)를 평으로 변환 (1평 ≈ 3.30578m²)
   return Math.round(area / 3.3058)
 }
 </script>

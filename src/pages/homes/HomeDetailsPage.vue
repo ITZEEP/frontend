@@ -1,6 +1,11 @@
 <template>
   <div class="max-w-4xl mx-auto p-6">
-    <ImageGallery v-if="images.length > 0" :images="images" />
+    <ImageGallery
+      v-if="images.length > 0"
+      :images="images"
+      :homeId="id"
+      :initialIsFavorite="isFavorite"
+    />
 
     <div v-if="listing" class="mt-6 space-y-10">
       <ListingBasicInfo :listing="listing" />
@@ -36,7 +41,7 @@ import RoomDetails from '@/components/homes/homedetails/RoomDetails.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import TravelMap from '@/components/travel/TravelMap.vue'
 
-import { fetchListingById } from '@/apis/listing.js'
+import { fetchListingById } from '@/apis/listing.js' // API 함수 import
 
 const route = useRoute()
 const router = useRouter()
@@ -44,6 +49,7 @@ const id = Number(route.params.no)
 
 const listing = ref(null)
 const images = ref([])
+const isFavorite = ref(false) // 찜 상태를 서버에서 받아와 초기화
 
 onMounted(async () => {
   try {
@@ -53,6 +59,8 @@ onMounted(async () => {
     if (data) {
       listing.value = data
       images.value = data.imageUrls || []
+      // 서버에서 찜 상태를 확인하는 API가 있다면 여기서 호출하여 isFavorite 초기화
+      // 예를 들어, isFavorite.value = await fetchHomeLikeStatus(id)
     }
   } catch (err) {
     console.error('매물 조회 실패:', err)
