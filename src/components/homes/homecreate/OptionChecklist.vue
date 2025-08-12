@@ -21,6 +21,22 @@
         />
       </div>
     </fieldset>
+
+    <div class="border border-gray-300 rounded-md p-4">
+      <h3 class="font-semibold mb-2">기타 상세 정보</h3>
+      <div class="flex flex-wrap gap-6">
+        <BaseCheckBox
+          label="반려동물 가능"
+          :modelValue="isPetFriendly"
+          @update:modelValue="(checked) => (isPetFriendly = checked)"
+        />
+        <BaseCheckBox
+          label="주차 가능"
+          :modelValue="isParkingAvailable"
+          @update:modelValue="(checked) => (isParkingAvailable = checked)"
+        />
+      </div>
+    </div>
   </form>
 </template>
 
@@ -38,47 +54,47 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue'])
 
 const localSelectedIds = ref([...props.modelValue])
+const isPetFriendly = ref(false)
+const isParkingAvailable = ref(false)
 
-// 'itemMap'은 이제 사용되지 않습니다.
+// 데이터베이스의 'facility_item' 테이블과 일치하도록 수정되었습니다.
 const utilityItems = {
   appliances: [
     { id: 1, name: '에어컨' },
     { id: 2, name: '세탁기' },
     { id: 3, name: '냉장고' },
     { id: 4, name: '전자레인지' },
-    { id: 5, name: 'TV' },
-    { id: 6, name: '인덕션' },
-    { id: 7, name: '가스레인지' },
-    { id: 8, name: '벽걸이 에어컨' },
-    { id: 9, name: '빌트인 에어컨' },
+    { id: 16, name: 'TV' },
+    { id: 19, name: '인덕션' },
+    { id: 20, name: '가스렌지' },
+    { id: 22, name: '벽걸이 에어컨' },
+    { id: 23, name: '빌트인 에어컨' },
   ],
   furniture: [
-    { id: 10, name: '침대' },
-    { id: 11, name: '책상' },
-    { id: 12, name: '옷장' },
-    { id: 13, name: '소파' },
-    { id: 14, name: '욕조' },
-    { id: 15, name: '싱크대' },
-    { id: 16, name: '붙박이장' },
-    { id: 17, name: '신발장' },
+    { id: 5, name: '침대' },
+    { id: 6, name: '책상' },
+    { id: 7, name: '옷장' },
+    { id: 8, name: '소파' },
+    { id: 24, name: '욕조' },
+    { id: 25, name: '싱크대' },
+    { id: 28, name: '붙박이장' },
+    { id: 29, name: '신발장' },
   ],
   security: [
-    { id: 18, name: '도어락' },
-    { id: 19, name: 'CCTV' },
-    { id: 20, name: '인터폰' },
-    { id: 21, name: '카드키' },
-    { id: 22, name: '방범창' },
-    { id: 23, name: '경비' },
-    { id: 24, name: '화재경보기' },
-    { id: 25, name: '소화기' },
-    { id: 26, name: '현관보안' },
+    { id: 9, name: '도어락' },
+    { id: 10, name: 'CCTV' },
+    { id: 11, name: '인터폰' },
+    { id: 34, name: '카드키' },
+    { id: 35, name: '방범창' },
+    { id: 36, name: '경비' },
+    { id: 37, name: '화재경보기' },
+    { id: 38, name: '소화기' },
+    { id: 39, name: '현관보안' },
   ],
   convenience: [
-    { id: 27, name: '엘리베이터' },
-    { id: 28, name: '주차장' },
-    { id: 29, name: '택배보관함' },
-    { id: 30, name: '전체난방' },
-    { id: 31, name: '반려동물 가능' },
+    { id: 12, name: '엘리베이터' },
+    { id: 14, name: '택배보관함' },
+    { id: 41, name: '전체난방' },
   ],
 }
 
@@ -90,7 +106,17 @@ const categoryLabels = {
 }
 
 function updateCheckbox(itemId, checked) {
+  const allValidIds = Object.values(utilityItems)
+    .flat()
+    .map((item) => item.id)
   const index = localSelectedIds.value.indexOf(itemId)
+
+  // 유효한 ID인지 확인하는 로직 추가
+  if (!allValidIds.includes(itemId)) {
+    console.warn(`Attempted to update an invalid itemId: ${itemId}`)
+    return
+  }
+
   if (checked && index === -1) {
     localSelectedIds.value.push(itemId)
   } else if (!checked && index !== -1) {
