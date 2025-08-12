@@ -6,7 +6,12 @@
         class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
         @click.self="onMaskClick"
       >
-        <div :class="['bg-white rounded-xl w-full p-6 relative', props.maxWidth]">
+        <div
+          :class="[
+            'max-h-[670px] bg-white rounded-xl w-full p-6 relative overflow-y-auto',
+            props.maxWidth,
+          ]"
+        >
           <button
             v-if="closable"
             class="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
