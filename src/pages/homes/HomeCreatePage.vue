@@ -110,7 +110,9 @@ const handleSubmit = async () => {
 
     console.log('최종 제출 데이터:', payload, images)
     const response = await createListing(payload, images)
-    const homeId = response.data
+    const homeId = response
+    console.log('API 응답으로 받은 homeId:', homeId)
+
     alert('매물 등록 완료')
     router.push(`/homes/create/${homeId}/verification`)
   } catch (e) {
