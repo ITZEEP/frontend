@@ -1,3 +1,19 @@
+<template>
+  <div class="max-w-4xl mx-auto p-6 space-y-6">
+    <StepProgressIndicator :currentStep="currentStep" />
+    <component :is="stepComponent" :form="form" @update:form="updateForm" />
+    <div class="flex justify-between mt-10">
+      <BaseButton v-if="currentStep > 1" @click="goToStep(currentStep - 1)">이전</BaseButton>
+      <div class="ml-auto">
+        <BaseButton v-if="currentStep < stepComponents.length" @click="goToStep(currentStep + 1)">
+          다음
+        </BaseButton>
+        <BaseButton v-else @click="handleSubmit" class="ml-2">저장</BaseButton>
+      </div>
+    </div>
+  </div>
+</template>
+
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -42,16 +58,17 @@ const form = reactive({
   bathroomCount: 0,
   homeFloor: 0,
   buildingTotalFloors: 0,
-  buildDate: '',
+  buildDate: '', // string "yyyy-MM-dd"
   homeDirection: '',
-  facilityItemIds: [],
-  maintenanceFeeItems: [],
+  facilityItemIds: [], // 백엔드 DTO에 맞게 직접 사용
+  maintenanceFeeItems: [], // 백엔드 DTO에 맞게 직접 사용
   description: '',
-  images: [],
+  images: [], // 파일 객체 배열
   isPet: false,
   isParking: false,
   area: 0,
   landCategory: '',
+  // ... HomeCreateRequestDto의 다른 필드들도 여기에 포함
 })
 
 const stepComponent = computed(() => stepComponents[currentStep.value - 1])
@@ -111,19 +128,3 @@ const handleSubmit = async () => {
   }
 }
 </script>
-
-<template>
-  <div class="max-w-4xl mx-auto p-6 space-y-6">
-    <StepProgressIndicator :currentStep="currentStep" />
-    <component :is="stepComponent" :form="form" @update:form="updateForm" />
-    <div class="flex justify-between mt-10">
-      <BaseButton v-if="currentStep > 1" @click="goToStep(currentStep - 1)">이전</BaseButton>
-      <div class="ml-auto">
-        <BaseButton v-if="currentStep < stepComponents.length" @click="goToStep(currentStep + 1)">
-          다음
-        </BaseButton>
-        <BaseButton v-else @click="handleSubmit" class="ml-2">저장</BaseButton>
-      </div>
-    </div>
-  </div>
-</template>

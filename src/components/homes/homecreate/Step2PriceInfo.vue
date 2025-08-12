@@ -85,7 +85,6 @@
             @input="handleInput('monthlyRent', $event)"
             class="w-full border rounded px-3 py-2 pr-16 text-right"
             placeholder="0"
-            required
           />
           <span class="absolute right-4 top-1/2 transform -translate-y-1/2 text-sm text-gray-500"
             >만원</span
@@ -144,6 +143,7 @@ function formatCurrency(value) {
 function handleInput(field, event) {
   const raw = event.target.value.replace(/[^\d]/g, '')
   const parsed = raw ? parseInt(raw, 10) : 0
+  // 이 부분은 기존과 동일
   emit('update:form', { ...props.form, [field]: parsed })
   const formatted = formatCurrency(raw || '0')
   event.target.value = formatted
@@ -176,7 +176,8 @@ function toggleMaintenanceItem(id, name, checked) {
   } else {
     newItems = newItems.filter((item) => item.maintenanceId !== id)
   }
-  emit('update:form', { ...props.form, maintenanceFeeItems: newItems })
+  // ✨ 이 부분 수정: 'maintenanceFeeItems' 키만 가진 객체를 emit
+  emit('update:form', { maintenanceFeeItems: newItems })
 }
 
 function isChecked(id) {
