@@ -83,25 +83,25 @@ defineProps({
 function formatNumber(value) {
   if (typeof value === 'number') {
     // 억 단위 처리
-    if (value >= 100000000) {
-      const billion = Math.floor(value / 100000000)
-      const remainder = value % 100000000
-      if (remainder > 0) {
-        return `${billion}억 ${remainder.toLocaleString()}`
-      } else {
-        return `${billion}억`
-      }
-    }
+    // if (value >= 100000000) {
+    //   const billion = Math.floor(value / 100000000)
+    //   const remainder = value % 100000000
+    //   if (remainder > 0) {
+    //     return `${billion}억 ${remainder.toLocaleString()}`
+    //   } else {
+    //     return `${billion}억`
+    //   }
+    // }
     // 천만 단위 처리
-    if (value >= 10000) {
-      const tenThousand = Math.floor(value / 10000)
-      const remainder = value % 10000
-      if (remainder > 0) {
-        return `${tenThousand}만 ${remainder.toLocaleString()}`
-      } else {
-        return `${tenThousand}만`
-      }
-    }
+    // if (value >= 10000) {
+    //   const tenThousand = Math.floor(value / 10000)
+    //   const remainder = value % 10000
+    //   if (remainder > 0) {
+    //     return `${tenThousand}만 ${remainder.toLocaleString()}`
+    //   } else {
+    //     return `${tenThousand}만`
+    //   }
+    // }
     return value.toLocaleString()
   }
   return value ?? '0'

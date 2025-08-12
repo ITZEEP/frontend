@@ -1,3 +1,19 @@
+<template>
+  <div class="max-w-4xl mx-auto p-6 space-y-6">
+    <StepProgressIndicator :currentStep="currentStep" />
+    <component :is="stepComponent" :form="form" @update:form="updateForm" />
+    <div class="flex justify-between mt-10">
+      <BaseButton v-if="currentStep > 1" @click="goToStep(currentStep - 1)">이전</BaseButton>
+      <div class="ml-auto">
+        <BaseButton v-if="currentStep < stepComponents.length" @click="goToStep(currentStep + 1)">
+          다음
+        </BaseButton>
+        <BaseButton v-else @click="handleSubmit" class="ml-2">저장</BaseButton>
+      </div>
+    </div>
+  </div>
+</template>
+
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -39,22 +55,20 @@ const form = reactive({
   supplyArea: 0,
   exclusiveArea: 0,
   roomCnt: 0,
-  bathroomCount: 0,
+  bathroomCount: 0, // 백엔드 DTO에 bathroomCnt로 매핑
   homeFloor: 0,
   buildingTotalFloors: 0,
-  buildDate: '', // string "yyyy-MM-dd"
+  buildDate: '',
   homeDirection: '',
-  options: [],
-  utilities: {
-    electricity: false,
-    gas: false,
-    water: false,
-    internet: false,
-    cableTV: false,
-    heating: false,
-  },
+  facilityItemIds: [], // 백엔드 DTO에 맞게 직접 사용
+  maintenanceFeeItems: [], // 백엔드 DTO에 맞게 직접 사용
   description: '',
-  images: [],
+  images: [], // 파일 객체 배열
+  isPet: false,
+  isParking: false,
+  area: 0,
+  landCategory: '',
+  // ... HomeCreateRequestDto의 다른 필드들도 여기에 포함
 })
 
 const stepComponent = computed(() => stepComponents[currentStep.value - 1])
@@ -67,32 +81,19 @@ const goToStep = (step) => {
   router.push({ query: { step: step.toString() } })
 }
 
-const utilityIdMap = {
-  electricity: 1,
-  gas: 2,
-  water: 3,
-  internet: 4,
-  cableTV: 5,
-  heating: 6,
-}
-
 const handleSubmit = async () => {
   try {
-    const maintenanceFees = Object.keys(form.utilities)
-      .filter((key) => form.utilities[key])
-      .map((key) => ({
-        maintenanceId: utilityIdMap[key],
-        fee: 0,
-      }))
-
-    // NaN 방지용 숫자 변환 함수
     const safeNumber = (val) => {
       const num = Number(val)
       return isNaN(num) ? 0 : num
     }
 
+    // `payload`를 백엔드 `HomeCreateRequestDto` 필드명에 맞게 생성
     const payload = {
-      ...form,
+      addr1: form.addr1,
+      addr2: form.addr2,
+      residenceType: form.residenceType,
+      leaseType: form.leaseType,
       depositPrice: safeNumber(form.depositPrice),
       monthlyRent: safeNumber(form.monthlyRent),
       maintenanceFee: safeNumber(form.maintenanceFee),
@@ -102,14 +103,20 @@ const handleSubmit = async () => {
       bathroomCount: safeNumber(form.bathroomCount),
       homeFloor: safeNumber(form.homeFloor),
       buildingTotalFloors: safeNumber(form.buildingTotalFloors),
-
-      options: Array.isArray(form.options) ? form.options.join(',') : '',
-      maintenanceFees: maintenanceFees,
+      buildDate: form.buildDate,
+      homeDirection: form.homeDirection,
+      isPet: form.isPet,
+      isParkingAvailable: form.isParking,
+      area: safeNumber(form.area),
+      landCategory: form.landCategory,
+      facilityItemIds: form.facilityItemIds,
+      maintenanceFeeItems: form.maintenanceFeeItems,
+      // `images` 필드는 FormData로 별도 전송하므로 payload에서 제외
     }
-    const images = form.images
 
-    console.log('최종 제출 데이터:', payload, images)
-    const response = await createListing(payload, images)
+    console.log('최종 제출 데이터:', payload, form.images)
+    const response = await createListing(payload, form.images)
+
     const homeId = response
     console.log('API 응답으로 받은 homeId:', homeId)
 
@@ -121,19 +128,3 @@ const handleSubmit = async () => {
   }
 }
 </script>
-
-<template>
-  <div class="max-w-4xl mx-auto p-6 space-y-6">
-    <StepProgressIndicator :currentStep="currentStep" />
-    <component :is="stepComponent" :form="form" @update:form="updateForm" />
-    <div class="flex justify-between mt-10">
-      <BaseButton v-if="currentStep > 1" @click="goToStep(currentStep - 1)">이전</BaseButton>
-      <div class="ml-auto">
-        <BaseButton v-if="currentStep < stepComponents.length" @click="goToStep(currentStep + 1)">
-          다음
-        </BaseButton>
-        <BaseButton v-else @click="handleSubmit" class="ml-2">저장</BaseButton>
-      </div>
-    </div>
-  </div>
-</template>

@@ -1,36 +1,3 @@
-<script setup>
-import { toRefs } from 'vue'
-import OptionChecklist from './OptionChecklist.vue'
-
-const props = defineProps({
-  form: {
-    type: Object,
-    required: true,
-  },
-})
-const emit = defineEmits(['update:form'])
-
-const { form } = toRefs(props)
-
-const handleChange = (key, value) => {
-  emit('update:form', {
-    ...props.form,
-    [key]: value,
-  })
-}
-
-const homeDirectionOptions = [
-  { label: '남향', value: 'S' },
-  { label: '동향', value: 'E' },
-  { label: '서향', value: 'W' },
-  { label: '북향', value: 'N' },
-  { label: '남동향', value: 'SE' },
-  { label: '남서향', value: 'SW' },
-  { label: '북동향', value: 'NE' },
-  { label: '북서향', value: 'NW' },
-]
-</script>
-
 <template>
   <form class="max-w-4xl mx-auto p-6 space-y-6 border rounded-md">
     <h2 class="text-lg font-semibold mb-2">상세 정보</h2>
@@ -204,6 +171,39 @@ const homeDirectionOptions = [
     </fieldset>
   </form>
 </template>
+
+<script setup>
+import { toRefs } from 'vue'
+import OptionChecklist from './OptionChecklist.vue'
+
+const props = defineProps({
+  form: {
+    type: Object,
+    required: true,
+  },
+})
+const emit = defineEmits(['update:form'])
+
+const { form } = toRefs(props)
+
+const handleChange = (key, value) => {
+  emit('update:form', {
+    ...props.form,
+    [key]: value,
+  })
+}
+
+const homeDirectionOptions = [
+  { label: '남향', value: 'S' },
+  { label: '동향', value: 'E' },
+  { label: '서향', value: 'W' },
+  { label: '북향', value: 'N' },
+  { label: '남동향', value: 'SE' },
+  { label: '남서향', value: 'SW' },
+  { label: '북동향', value: 'NE' },
+  { label: '북서향', value: 'NW' },
+]
+</script>
 
 <style scoped>
 input[type='number'].no-spin::-webkit-inner-spin-button,
