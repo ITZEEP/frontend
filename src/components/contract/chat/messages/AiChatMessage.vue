@@ -12,25 +12,38 @@
         </p>
       </div>
 
-      <!-- 메시지 내용 -->
+      <!-- 메시지 내용 (접기/펼치기 가능) -->
       <div class="relative">
         <p class="text-sm whitespace-pre-line break-words text-white">
-          {{ props.message }}
+          {{ displayText }}
         </p>
 
-        <!-- 메시지 길이 표시 -->
-        <div v-if="props.message.length > 100" class="mt-1">
-          <span class="text-xs opacity-60 text-white">{{ props.message.length }}자</span>
+        <!-- 길이/토글 -->
+        <div class="mt-1 flex items-center gap-2" v-if="showLength || showToggle">
+          <span v-if="showLength" class="text-xs opacity-60 text-white"
+            >{{ message.length }}자</span
+          >
+          <button
+            v-if="showToggle"
+            class="text-xs underline opacity-80 hover:opacity-100"
+            @click="expanded = !expanded"
+          >
+            {{ expanded ? '접기' : '더보기' }}
+          </button>
         </div>
       </div>
 
-      <!-- 메시지 액션 버튼들: 항상 표시, 메시지 아래에 배치 -->
-      <div v-if="props.buttons.length" class="mt-3 flex gap-2 flex-wrap">
+      <!-- 메시지 액션 버튼들 -->
+      <div v-if="safeButtons.length" class="mt-3 flex gap-2 flex-wrap">
         <BaseButton
-          v-for="(button, index) in props.buttons"
+          v-for="(button, index) in safeButtons"
           :key="index"
-          @click="$emit('action', button.action)"
+          :disabled="clickLocked || button.disabled"
           variant="outline"
+          @click="onClick(button)"
+          @keydown.enter.prevent="onClick(button)"
+          @keydown.space.prevent="onClick(button)"
+          :data-action="button.action"
         >
           {{ button.label }}
         </BaseButton>
@@ -40,37 +53,60 @@
     <!-- 시간 -->
     <div class="flex items-center gap-2 mt-1">
       <p class="text-xs text-gray-400">
-        {{ time }}
+        {{ formattedTime }}
       </p>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import AiIcon from '@/assets/icons/AiIcon.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 
 const props = defineProps({
-  message: {
-    type: String,
-    required: true,
-  },
-  buttons: {
-    type: Array,
-    default: () => [],
-  },
+  message: { type: String, required: true },
+  buttons: { type: Array, default: () => [] },
+  sentAt: { type: [String, Number, Date], default: null },
+  collapseAt: { type: Number, default: 280 },
+  showLengthBadge: { type: Boolean, default: true },
 })
 
-// 시간 포맷
-const time = computed(() => {
-  return new Date().toLocaleTimeString('ko-KR', {
+const emit = defineEmits(['action'])
+
+const expanded = ref(false)
+const clickLocked = ref(false)
+
+const safeButtons = computed(() => (Array.isArray(props.buttons) ? props.buttons : []))
+
+const showToggle = computed(() => props.message.length > props.collapseAt)
+const showLength = computed(() => props.showLengthBadge && props.message.length > 100)
+
+const displayText = computed(() => {
+  if (expanded.value || !showToggle.value) return props.message
+  return props.message.slice(0, props.collapseAt) + '…'
+})
+
+const formattedTime = computed(() => {
+  const date = props.sentAt ? new Date(props.sentAt) : new Date()
+  return date.toLocaleTimeString('ko-KR', {
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
     timeZone: 'Asia/Seoul',
   })
 })
+
+function onClick(button) {
+  if (clickLocked.value) return
+  clickLocked.value = true
+  emit('action', {
+    action: button.action,
+    label: button.label,
+    message: props.message,
+  })
+  setTimeout(() => (clickLocked.value = false), 250)
+}
 </script>
 
 <style scoped>

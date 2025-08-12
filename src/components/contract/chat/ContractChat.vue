@@ -1,3 +1,4 @@
+<!-- src/components/contract/ContractChat.vue -->
 <template>
   <div class="h-full flex flex-col">
     <!-- 상단 헤더 -->
@@ -34,36 +35,16 @@
       <div v-else>
         <!-- API에서 로드된 기존 메시지들 -->
         <template v-for="message in apiMessages" :key="'api-' + message.id">
-          <template v-if="message.senderId === AI_SENDER_ID">
-            <AiChatMessage :message="message.content" :buttons="[]" />
-          </template>
-
-          <template v-else-if="message.senderId === AI_SENDER_BUTTON">
+          <template v-if="isAi(message)">
             <AiChatMessage
               :message="message.content"
-              :buttons="[
-                {
-                  label: '특약 검토',
-                  action: 'openTermsReview',
-                },
-              ]"
+              :buttons="aiButtons(message)"
+              :sentAt="message.sendTime"
               @action="handleAiAction"
             />
           </template>
 
-          <template v-else-if="message.senderId === AI_SENDER_COMPLETE">
-            <AiChatMessage
-              :message="message.content"
-              :buttons="[
-                {
-                  label: '특약 수정 과정 확인하기',
-                  action: 'openTermsReview',
-                },
-              ]"
-              @action="handleAiAction"
-            />
-          </template>
-
+          <!-- 사용자/상대방 메시지 -->
           <template v-else>
             <UserChatMessage
               :name="getMessageSenderName(message)"
@@ -84,23 +65,16 @@
           v-for="(message, index) in hookMessages"
           :key="'hook-' + (message.id || message.sendTime || index)"
         >
-          <template v-if="message.senderId === AI_SENDER_ID">
-            <AiChatMessage :message="message.content" :buttons="[]" />
-          </template>
-
-          <template v-else-if="message.senderId === AI_SENDER_BUTTON">
+          <!-- ✅ AI 메시지는 규칙 기반 버튼으로 처리 -->
+          <template v-if="isAi(message)">
             <AiChatMessage
               :message="message.content"
-              :buttons="[
-                {
-                  label: '특약 검토',
-                  action: 'openTermsReview',
-                },
-              ]"
+              :buttons="aiButtons(message)"
               @action="handleAiAction"
             />
           </template>
 
+          <!-- 사용자/상대방 메시지 -->
           <template v-else>
             <UserChatMessage
               :name="getMessageSenderName(message)"
@@ -201,6 +175,11 @@ import LoadingOverlay from '@/components/common/LoadingOverlay.vue'
 import AiChatMessage from './messages/AiChatMessage.vue'
 import TermsReviewModal from '@/components/contract/modals/step3/TermsReviewModal.vue'
 import { useModalStore } from '@/stores/modal'
+import FinalClauseSelectModal from '@/components/contract/modals/step3/FinalClauseSelectModal.vue'
+
+/* ✅ 추가: 규칙 기반 버튼/액션 연결 */
+import { getAiButtonsForMessage, AI_SENDER } from '@/config/chat/aiUiRegistry'
+import { createActionDispatchers } from '@/config/chat/aiActionHandlers'
 
 const modalStore = useModalStore()
 
@@ -213,6 +192,12 @@ const props = defineProps({
     type: [String, Number],
     required: false,
   },
+  // 필요 시 외부에서 단계 주입 가능. 없으면 3으로 사용 (기존 로직 영향 X)
+  currentStep: {
+    type: [Number, String],
+    required: false,
+    default: 3,
+  },
 })
 
 // URL에서 contractChatId 추출
@@ -222,23 +207,12 @@ const urlContractChatId = computed(() => {
 
 // 실제 사용할 contractChatId 결정
 const actualContractChatId = computed(() => {
-  // 1. props에서 먼저 확인
-  if (props.contractChatId) {
-    return String(props.contractChatId)
-  }
-
-  // 2. URL 파라미터에서 확인
-  if (urlContractChatId.value) {
-    return String(urlContractChatId.value)
-  }
-
-  // 3. URL 경로에서 직접 추출 (마지막 방법)
+  if (props.contractChatId) return String(props.contractChatId)
+  if (urlContractChatId.value) return String(urlContractChatId.value)
   const pathParts = window.location.pathname.split('/')
   const contractIndex = pathParts.findIndex((part) => part === 'contract')
-  if (contractIndex !== -1 && pathParts[contractIndex + 1]) {
+  if (contractIndex !== -1 && pathParts[contractIndex + 1])
     return String(pathParts[contractIndex + 1])
-  }
-
   return null
 })
 
@@ -250,26 +224,16 @@ const currentUserId = ref('')
 const messagesContainer = ref(null)
 const showExportModal = ref(false)
 const exportedMessages = ref([])
-
-// 사용자 정보 및 채팅 준비 상태
 const userLoaded = ref(false)
-
-// 계약 데이터
 const contractData = ref({})
 
 // 계약 상대방 ID
 const contractReceiverId = computed(() => {
   if (!contractData.value || !currentUserId.value) return null
-
   const { ownerId, buyerId } = contractData.value
   const currentId = String(currentUserId.value)
-
-  if (currentId === String(ownerId)) {
-    return String(buyerId)
-  } else if (currentId === String(buyerId)) {
-    return String(ownerId)
-  }
-
+  if (currentId === String(ownerId)) return String(buyerId)
+  if (currentId === String(buyerId)) return String(ownerId)
   return null
 })
 
@@ -278,7 +242,6 @@ const {
   messages: hookMessages,
   isReady: hookIsReady,
   sendContractMessage,
-  // getOtherUserId: hookGetOtherUserId,
   isTyping,
 } = useContractChat(actualContractChatId, currentUserId, contractData)
 
@@ -292,7 +255,7 @@ const isInputReady = computed(() => {
   )
 })
 
-// 로딩 메시지 계산
+// 로딩 메시지
 const getLoadingMessage = () => {
   if (!actualContractChatId.value) return '계약 채팅방 ID를 찾는 중...'
   if (!currentUserId.value) return '사용자 정보 로딩 중...'
@@ -301,53 +264,32 @@ const getLoadingMessage = () => {
   return '로딩 중...'
 }
 
-// 🔧 추가: 메시지 발신자 이름 가져오기
-const AI_SENDER_ID = 9999 // JavaScript의 최대 안전 정수
-const AI_SENDER_BUTTON = 9998
-const AI_SENDER_COMPLETE = 9997
+// 상수: 문자열 통일
+const AI_SENDER_ID = AI_SENDER.PLAIN // '9999'
+const AI_SENDER_BUTTON = AI_SENDER.BUTTON // '9998'
+const AI_SENDER_COMPLETE = AI_SENDER.COMPLETE // '9997'
 
-// 2. getMessageSenderName 함수 수정
+// 헬퍼
+const isAi = (message) =>
+  [AI_SENDER_ID, AI_SENDER_BUTTON, AI_SENDER_COMPLETE].includes(String(message?.senderId))
+
 const getMessageSenderName = (message) => {
-  if (String(message.senderId) === String(currentUserId.value)) {
-    return '나'
-  }
-
-  // 계약 데이터에서 상대방 정보 가져오기
+  if (String(message.senderId) === String(currentUserId.value)) return '나'
   const { ownerId, buyerId } = contractData.value || {}
-  if (String(message.senderId) === String(ownerId)) {
-    return '소유자'
-  } else if (String(message.senderId) === String(buyerId)) {
-    return '구매자'
-  }
-
+  if (String(message.senderId) === String(ownerId)) return '소유자'
+  if (String(message.senderId) === String(buyerId)) return '구매자'
   return '사용자'
 }
 
-// 🔧 추가: 메시지 상태 가져오기
 const getMessageStatus = (message) => {
-  // 상대방 메시지는 항상 전송됨 상태
-  if (String(message.senderId) !== String(currentUserId.value)) {
-    return 'sent'
-  }
-
-  // 내 메시지의 상태 판단
-  if (message.id && message.sendTime) {
-    return 'sent'
-  }
-
+  if (String(message.senderId) !== String(currentUserId.value)) return 'sent'
+  if (message.id && message.sendTime) return 'sent'
   return 'sending'
 }
 
-// 🔧 추가: 답장 처리
-const handleReply = (replyData) => {
-  console.log('답장:', replyData)
-  // 답장 기능 구현 (선택사항)
-}
-
-// 🔧 추가: 복사 처리
-const handleCopy = (message) => {
-  console.log('메시지 복사됨:', message)
-}
+// 답장/복사
+const handleReply = (replyData) => console.log('답장:', replyData)
+const handleCopy = (message) => console.log('메시지 복사됨:', message)
 
 // 사용자 정보 로드
 const loadUserInfo = async () => {
@@ -372,7 +314,6 @@ const loadContractInfo = async () => {
   }
   try {
     const response = await getContractInfo(actualContractChatId.value)
-
     if (response.success && response.data) {
       contractData.value = response.data
     } else {
@@ -382,22 +323,19 @@ const loadContractInfo = async () => {
     console.error('계약 정보 로드 실패:', error)
   }
 }
+
 // 메시지 로드
 const loadMessages = async () => {
   if (!actualContractChatId.value) {
     console.warn('메시지 로드 건너뜀: contractChatId가 없음')
     return
   }
-
   try {
     loadingMessages.value = true
     messagesError.value = null
-
     const response = await getContractMessages(actualContractChatId.value)
-
     if (response && response.success) {
       apiMessages.value = response.data || []
-
       if (apiMessages.value.length === 0) {
         console.log('메시지가 없습니다. 첫 메시지를 보내보세요!')
       }
@@ -405,22 +343,17 @@ const loadMessages = async () => {
       const errorMsg = response?.message || '메시지 로드에 실패했습니다.'
       messagesError.value = errorMsg
       console.error('메시지 로드 실패:', response)
-
-      // 404 에러인 경우 (계약 채팅방이 존재하지 않음)
       if (errorMsg.includes('404') || errorMsg.includes('not found')) {
         messagesError.value = '계약 채팅방을 찾을 수 없습니다. 계약이 생성되지 않았을 수 있습니다.'
       }
     }
-
     await nextTick()
     forceScrollToBottom()
   } catch (error) {
     console.error('메시지 로드 실패:', error)
-
-    // 네트워크 에러인지 확인
-    if (error.message.includes('404')) {
+    if (error.message?.includes?.('404')) {
       messagesError.value = '계약 채팅방이 존재하지 않습니다. 먼저 계약을 생성해주세요.'
-    } else if (error.message.includes('403')) {
+    } else if (error.message?.includes?.('403')) {
       messagesError.value = '계약 채팅방에 접근할 권한이 없습니다.'
     } else {
       messagesError.value = '메시지를 불러올 수 없습니다: ' + (error.message || '알 수 없는 오류')
@@ -430,45 +363,38 @@ const loadMessages = async () => {
   }
 }
 
-// 강제 스크롤
+// 스크롤
 const forceScrollToBottom = () => {
   if (!messagesContainer.value) return
-
   const container = messagesContainer.value
   container.scrollTop = container.scrollHeight
-
   nextTick(() => {
     container.scrollTop = container.scrollHeight
   })
-
   requestAnimationFrame(() => {
     container.scrollTop = container.scrollHeight
   })
 }
 
-// 🔧 수정: 메시지 전송 (즉시 표시 포함)
+// 메시지 전송
 const sendMessage = async (content) => {
   if (!isInputReady.value) {
     console.warn('메시지 전송 불가: 입력 준비되지 않음')
     return
   }
-
   try {
     const success = sendContractMessage(content, 'TEXT')
-
     if (success) {
       const newMessage = {
         id: Date.now(),
         senderId: currentUserId.value,
         receiverId: contractReceiverId.value,
-        content: content,
+        content,
         sendTime: new Date().toISOString(),
         type: 'TEXT',
         isRead: false,
       }
-
       hookMessages.value.push(newMessage)
-      // 메시지 전송 후 강제 스크롤
       nextTick(() => {
         forceScrollToBottom()
       })
@@ -485,14 +411,11 @@ const handleTyping = (isTypingValue) => {
   console.log('타이핑 상태:', isTypingValue)
 }
 
-// 메시지 시간 포맷팅
+// 시간 포맷
 const formatMessageTime = (dateString) => {
   if (!dateString) return ''
   const date = new Date(dateString)
-  return date.toLocaleTimeString('ko-KR', {
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+  return date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
 }
 
 // 특약 시작점 설정
@@ -514,18 +437,13 @@ const handleSetStartPoint = async () => {
 const handleExportMessages = async () => {
   try {
     isLoadingOverlayVisible.value = true
-
     const order = store.currentOrder
     const response = await setEndPointAndExport(actualContractChatId.value, order)
-
     if (response.success) {
       exportedMessages.value = response.data
       showExportModal.value = true
-
       console.log('[ContractChat] export 전 currentOrder:', store.currentOrder)
-
       store.markOrderSuccess(store.currentOrder)
-
       await store.moveToNextOrder(actualContractChatId.value)
     } else {
       alert('특약 내보내기에 실패했습니다: ' + response.message)
@@ -538,20 +456,37 @@ const handleExportMessages = async () => {
   }
 }
 
-const handleAiAction = (action) => {
-  if (action === 'openTermsReview') {
-    openTermsReview()
-  }
-}
+/* ✅ 규칙 기반 버튼 계산 */
+const currentStepValue = computed(() => Number(props.currentStep) || 3)
+const aiButtons = (message) => getAiButtonsForMessage(currentStepValue.value, message)
 
-// 리뷰 검토 모달 열기
+/* ✅ 액션 디스패처: 현재처럼 모달 열기 함수는 그대로 사용 */
 const openTermsReview = () => {
-  modalStore.open(TermsReviewModal, {
-    onClose: () => modalStore.close(),
-  })
+  modalStore.open(TermsReviewModal, { onClose: () => modalStore.close() })
+}
+const openFinalClause = () => {
+  modalStore.open(FinalClauseSelectModal, { onClose: () => modalStore.close() })
 }
 
-// Watch들
+// 필요 시 추가 액션(내보내기 결과/서명 등)을 여기서 더 정의 가능
+const openExportResult = () => {
+  console.log('[ContractChat] openExportResult')
+}
+
+const dispatchAction = createActionDispatchers({
+  step3: { openTermsReview, openFinalClause, openExportResult },
+})
+
+const handleAiAction = (payload) => {
+  const action = typeof payload === 'string' ? payload : payload?.action
+  if (!action) {
+    console.warn('[ContractChat] 빈 액션 payload:', payload)
+    return
+  }
+  dispatchAction(action)
+}
+
+// Watch들 (기존 로직 그대로)
 watch(
   hookMessages,
   (newMessages, oldMessages) => {
@@ -560,12 +495,14 @@ watch(
         forceScrollToBottom()
       })
     }
-
     const latestMessage = newMessages[newMessages.length - 1]
-
     if (latestMessage && latestMessage.senderId === 9999) {
       console.log('[ContractChat] AI 메시지 감지됨 (senderId: 9999)')
       store.markAiMessageReceived()
+    }
+    if (latestMessage && String(latestMessage.senderId) === AI_SENDER_COMPLETE) {
+      console.log('[ContractChat] 최종 알림 감지됨 (senderId: 9997) → allCompleted')
+      store.markAllCompleted()
     }
   },
   { immediate: true, deep: true },
@@ -594,10 +531,9 @@ watch(
   { immediate: true },
 )
 
-// 컴포넌트 마운트 시 초기화
+// 초기화
 onMounted(async () => {
   await loadUserInfo()
-  // actualContractChatId가 이미 있으면 즉시 로드
   if (actualContractChatId.value) {
     await loadMessages()
     if (currentUserId.value) {
@@ -611,7 +547,6 @@ onMounted(async () => {
 .typing-indicator {
   animation: blink 1.5s infinite;
 }
-
 @keyframes blink {
   0%,
   50% {

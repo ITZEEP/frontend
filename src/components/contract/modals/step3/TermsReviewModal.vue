@@ -32,7 +32,6 @@ import {
   putRecentData,
   postAiMessage,
   postAutoNextRound,
-  getAllRoundsSpecialContract,
 } from '@/apis/contractChatApi'
 import { onMounted, ref } from 'vue'
 import { useModalStore } from '@/stores/modal'
@@ -55,15 +54,6 @@ const clauses = ref([])
 const selections = ref({})
 const contracts = ref([])
 
-onMounted(async () => {
-  const result = await getSpecialContractForUser(contractChatId)
-  clauses.value = result.clauses
-  round.value = result.round || 1
-
-  // store에 저장
-  store.setRound(round.value)
-})
-
 const handleSelectionChange = ({ id, selected }) => {
   selections.value[id] = selected
   console.log('제출 결과: ', selections.value)
@@ -83,28 +73,15 @@ const confirm = async () => {
     if (message === '모든 특약이 완료되었습니다!') {
       console.log('✅ 모든 특약 완료! → 최종안 선택 모달 오픈')
 
-      const res = await getAllRoundsSpecialContract(contractChatId)
-
-      if (res && res.rounds) {
-        const clausesByRound = {}
-
-        Object.entries(res.rounds).forEach(([key, roundData]) => {
-          if (roundData && roundData.clauses?.length > 0) {
-            const label = roundData.round === 1 ? '초안' : `${roundData.round - 1}회차`
-            clausesByRound[label] = roundData.clauses
-          }
-        })
-
+      if (message === '모든 특약이 완료되었습니다!') {
+        console.log('✅ 모든 특약 완료! → 최종안 선택 모달 오픈 (데이터는 모달에서 로드)')
         modalStore.open(FinalClauseSelectModal, {
-          clausesByRound,
           onClose: () => modalStore.close(),
-          onSelect: (selectedRound) => {
-            console.log('최종 선택된 라운드:', selectedRound)
+          onSelect: () => {
             modalStore.close()
           },
         })
-      } else {
-        console.warn('getAllRoundsSpecialContract 응답 없음 또는 비어있음')
+        return
       }
 
       return
@@ -157,4 +134,12 @@ const onClose = () => {
   modalStore.close()
   props.onClose?.()
 }
+
+onMounted(async () => {
+  const result = await getSpecialContractForUser(contractChatId)
+  clauses.value = result.clauses
+  round.value = result.round || 1
+
+  store.setRound(round.value)
+})
 </script>
