@@ -168,22 +168,18 @@ const maintenanceItems = [
 ]
 
 function toggleMaintenanceItem(id, name, checked) {
-  let newItems = [...(props.form.maintenanceFees || [])]
+  let newItems = [...(props.form.maintenanceFeeItems || [])]
   if (checked) {
     if (!newItems.some((item) => item.maintenanceId === id)) {
-      newItems.push({ maintenanceId: id, maintenanceName: name })
+      newItems.push({ maintenanceId: id, itemName: name })
     }
   } else {
     newItems = newItems.filter((item) => item.maintenanceId !== id)
   }
-  emit('update:form', { ...props.form, maintenanceFees: newItems })
+  emit('update:form', { ...props.form, maintenanceFeeItems: newItems })
 }
 
 function isChecked(id) {
-  return (props.form.maintenanceFees || []).some((item) => item.maintenanceId === id)
+  return (props.form.maintenanceFeeItems || []).some((item) => item.maintenanceId === id)
 }
 </script>
-
-<style scoped>
-/* 기존 스타일 그대로 유지 */
-</style>

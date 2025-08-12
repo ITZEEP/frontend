@@ -165,8 +165,8 @@
 
     <fieldset class="rounded-md p-4">
       <OptionChecklist
-        :modelValue="form.options"
-        @update:modelValue="(val) => handleChange('options', val)"
+        :modelValue="form.facilityItemIds"
+        @update:modelValue="(val) => handleChange('facilityItemIds', val)"
       />
     </fieldset>
   </form>
