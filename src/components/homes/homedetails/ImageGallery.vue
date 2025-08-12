@@ -24,7 +24,6 @@
       >
         ◀
       </button>
-
       <button
         @click="nextImage"
         @keydown.right.prevent="nextImage"
@@ -54,6 +53,7 @@
 <script setup>
 import { ref } from 'vue'
 import { toggleHomeLike } from '@/apis/listing.js'
+// import { submitReport as apiSubmitReport } from '@/apis/listing.js' // 신고 API import도 주석 처리
 
 const props = defineProps({
   images: {
@@ -71,8 +71,15 @@ const props = defineProps({
   },
 })
 
+// const emit = defineEmits(['report-submitted']) // 사용되지 않으므로 주석 처리
+
 const currentIndex = ref(0)
 const isFavorite = ref(props.initialIsFavorite)
+
+// 신고 관련 상태 변수 주석 처리
+// const showReportModal = ref(false)
+// const showReportCompleteModal = ref(false)
+// const reportContent = ref('')
 
 const nextImage = () => {
   if (!props.images || props.images.length <= 1) return
@@ -87,6 +94,32 @@ const prevImage = () => {
 const handleImageError = (event) => {
   event.target.src = '/fallback-image.png'
 }
+
+// 신고 관련 함수들 주석 처리
+// const openReportModal = () => {
+//   reportContent.value = ''
+//   showReportModal.value = true
+// }
+
+// const closeReportModal = () => {
+//   showReportModal.value = false
+// }
+
+// const const submitReport = async () => {
+//   if (!reportContent.value.trim()) return
+//   try {
+//     await apiSubmitReport(props.homeId, reportContent.value)
+//     showReportModal.value = false
+//     showReportCompleteModal.value = true
+//     emit('report-submitted', reportContent.value)
+//   } catch (error) {
+//     console.error('신고 접수 실패:', error)
+//   }
+// }
+
+// const closeReportCompleteModal = () => {
+//   showReportCompleteModal.value = false
+// }
 
 const toggleFavorite = async () => {
   try {

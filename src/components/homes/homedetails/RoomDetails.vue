@@ -75,7 +75,7 @@
               :key="item.maintenanceId"
               class="bg-gray-100 text-xs px-3 py-1 rounded-full"
             >
-              {{ item.maintenanceName }}
+              {{ getMaintenanceNameById(item.maintenanceId) }}
             </span>
           </div>
         </div>
@@ -200,7 +200,20 @@ const displayedHomeDirection = computed(() => {
   return homeDirectionMap[upperCaseDirection] || upperCaseDirection
 })
 
-// 백엔드 데이터와 정확히 일치하도록 아이콘 매핑 객체를 보강
+// `maintenanceId`와 `item_name`을 매핑하는 객체
+const maintenanceIdMap = {
+  1: '전기료',
+  2: '수도료',
+  3: '가스료',
+  4: '인터넷',
+  5: '청소비',
+}
+
+// maintenanceId를 받아 이름을 반환하는 함수
+const getMaintenanceNameById = (id) => {
+  return maintenanceIdMap[id] || '알 수 없음'
+}
+
 const iconMap = {
   에어컨: AirconIcon,
   세탁기: LaunIcon,

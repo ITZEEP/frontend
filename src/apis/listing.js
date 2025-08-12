@@ -50,15 +50,17 @@ export async function fetchListingById(id) {
 // 3. 매물 등록 (S3 업로드 후 JSON 전송)
 export async function createListing(listingData, images) {
   try {
-    const imageUrls = images ? await Promise.all(images.map((file) => uploadImageToS3(file))) : []
-
     const finalListingData = {
       ...listingData,
-      imageUrls: imageUrls,
+      images: [...images],
     }
 
+    console.log(finalListingData)
+
     const response = await api.post(API_BASE_URL, finalListingData, {
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
     })
 
     return response.data.data
@@ -92,10 +94,9 @@ export async function deleteListing(id) {
   }
 }
 
-// 6. 찜하기/취소 API 함수 추가
+// 6. 찜하기/취소 API 함수
 export async function toggleHomeLike(homeId) {
   try {
-    // 백엔드 API 명세에 따라 POST 요청 사용
     const response = await api.post(`${API_BASE_URL}/${homeId}/like`)
     return response.data
   } catch (error) {
@@ -103,3 +104,16 @@ export async function toggleHomeLike(homeId) {
     throw error
   }
 }
+
+// ✨ 추가된 부분: 매물 신고 API 함수
+// export async function submitReport(homeId, reportContent) {
+//   try {
+//     const response = await api.post(`${API_BASE_URL}/${homeId}/report`, {
+//       content: reportContent,
+//     })
+//     return response.data
+//   } catch (error) {
+//     console.error(`매물 ID ${homeId} 신고 실패`, error)
+//     throw error
+//   }
+// }

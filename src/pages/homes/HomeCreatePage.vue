@@ -104,18 +104,18 @@ const handleSubmit = async () => {
       buildingTotalFloors: safeNumber(form.buildingTotalFloors),
 
       options: Array.isArray(form.options) ? form.options.join(',') : '',
-      images: form.images.map((img) => img.url),
       maintenanceFees: maintenanceFees,
     }
+    const images = form.images
 
-    console.log('최종 제출 데이터:', payload)
-    await createListing(payload)
+    console.log('최종 제출 데이터:', payload, images)
+    const response = await createListing(payload, images)
+    const homeId = response.data
     alert('매물 등록 완료')
-    router.push('/homes/create/verification')
+    router.push(`/homes/create/${homeId}/verification`)
   } catch (e) {
     console.error('등록 실패', e)
     alert('매물 등록 실패')
-    router.push('/homes/create/verification')
   }
 }
 </script>
