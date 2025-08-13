@@ -49,7 +49,7 @@
             :label="item.maintenanceName"
             :modelValue="isChecked(item.maintenanceId)"
             @update:modelValue="
-              (checked) => toggleMaintenanceItem(item.maintenanceId, item.maintenanceName, checked)
+              (checked) => toggleMaintenanceItem(item.maintenanceId, item.fee, checked)
             "
           />
         </div>
@@ -117,7 +117,7 @@
             :label="item.maintenanceName"
             :modelValue="isChecked(item.maintenanceId)"
             @update:modelValue="
-              (checked) => toggleMaintenanceItem(item.maintenanceId, item.maintenanceName, checked)
+              (checked) => toggleMaintenanceItem(item.maintenanceId, item.fee, checked)
             "
           />
         </div>
@@ -157,27 +157,30 @@ function displayValue(field) {
 }
 
 const maintenanceItems = [
-  { maintenanceId: 3, maintenanceName: '가스료' },
-  { maintenanceId: 2, maintenanceName: '수도료' },
-  { maintenanceId: 4, maintenanceName: '인터넷' },
-  { maintenanceId: 1, maintenanceName: '전기료' },
-  { maintenanceId: 5, maintenanceName: '청소비' },
+  { maintenanceId: 3, maintenanceName: '가스료', fee: 0 },
+  { maintenanceId: 2, maintenanceName: '수도료', fee: 0 },
+  { maintenanceId: 4, maintenanceName: '인터넷', fee: 0 },
+  { maintenanceId: 1, maintenanceName: '전기료', fee: 0 },
+  { maintenanceId: 5, maintenanceName: '청소비', fee: 0 },
 ]
 
-function toggleMaintenanceItem(id, name, checked) {
-  let newItems = [...(props.form.maintenanceFeeItems || [])]
+function toggleMaintenanceItem(id, fee, checked) {
+  let newItems = [...(props.form.maintenanceFees || [])]
 
   if (checked) {
     if (!newItems.some((item) => toRaw(item).maintenanceId === id)) {
-      newItems.push({ maintenanceId: id, itemName: name })
+      newItems.push({ maintenanceId: id, fee: fee })
     }
   } else {
     newItems = newItems.filter((item) => toRaw(item).maintenanceId !== id)
   }
-  emit('update:form', { maintenanceFeeItems: toRaw(newItems) })
+  emit('update:form', {
+    ...props.form,
+    maintenanceFees: toRaw(newItems),
+  })
 }
 
 function isChecked(id) {
-  return (props.form.maintenanceFeeItems || []).some((item) => toRaw(item).maintenanceId === id)
+  return (props.form.maintenanceFees || []).some((item) => toRaw(item).maintenanceId === id)
 }
 </script>

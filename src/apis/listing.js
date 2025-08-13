@@ -44,24 +44,33 @@ export async function fetchListingById(id) {
   }
 }
 
+// apis/listing.js 파일의 createListing 함수
 export async function createListing(listingData, images) {
   try {
     const formData = new FormData()
 
+    // listingData의 모든 필드를 formData에 추가
     for (const key in listingData) {
       if (Object.prototype.hasOwnProperty.call(listingData, key)) {
         const value = listingData[key]
 
-        if (Array.isArray(value)) {
-          value.forEach((item) => {
-            formData.append(key, item)
+        if (key === 'maintenanceFees' && Array.isArray(value)) {
+          // ⭐ maintenanceFees 배열의 각 객체를 Spring DTO 바인딩 규칙에 맞게 추가
+          value.forEach((feeItem, index) => {
+            formData.append(`maintenanceFees[${index}].maintenanceId`, feeItem.maintenanceId)
+            formData.append(`maintenanceFees[${index}].fee`, feeItem.fee)
           })
+        } else if (Array.isArray(value)) {
+          // 다른 배열은 일반적인 방식으로 추가
+          value.forEach((item) => formData.append(key, item))
         } else if (value !== null && value !== undefined) {
+          // 그 외의 필드는 그대로 추가
           formData.append(key, value)
         }
       }
     }
 
+    // 이미지 파일들을 formData에 추가
     images.forEach((image) => {
       formData.append('images', image)
     })

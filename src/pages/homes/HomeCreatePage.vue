@@ -61,7 +61,7 @@ const form = reactive({
   buildDate: '',
   homeDirection: '',
   facilityItemIds: [],
-  maintenanceFeeItems: [],
+  maintenanceFees: [],
   description: '',
   images: [],
   isPet: false,
@@ -112,6 +112,8 @@ const handleSubmit = async () => {
     }
     // 다른 필수 필드들에 대해서도 여기에 유효성 검사를 추가할 수 있습니다.
 
+    const rawForm = toRaw(form)
+
     const payload = {
       addr1: rawForm.addr1,
       addr2: rawForm.addr2,
@@ -133,12 +135,13 @@ const handleSubmit = async () => {
       area: safeNumber(rawForm.area),
       landCategory: rawForm.landCategory,
       facilityItemIds: rawForm.facilityItemIds,
-      maintenanceFeeItems: rawForm.maintenanceFeeItems,
+      maintenanceFees: rawForm.maintenanceFees,
     }
 
     console.log('📦 최종 제출 데이터 (payload):', payload)
     console.log('🖼️ 업로드할 이미지 파일:', rawForm.images)
 
+    // ⭐ createListing 함수에 DTO 객체와 이미지 배열을 분리해서 전달
     const response = await createListing(payload, rawForm.images)
 
     const homeId = response
