@@ -51,7 +51,7 @@
             방 / 욕실 수
           </div>
           <div class="text-black font-medium">
-            {{ listing.roomCnt }}개 / {{ listing.bathroomCount }}개
+            {{ listing.roomCnt }}개 / {{ listing.bathroomCnt }}개
           </div>
         </div>
       </div>
@@ -89,7 +89,7 @@
         <h3 class="font-semibold mb-3 text-sm text-gray-600">건물 시설</h3>
         <div class="grid grid-cols-5 gap-5 text-center text-xs">
           <div
-            v-if="listing.isParkingAvailable"
+            v-if="listing.isParking"
             class="flex flex-col items-center bg-gray-100 px-3 py-2 rounded-md shadow-sm text-gray-700"
           >
             <ParkingIcon class="text-yellow-primary w-4 h-4 mb-1" />

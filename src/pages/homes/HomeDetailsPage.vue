@@ -13,7 +13,7 @@
 
       <TravelMap
         :title="listing.residenceType + ' 매물 위치'"
-        :address="listing.addr1 + ' ' + listing.addr2"
+        :address="processedAddress"
         class="rounded-md shadow-md"
       />
 
@@ -41,7 +41,7 @@ import RoomDetails from '@/components/homes/homedetails/RoomDetails.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import TravelMap from '@/components/travel/TravelMap.vue'
 
-import { fetchListingById } from '@/apis/listing.js' // API 함수 import
+import { fetchListingById } from '@/apis/listing.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -49,7 +49,8 @@ const id = Number(route.params.no)
 
 const listing = ref(null)
 const images = ref([])
-const isFavorite = ref(false) // 찜 상태를 서버에서 받아와 초기화
+const isFavorite = ref(false)
+const processedAddress = ref('')
 
 onMounted(async () => {
   try {
@@ -59,8 +60,14 @@ onMounted(async () => {
     if (data) {
       listing.value = data
       images.value = data.imageUrls || []
-      // 서버에서 찜 상태를 확인하는 API가 있다면 여기서 호출하여 isFavorite 초기화
-      // 예를 들어, isFavorite.value = await fetchHomeLikeStatus(id)
+
+      if (data.addr1) {
+        processedAddress.value = data.addr1
+      } else {
+        processedAddress.value = data.addr2 || '주소정보 없음'
+      }
+
+      console.log('최종 가공된 주소:', processedAddress.value)
     }
   } catch (err) {
     console.error('매물 조회 실패:', err)
