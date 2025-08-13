@@ -89,7 +89,7 @@ const handleSubmit = async () => {
 
     const rawForm = toRaw(form)
 
-    // ⭐ 필수 필드에 대한 유효성 검사 로직 추가
+    // ⭐ 필수 필드에 대한 유효성 검사 로직
     if (!rawForm.residenceType) {
       alert('매물 종류를 선택해주세요.')
       goToStep(1)
@@ -110,9 +110,7 @@ const handleSubmit = async () => {
       goToStep(3)
       return
     }
-    // 다른 필수 필드들에 대해서도 여기에 유효성 검사를 추가할 수 있습니다.
-
-    const rawForm = toRaw(form)
+    // 다른 필수 필드들에 대한 유효성 검사를 여기에 추가할 수 있습니다.
 
     const payload = {
       addr1: rawForm.addr1,
@@ -141,7 +139,7 @@ const handleSubmit = async () => {
     console.log('📦 최종 제출 데이터 (payload):', payload)
     console.log('🖼️ 업로드할 이미지 파일:', rawForm.images)
 
-    // ⭐ createListing 함수에 DTO 객체와 이미지 배열을 분리해서 전달
+    // createListing 함수에 DTO 객체와 이미지 배열을 분리해서 전달
     const response = await createListing(payload, rawForm.images)
 
     const homeId = response
