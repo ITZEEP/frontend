@@ -1,13 +1,23 @@
 <template>
   <div class="w-full h-[728px] flex flex-col gap-4 overflow-y-auto">
-    <h2 class="text-base font-semibold">
-      <template v-if="isAllDone">최종 확정된 특약</template>
-      <template v-else>현재 조율 중인 특약</template>
-      <span v-if="!isAllDone">
-        <span v-if="store.currentRound === 0">(초안 수정)</span>
-        <span v-else>({{ store.currentRound }}회차 수정)</span>
-      </span>
-    </h2>
+    <div class="w-full flex gap-4">
+      <h2 class="text-base font-semibold">
+        <template v-if="isAllDone">최종 확정된 특약</template>
+        <template v-else>현재 조율 중인 특약</template>
+        <span v-if="!isAllDone">
+          <span v-if="store.currentRound === 0">(초안 수정)</span>
+          <span v-else>({{ store.currentRound }}회차 수정)</span>
+        </span>
+      </h2>
+
+      <p v-if="isAllDone && !isOwner" class="text-xs text-green-500 mt-1">
+        임대인이 특약을 수정·삭제하거나 최종 확정을 요청할 예정입니다.
+      </p>
+
+      <p v-if="isAllDone && isOwner" class="text-xs text-green-500 mt-1">
+        특약 변경이나 최종 확정을 요청하면, 임차인이 승인 또는 거절합니다.
+      </p>
+    </div>
 
     <!-- 전체 완료인 경우: 최종 계약서 특약 -->
     <div v-if="isAllDone" class="w-full">
@@ -94,7 +104,6 @@
           </div>
         </li>
 
-        <!-- 임대인만 최종 확정 버튼 노출 -->
         <!-- 임대인만 최종 확정 버튼 노출 -->
         <BaseButton
           v-if="isOwner"
