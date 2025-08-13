@@ -63,7 +63,7 @@
         <div class="flex justify-between items-center">
           <div class="font-semibold">월 관리비</div>
           <div class="text-yellow-primary font-bold text-lg">
-            {{ listing.maintenanceFee ?? 0 }}만원
+            {{ listing.maintenaceFee ?? 0 }}만원
           </div>
         </div>
 
