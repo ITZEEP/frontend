@@ -157,7 +157,7 @@
 
 <script setup>
 import { ref, computed, onMounted, nextTick, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import {
   getContractMessages,
   setStartPoint,
@@ -185,6 +185,7 @@ import { createActionDispatchers } from '@/config/chat/aiActionHandlers'
 const modalStore = useModalStore()
 
 const route = useRoute()
+const router = useRouter()
 const store = useSpecialContractStore()
 const isLoadingOverlayVisible = ref(false)
 
@@ -197,6 +198,11 @@ const props = defineProps({
     type: [Number, String],
     required: false,
     default: 3,
+  },
+  currentRound: {
+    type: [Number, String],
+    required: false,
+    default: 0,
   },
 })
 
@@ -215,6 +221,37 @@ const actualContractChatId = computed(() => {
     return String(pathParts[contractIndex + 1])
   return null
 })
+
+// step & round 파싱 헬퍼
+const stepFromQuery = computed(() => Number(route.query.step) || null)
+const roundFromQuery = computed(() => Number(route.query.round))
+
+// URL 쿼리 갱신 유틸
+function replaceQuery(nextQuery = {}) {
+  router.replace({
+    query: {
+      ...route.query,
+      ...nextQuery,
+    },
+  })
+}
+
+// step=4로 전환(완료): round 제거
+function gotoStep4() {
+  const q = { ...route.query }
+  delete q.round
+  router.replace({ query: { ...q, step: 4 } })
+}
+
+const initialRound = computed(() => {
+  if (Number(stepFromQuery.value) !== 3) return 0
+  const fromUrl = roundFromQuery.value
+  if (!Number.isNaN(fromUrl)) return Number(fromUrl)
+  const fromProp = Number(props.currentRound)
+  return Number.isNaN(fromProp) ? 0 : fromProp
+})
+
+store.setRound(initialRound.value)
 
 // 상태 관리
 const apiMessages = ref([])
@@ -575,6 +612,7 @@ watch(
     if (latestMessage && String(latestMessage.senderId) === AI_SENDER_COMPLETE) {
       console.log('[ContractChat] 최종 알림 감지됨 (senderId: 9997) → allCompleted')
       store.markAllCompleted()
+      gotoStep4()
     }
   },
   { immediate: true, deep: true },
@@ -603,6 +641,16 @@ watch(
   { immediate: true },
 )
 
+watch(
+  () => store.currentRound,
+  (r) => {
+    if (Number(stepFromQuery.value) === 3) {
+      replaceQuery({ round: r })
+    }
+  },
+  { immediate: false },
+)
+
 // 초기화
 onMounted(async () => {
   await loadUserInfo()
@@ -611,6 +659,12 @@ onMounted(async () => {
     if (currentUserId.value) {
       await loadContractInfo()
     }
+  }
+})
+
+onMounted(() => {
+  if (Number(stepFromQuery.value) === 3 && Number.isNaN(roundFromQuery.value)) {
+    replaceQuery({ round: store.currentRound })
   }
 })
 </script>
