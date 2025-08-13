@@ -37,7 +37,7 @@ export const contentRulesByStep = {
     {
       when: (message) => {
         const t = String(message?.content || '')
-        return t.includes('임대인이 특약') && t.includes('최종 확정')
+        return t.includes('임대인이 최종 특약')
       },
       buttons: [
         { label: '거절', action: 'step3.finalConfirm.reject' },
