@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full flex flex-col items-start mb-3 animate-fade-in m-2">
+  <div class="w-full flex flex-col items-start mb-3 animate-fade-in">
     <!-- 메시지 버블 -->
     <div
       class="flex flex-col gap-1 p-3 rounded-xl w-fit max-w-xs lg:max-w-md relative transition-all duration-200 shadow-md bg-gradient-to-r from-blue-400 to-purple-400 text-white"
