@@ -51,7 +51,7 @@
             방 / 욕실 수
           </div>
           <div class="text-black font-medium">
-            {{ listing.roomCnt }}개 / {{ listing.bathroomCnt }}개
+            {{ listing.roomCnt }}개 / {{ listing.bathroomCount }}개
           </div>
         </div>
       </div>
@@ -63,7 +63,7 @@
         <div class="flex justify-between items-center">
           <div class="font-semibold">월 관리비</div>
           <div class="text-yellow-primary font-bold text-lg">
-            {{ listing.maintenaceFee ?? 0 }}만원
+            {{ listing.maintenanceFee ?? 0 }}만원
           </div>
         </div>
 
@@ -71,7 +71,7 @@
           <div class="text-gray-600 mb-2">관리비 포함 항목</div>
           <div class="flex flex-wrap gap-2">
             <span
-              v-for="item in listing.maintenanceFeeItems"
+              v-for="item in listing.maintenanceFees"
               :key="item.maintenanceId"
               class="bg-gray-100 text-xs px-3 py-1 rounded-full"
             >
@@ -89,7 +89,7 @@
         <h3 class="font-semibold mb-3 text-sm text-gray-600">건물 시설</h3>
         <div class="grid grid-cols-5 gap-5 text-center text-xs">
           <div
-            v-if="listing.isParking"
+            v-if="listing.isParkingAvailable"
             class="flex flex-col items-center bg-gray-100 px-3 py-2 rounded-md shadow-sm text-gray-700"
           >
             <ParkingIcon class="text-yellow-primary w-4 h-4 mb-1" />
@@ -135,14 +135,12 @@
 
 <script setup>
 import { computed } from 'vue'
-
 import NetAreaIcon from '@/assets/icons/NetAreaIcon.vue'
 import GrossAreaIcon from '@/assets/icons/GrossAreaIcon.vue'
 import FloorIcon from '@/assets/icons/FloorIcon.vue'
 import CalendarIcon from '@/assets/icons/CalendarIcon.vue'
 import DirectionIcon from '@/assets/icons/DirectionIcon.vue'
 import RoomIcon from '@/assets/icons/RoomIcon.vue'
-
 import ElevatorIcon from '@/assets/icons/ElevatorIcon.vue'
 import IndividualHeatingIcon from '@/assets/icons/IndividualHeatingIcon.vue'
 import CenterHeatingIcon from '@/assets/icons/CenterHeatingIcon.vue'
@@ -200,7 +198,6 @@ const displayedHomeDirection = computed(() => {
   return homeDirectionMap[upperCaseDirection] || upperCaseDirection
 })
 
-// `maintenanceId`와 `item_name`을 매핑하는 객체
 const maintenanceIdMap = {
   1: '전기료',
   2: '수도료',
@@ -209,7 +206,6 @@ const maintenanceIdMap = {
   5: '청소비',
 }
 
-// maintenanceId를 받아 이름을 반환하는 함수
 const getMaintenanceNameById = (id) => {
   return maintenanceIdMap[id] || '알 수 없음'
 }
@@ -224,7 +220,6 @@ const iconMap = {
   '벽걸이 에어컨': WallairconIcon,
   '빌트인 에어컨': Builtinaorcon,
   TV: TvIcon,
-
   욕조: BathIcon,
   싱크대: SinkIcon,
   책상: DeskIcon,
@@ -232,7 +227,6 @@ const iconMap = {
   붙박이장: BootbacIcon,
   신발장: ShoeseIcon,
   소파: SofaIcon,
-
   CCTV: CctvIcon,
   인터폰: InterphoneIcon,
   도어락: DoorlockIcon,
@@ -242,7 +236,6 @@ const iconMap = {
   화재경보기: FirewarningIcon,
   소화기: SohwagiIcon,
   현관보안: HyungwansecuIcon,
-
   엘리베이터: ElevatorIcon,
   주차장: ParkingIcon,
   택배보관함: null,
