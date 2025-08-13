@@ -128,13 +128,12 @@
 
 <script setup>
 import BaseCheckBox from '@/components/common/BaseCheckbox.vue'
-import { toRefs } from 'vue'
+import { toRaw, toRefs } from 'vue'
 
 const emit = defineEmits(['update:form'])
 const props = defineProps({ form: Object })
 const { form } = toRefs(props)
 
-// 천 단위 콤마 포맷 함수
 function formatCurrency(value) {
   const number = value.replace(/[^\d]/g, '')
   return number.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
@@ -143,7 +142,6 @@ function formatCurrency(value) {
 function handleInput(field, event) {
   const raw = event.target.value.replace(/[^\d]/g, '')
   const parsed = raw ? parseInt(raw, 10) : 0
-  // 이 부분은 기존과 동일
   emit('update:form', { ...props.form, [field]: parsed })
   const formatted = formatCurrency(raw || '0')
   event.target.value = formatted
@@ -158,7 +156,6 @@ function displayValue(field) {
   return value || value === 0 ? formatCurrency(String(value)) : '0'
 }
 
-// `maintenance_id`와 `item_name`을 포함하는 배열
 const maintenanceItems = [
   { maintenanceId: 3, maintenanceName: '가스료' },
   { maintenanceId: 2, maintenanceName: '수도료' },
@@ -169,18 +166,18 @@ const maintenanceItems = [
 
 function toggleMaintenanceItem(id, name, checked) {
   let newItems = [...(props.form.maintenanceFeeItems || [])]
+
   if (checked) {
-    if (!newItems.some((item) => item.maintenanceId === id)) {
+    if (!newItems.some((item) => toRaw(item).maintenanceId === id)) {
       newItems.push({ maintenanceId: id, itemName: name })
     }
   } else {
-    newItems = newItems.filter((item) => item.maintenanceId !== id)
+    newItems = newItems.filter((item) => toRaw(item).maintenanceId !== id)
   }
-  // ✨ 이 부분 수정: 'maintenanceFeeItems' 키만 가진 객체를 emit
-  emit('update:form', { maintenanceFeeItems: newItems })
+  emit('update:form', { maintenanceFeeItems: toRaw(newItems) })
 }
 
 function isChecked(id) {
-  return (props.form.maintenanceFeeItems || []).some((item) => item.maintenanceId === id)
+  return (props.form.maintenanceFeeItems || []).some((item) => toRaw(item).maintenanceId === id)
 }
 </script>

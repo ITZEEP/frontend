@@ -3,7 +3,6 @@ import axios from 'axios'
 
 const API_BASE_URL = '/api/homes'
 
-// S3 Presigned URL을 요청하고 파일을 업로드하는 함수
 async function uploadImageToS3(file) {
   try {
     const presignedUrlResponse = await api.post('/api/s3-presigned-url', {
@@ -25,7 +24,6 @@ async function uploadImageToS3(file) {
   }
 }
 
-// 1. 전체 매물 리스트 조회 및 검색 (필터 옵션 포함)
 export async function fetchListings(params = {}) {
   try {
     const response = await api.get(API_BASE_URL, { params })
@@ -36,7 +34,6 @@ export async function fetchListings(params = {}) {
   }
 }
 
-// 2. 단일 매물 상세 조회
 export async function fetchListingById(id) {
   try {
     const response = await api.get(`${API_BASE_URL}/${id}`)
@@ -47,15 +44,29 @@ export async function fetchListingById(id) {
   }
 }
 
-// 3. 매물 등록 (S3 업로드 후 JSON 전송)
 export async function createListing(listingData, images) {
   try {
-    const finalListingData = {
-      ...listingData,
-      images: [...images],
+    const formData = new FormData()
+
+    for (const key in listingData) {
+      if (Object.prototype.hasOwnProperty.call(listingData, key)) {
+        const value = listingData[key]
+
+        if (Array.isArray(value)) {
+          value.forEach((item) => {
+            formData.append(key, item)
+          })
+        } else if (value !== null && value !== undefined) {
+          formData.append(key, value)
+        }
+      }
     }
 
-    const response = await api.post(API_BASE_URL, finalListingData, {
+    images.forEach((image) => {
+      formData.append('images', image)
+    })
+
+    const response = await api.post(API_BASE_URL, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -68,7 +79,6 @@ export async function createListing(listingData, images) {
   }
 }
 
-// 4. 매물 수정 (JSON)
 export async function updateListing(id, updatedData) {
   try {
     const response = await api.put(`${API_BASE_URL}/${id}`, updatedData, {
@@ -81,7 +91,6 @@ export async function updateListing(id, updatedData) {
   }
 }
 
-// 5. 매물 삭제
 export async function deleteListing(id) {
   try {
     const response = await api.delete(`${API_BASE_URL}/${id}`)
@@ -92,7 +101,6 @@ export async function deleteListing(id) {
   }
 }
 
-// 6. 찜하기/취소 API 함수
 export async function toggleHomeLike(homeId) {
   try {
     const response = await api.post(`${API_BASE_URL}/${homeId}/like`)
@@ -102,16 +110,3 @@ export async function toggleHomeLike(homeId) {
     throw error
   }
 }
-
-// ✨ 추가된 부분: 매물 신고 API 함수
-// export async function submitReport(homeId, reportContent) {
-//   try {
-//     const response = await api.post(`${API_BASE_URL}/${homeId}/report`, {
-//       content: reportContent,
-//     })
-//     return response.data
-//   } catch (error) {
-//     console.error(`매물 ID ${homeId} 신고 실패`, error)
-//     throw error
-//   }
-// }

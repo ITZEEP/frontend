@@ -15,7 +15,7 @@
 </template>
 
 <script setup>
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, reactive, ref, toRaw, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import StepProgressIndicator from '@/components/homes/homecreate/StepProgressIndicator.vue'
@@ -25,7 +25,6 @@ import Step3DetailInfo from '@/components/homes/homecreate/Step3DetailInfo.vue'
 import Step4ImageUpload from '@/components/homes/homecreate/Step4ImageUpload.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 
-// API 호출 함수 가져오기
 import { createListing } from '@/apis/listing.js'
 
 const stepComponents = [Step1BasicInfo, Step2PriceInfo, Step3DetailInfo, Step4ImageUpload]
@@ -59,17 +58,16 @@ const form = reactive({
   bathroomCount: 0,
   homeFloor: 0,
   buildingTotalFloors: 0,
-  buildDate: '', // string "yyyy-MM-dd"
+  buildDate: '',
   homeDirection: '',
-  facilityItemIds: [], // 백엔드 DTO에 맞게 직접 사용
-  maintenanceFeeItems: [], // 백엔드 DTO에 맞게 직접 사용
+  facilityItemIds: [],
+  maintenanceFeeItems: [],
   description: '',
-  images: [], // 파일 객체 배열
+  images: [],
   isPet: false,
   isParking: false,
   area: 0,
   landCategory: '',
-  // ... HomeCreateRequestDto의 다른 필드들도 여기에 포함
 })
 
 const stepComponent = computed(() => stepComponents[currentStep.value - 1])
@@ -89,36 +87,59 @@ const handleSubmit = async () => {
       return isNaN(num) ? 0 : num
     }
 
-    // payload 객체를 명확하게 분리
+    const rawForm = toRaw(form)
+
+    // ⭐ 필수 필드에 대한 유효성 검사 로직 추가
+    if (!rawForm.residenceType) {
+      alert('매물 종류를 선택해주세요.')
+      goToStep(1)
+      return
+    }
+    if (!rawForm.leaseType) {
+      alert('거래 유형을 선택해주세요.')
+      goToStep(1)
+      return
+    }
+    if (!rawForm.addr1) {
+      alert('주소를 입력해주세요.')
+      goToStep(1)
+      return
+    }
+    if (safeNumber(rawForm.exclusiveArea) <= 0) {
+      alert('전용 면적을 0보다 크게 입력해주세요.')
+      goToStep(3)
+      return
+    }
+    // 다른 필수 필드들에 대해서도 여기에 유효성 검사를 추가할 수 있습니다.
+
     const payload = {
-      addr1: form.addr1,
-      addr2: form.addr2,
-      residenceType: form.residenceType,
-      leaseType: form.leaseType,
-      depositPrice: safeNumber(form.depositPrice),
-      monthlyRent: safeNumber(form.monthlyRent),
-      maintenanceFee: safeNumber(form.maintenanceFee),
-      supplyArea: safeNumber(form.supplyArea),
-      exclusiveArea: safeNumber(form.exclusiveArea),
-      roomCnt: safeNumber(form.roomCnt),
-      bathroomCount: safeNumber(form.bathroomCount),
-      homeFloor: safeNumber(form.homeFloor),
-      buildingTotalFloors: safeNumber(form.buildingTotalFloors),
-      buildDate: form.buildDate,
-      homeDirection: form.homeDirection,
-      isPet: form.isPet,
-      isParkingAvailable: form.isParking,
-      area: safeNumber(form.area),
-      landCategory: form.landCategory,
-      facilityItemIds: form.facilityItemIds,
-      maintenanceFeeItems: form.maintenanceFeeItems,
+      addr1: rawForm.addr1,
+      addr2: rawForm.addr2,
+      residenceType: rawForm.residenceType,
+      leaseType: rawForm.leaseType,
+      depositPrice: safeNumber(rawForm.depositPrice),
+      monthlyRent: safeNumber(rawForm.monthlyRent),
+      maintenanceFee: safeNumber(rawForm.maintenanceFee),
+      supplyArea: safeNumber(rawForm.supplyArea),
+      exclusiveArea: safeNumber(rawForm.exclusiveArea),
+      roomCnt: safeNumber(rawForm.roomCnt),
+      bathroomCount: safeNumber(rawForm.bathroomCount),
+      homeFloor: safeNumber(rawForm.homeFloor),
+      buildingTotalFloors: safeNumber(rawForm.buildingTotalFloors),
+      buildDate: rawForm.buildDate,
+      homeDirection: rawForm.homeDirection,
+      isPet: rawForm.isPet,
+      isParkingAvailable: rawForm.isParking,
+      area: safeNumber(rawForm.area),
+      landCategory: rawForm.landCategory,
+      facilityItemIds: rawForm.facilityItemIds,
+      maintenanceFeeItems: rawForm.maintenanceFeeItems,
     }
 
     console.log('📦 최종 제출 데이터 (payload):', payload)
-    console.log('🖼️ 업로드할 이미지 파일:', form.images)
+    console.log('🖼️ 업로드할 이미지 파일:', rawForm.images)
 
-    // createListing 함수 호출 부분
-    const response = await createListing(payload, form.images)
+    const response = await createListing(payload, rawForm.images)
 
     const homeId = response
     console.log('✅ API 응답으로 받은 homeId:', homeId)

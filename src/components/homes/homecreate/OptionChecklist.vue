@@ -67,7 +67,6 @@ const allValidIds = computed(() => {
     .map((item) => item.id)
 })
 
-// 데이터베이스의 'facility_item' 테이블과 일치하도록 수정되었습니다.
 const utilityItems = {
   appliances: [
     { id: 1, name: '에어컨' },
@@ -116,13 +115,15 @@ const categoryLabels = {
 }
 
 function updateCheckbox(itemId, checked) {
-  const index = localSelectedIds.value.indexOf(itemId)
-  if (!allValidIds.value.includes(itemId)) {
+  const numericItemId = Number(itemId)
+
+  const index = localSelectedIds.value.indexOf(numericItemId)
+  if (!allValidIds.value.includes(numericItemId)) {
     console.warn(`Attempted to update an invalid itemId: ${itemId}`)
     return
   }
   if (checked && index === -1) {
-    localSelectedIds.value.push(itemId)
+    localSelectedIds.value.push(numericItemId)
   } else if (!checked && index !== -1) {
     localSelectedIds.value.splice(index, 1)
   }
@@ -131,9 +132,6 @@ function updateCheckbox(itemId, checked) {
 watch(
   [localSelectedIds, isPet, isParking],
   () => {
-    // facilityItemIds 배열의 현재 상태를 콘솔에 출력합니다.
-    console.log('현재 선택된 시설 ID:', localSelectedIds.value)
-
     emit('update:modelValue', {
       facilityItemIds: localSelectedIds.value,
       isPet: isPet.value,
@@ -143,7 +141,3 @@ watch(
   { deep: true },
 )
 </script>
-
-<style scoped>
-/* Tailwind 사용 중이므로 커스텀 스타일은 생략 */
-</style>
