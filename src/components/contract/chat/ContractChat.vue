@@ -76,6 +76,7 @@
       v-if="isInputReady"
       :chatRoomId="actualContractChatId"
       :receiverId="contractReceiverId"
+      :isOwner="isOwner"
       @sendMessage="sendMessageUi"
       @typing="() => {}"
       @setStartPoint="handleSetStartPoint"
@@ -289,7 +290,12 @@ watch(
     if (String(latest.senderId) === '9999') store.markAiMessageReceived()
     if (String(latest.senderId) === AI_SENDER.COMPLETE) {
       store.markAllCompleted()
-      setRoundInUrl(4)
+      // 문구 매칭: 적법성 검토 단계 진입 알림
+      const t = String(latest.content || '')
+      if (t.includes('적법성 검토')) {
+        // step=4로 URL 쿼리 변경 (round는 제거/무시)
+        gotoStep4()
+      }
     }
   },
   { deep: true },
@@ -310,6 +316,17 @@ onMounted(async () => {
   if (actualContractChatId.value) {
     await loadMessages(actualContractChatId.value)
     if (currentUserId.value) await loadContractInfo()
+
+    // 히스토리에도 9997 적법성 문구가 있으면 step=4로 보정
+    const all = [...apiMessages.value, ...hookMessages.value]
+    const lastComplete = [...all]
+      .reverse()
+      .find(
+        (m) =>
+          String(m?.senderId) === AI_SENDER.COMPLETE &&
+          String(m?.content || '').includes('적법성 검토'),
+      )
+    if (lastComplete) gotoStep4()
   }
 })
 </script>

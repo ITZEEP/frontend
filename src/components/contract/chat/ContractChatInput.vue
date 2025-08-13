@@ -4,16 +4,33 @@
     <div
       class="w-full p-2 border-b flex flex-wrap gap-2 md:gap-4 md:flex-nowrap sm:gap-4 sm:flex-nowrap"
     >
-      <BaseButton @click="handleExportRequest" :disabled="isProcessing || !canSendMessage">{{
-        isProcessing ? '처리 중...' : '요청하기'
-      }}</BaseButton>
-      <BaseButton @click="handleExportReject" :disabled="isProcessing || !canSendMessage">{{
-        isProcessing ? '처리 중...' : '거절'
-      }}</BaseButton>
+      <template v-if="stepNum === 3">
+        <!-- 임대인 전용: 요청하기 -->
+        <BaseButton
+          v-if="props.isOwner"
+          @click="handleExportRequest"
+          :disabled="isProcessing || !canSendMessage"
+        >
+          {{ isProcessing ? '처리 중...' : '요청하기' }}
+        </BaseButton>
 
-      <BaseButton @click="handleExportMessages" :disabled="isProcessing || !canSendMessage">
-        {{ isProcessing ? '내보내는 중...' : '수락 후 AI 수정 요청' }}
-      </BaseButton>
+        <!-- 임차인 전용: 거절 / 수락 후 AI 수정 요청 -->
+        <BaseButton
+          v-if="!props.isOwner"
+          @click="handleExportReject"
+          :disabled="isProcessing || !canSendMessage"
+        >
+          {{ isProcessing ? '처리 중...' : '거절' }}
+        </BaseButton>
+
+        <BaseButton
+          v-if="!props.isOwner"
+          @click="handleExportMessages"
+          :disabled="isProcessing || !canSendMessage"
+        >
+          {{ isProcessing ? '내보내는 중...' : '수락 후 AI 수정 요청' }}
+        </BaseButton>
+      </template>
     </div>
 
     <!-- 오프라인 상태 알림 -->
@@ -100,8 +117,9 @@
 
 <script setup>
 import BaseButton from '@/components/common/BaseButton.vue'
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import { requestEndPointExport, rejectEndPointExport } from '@/apis/contractChatApi'
+import { useRoute } from 'vue-router'
 
 const emit = defineEmits([
   'sendMessage',
@@ -128,6 +146,13 @@ const props = defineProps({
     type: Boolean,
     default: false, // 개발 시에만 true로 설정
   },
+  isOwner: { type: Boolean, default: false },
+})
+
+const route = useRoute()
+const stepNum = computed(() => {
+  const s = Number(route.query.step)
+  return Number.isFinite(s) ? s : 3 // 기본 3으로
 })
 
 // 상태 관리

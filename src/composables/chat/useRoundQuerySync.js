@@ -47,5 +47,12 @@ export function useRoundQuerySync(stepFromProps) {
     if (Number(step.value) === 3) replaceQuery({ round: r })
   }
 
-  return { setRoundInUrl }
+  const gotoStep4 = () => {
+    const nextQuery = { ...route.query, step: '4' }
+    delete nextQuery.round
+    localStorage.removeItem('specialContract_allCompleted')
+    router.replace({ query: nextQuery })
+  }
+
+  return { setRoundInUrl, gotoStep4 }
 }
