@@ -71,7 +71,7 @@
           <div class="text-gray-600 mb-2">관리비 포함 항목</div>
           <div class="flex flex-wrap gap-2">
             <span
-              v-for="item in listing.maintenanceFees"
+              v-for="item in listing.maintenanceFeeItems"
               :key="item.maintenanceId"
               class="bg-gray-100 text-xs px-3 py-1 rounded-full"
             >

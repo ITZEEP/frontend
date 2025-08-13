@@ -90,8 +90,8 @@
             type="number"
             min="0"
             class="border rounded p-2 pr-12 w-full no-spin"
-            :value="form.bathroomCount"
-            @input="handleChange('bathroomCount', $event.target.valueAsNumber)"
+            :value="form.bathroomCnt"
+            @input="handleChange('bathroomCnt', $event.target.valueAsNumber)"
             required
             placeholder="0"
           />
@@ -170,7 +170,7 @@
           isPet: form.isPet,
           isParking: form.isParking,
         }"
-        @update:modelValue="(val) => updateForm(val)"
+        @update:modelValue="updateForm"
       />
     </fieldset>
   </form>
@@ -194,6 +194,13 @@ const handleChange = (key, value) => {
   emit('update:form', {
     ...props.form,
     [key]: value,
+  })
+}
+
+const updateForm = (updatedFields) => {
+  emit('update:form', {
+    ...props.form,
+    ...updatedFields,
   })
 }
 

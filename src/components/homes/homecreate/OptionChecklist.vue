@@ -27,13 +27,13 @@
       <div class="flex flex-wrap gap-6">
         <BaseCheckBox
           label="반려동물 가능"
-          :modelValue="isPet"
-          @update:modelValue="(checked) => (isPet = checked)"
+          :modelValue="localIsPet"
+          @update:modelValue="(checked) => updateToggleOption('isPet', checked)"
         />
         <BaseCheckBox
           label="주차 가능"
-          :modelValue="isParking"
-          @update:modelValue="(checked) => (isParking = checked)"
+          :modelValue="localIsParking"
+          @update:modelValue="(checked) => updateToggleOption('isParking', checked)"
         />
       </div>
     </div>
@@ -57,9 +57,30 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue'])
 
-const localSelectedIds = ref(props.modelValue.facilityItemIds || [])
-const isPet = ref(props.modelValue.isPet)
-const isParking = ref(props.modelValue.isParking)
+const localSelectedIds = ref([...props.modelValue.facilityItemIds])
+const localIsPet = ref(props.modelValue.isPet)
+const localIsParking = ref(props.modelValue.isParking)
+
+watch(
+  () => props.modelValue.facilityItemIds,
+  (newVal) => {
+    localSelectedIds.value = [...newVal]
+  },
+)
+
+watch(
+  () => props.modelValue.isPet,
+  (newVal) => {
+    localIsPet.value = newVal
+  },
+)
+
+watch(
+  () => props.modelValue.isParking,
+  (newVal) => {
+    localIsParking.value = newVal
+  },
+)
 
 const allValidIds = computed(() => {
   return Object.values(utilityItems)
@@ -116,28 +137,36 @@ const categoryLabels = {
 
 function updateCheckbox(itemId, checked) {
   const numericItemId = Number(itemId)
+  const currentIds = new Set(localSelectedIds.value)
 
-  const index = localSelectedIds.value.indexOf(numericItemId)
   if (!allValidIds.value.includes(numericItemId)) {
     console.warn(`Attempted to update an invalid itemId: ${itemId}`)
     return
   }
-  if (checked && index === -1) {
-    localSelectedIds.value.push(numericItemId)
-  } else if (!checked && index !== -1) {
-    localSelectedIds.value.splice(index, 1)
+
+  if (checked) {
+    currentIds.add(numericItemId)
+  } else {
+    currentIds.delete(numericItemId)
   }
+
+  localSelectedIds.value = Array.from(currentIds)
+  emit('update:modelValue', {
+    ...props.modelValue,
+    facilityItemIds: localSelectedIds.value,
+  })
 }
 
-watch(
-  [localSelectedIds, isPet, isParking],
-  () => {
-    emit('update:modelValue', {
-      facilityItemIds: localSelectedIds.value,
-      isPet: isPet.value,
-      isParking: isParking.value,
-    })
-  },
-  { deep: true },
-)
+function updateToggleOption(key, checked) {
+  if (key === 'isPet') {
+    localIsPet.value = checked
+  } else if (key === 'isParking') {
+    localIsParking.value = checked
+  }
+  emit('update:modelValue', {
+    ...props.modelValue,
+    isPet: localIsPet.value,
+    isParking: localIsParking.value,
+  })
+}
 </script>
