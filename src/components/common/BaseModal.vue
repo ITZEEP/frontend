@@ -8,7 +8,7 @@
       >
         <div
           :class="[
-            'max-h-[670px] bg-white rounded-xl w-full p-6 relative overflow-y-auto',
+            'max-h-[670px] bg-white rounded-xl w-full p-6 relative overflow-y-auto no-scrollbar',
             props.maxWidth,
           ]"
         >
@@ -75,5 +75,13 @@ watch(
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 </style>
