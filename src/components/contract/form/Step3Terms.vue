@@ -10,17 +10,17 @@
     </h2>
 
     <!-- 전체 완료인 경우: 최종 계약서 특약 -->
-    <div v-if="isAllDone">
+    <div v-if="isAllDone" class="w-full">
       <div v-if="finalClauses.length === 0">최종 특약이 없습니다.</div>
 
-      <ul v-else class="space-y-4 bg-gray-100 p-4 rounded-md flex flex-col">
+      <ul v-else class="w-full space-y-4 bg-gray-100 p-4 rounded-md flex flex-col">
         <li
           v-for="clause in finalClauses"
           :key="clause.order ?? clause.id ?? clause.clauseId"
-          class="flex flex-col gap-2 bg-white p-4 rounded-md shadow-sm"
+          class="w-full flex flex-col gap-2 bg-white p-4 rounded-md shadow-sm"
         >
-          <div class="flex justify-between items-start">
-            <div class="flex-1">
+          <div class="w-full flex justify-between items-start">
+            <div class="w-full flex-1">
               <div class="w-full flex justify-between items-center">
                 <!-- 제목 -->
                 <p class="text-sm font-medium mb-1">
@@ -60,7 +60,7 @@
               <!-- 내용 -->
               <div>
                 <template v-if="isOwner && isEditing(clause.order)">
-                  <div class="flex items-center gap-2">
+                  <div class="w-full flex items-center gap-2">
                     <textarea
                       v-model="editContentMap[clause.order]"
                       type="text"
@@ -108,16 +108,16 @@
     </div>
 
     <!-- 전체 완료가 아니면: 기존 조율 목록 -->
-    <div v-else>
+    <div v-else class="w-full">
       <div v-if="clauses.length === 0">조율 중인 특약이 없습니다.</div>
-      <ul v-else class="space-y-4 bg-gray-100 p-4 rounded-md flex flex-col">
+      <ul v-else class="w-full space-y-4 bg-gray-100 p-4 rounded-md flex flex-col">
         <li
           v-for="clause in clauses"
           :key="clause.id"
-          class="flex flex-col gap-2 bg-white p-4 rounded-md shadow-sm"
+          class="w-full flex flex-col gap-2 bg-white p-4 rounded-md shadow-sm"
         >
-          <div class="flex justify-between items-start">
-            <div>
+          <div class="w-full flex justify-between items-start">
+            <div class="w-full">
               <div class="w-full flex justify-between">
                 <p class="text-sm font-medium">{{ clause.id }}. {{ clause.title }}</p>
                 <button
