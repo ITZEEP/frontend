@@ -25,6 +25,7 @@ import Step3DetailInfo from '@/components/homes/homecreate/Step3DetailInfo.vue'
 import Step4ImageUpload from '@/components/homes/homecreate/Step4ImageUpload.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 
+// API 호출 함수 가져오기
 import { createListing } from '@/apis/listing.js'
 
 const stepComponents = [Step1BasicInfo, Step2PriceInfo, Step3DetailInfo, Step4ImageUpload]
@@ -88,6 +89,7 @@ const handleSubmit = async () => {
       return isNaN(num) ? 0 : num
     }
 
+    // payload 객체를 명확하게 분리
     const payload = {
       addr1: form.addr1,
       addr2: form.addr2,
@@ -115,6 +117,7 @@ const handleSubmit = async () => {
     console.log('📦 최종 제출 데이터 (payload):', payload)
     console.log('🖼️ 업로드할 이미지 파일:', form.images)
 
+    // createListing 함수 호출 부분
     const response = await createListing(payload, form.images)
 
     const homeId = response

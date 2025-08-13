@@ -55,8 +55,6 @@ export async function createListing(listingData, images) {
       images: [...images],
     }
 
-    console.log(finalListingData)
-
     const response = await api.post(API_BASE_URL, finalListingData, {
       headers: {
         'Content-Type': 'multipart/form-data',

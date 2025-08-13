@@ -27,13 +27,13 @@
       <div class="flex flex-wrap gap-6">
         <BaseCheckBox
           label="반려동물 가능"
-          :modelValue="isPetFriendly"
-          @update:modelValue="(checked) => (isPetFriendly = checked)"
+          :modelValue="isPet"
+          @update:modelValue="(checked) => (isPet = checked)"
         />
         <BaseCheckBox
           label="주차 가능"
-          :modelValue="isParkingAvailable"
-          @update:modelValue="(checked) => (isParkingAvailable = checked)"
+          :modelValue="isParking"
+          @update:modelValue="(checked) => (isParking = checked)"
         />
       </div>
     </div>
@@ -41,21 +41,31 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import BaseCheckBox from '@/components/common/BaseCheckbox.vue'
 
 const props = defineProps({
   modelValue: {
-    type: Array,
-    default: () => [],
+    type: Object,
+    default: () => ({
+      facilityItemIds: [],
+      isPet: false,
+      isParking: false,
+    }),
   },
 })
 
 const emit = defineEmits(['update:modelValue'])
 
-const localSelectedIds = ref([...props.modelValue])
-const isPetFriendly = ref(false)
-const isParkingAvailable = ref(false)
+const localSelectedIds = ref(props.modelValue.facilityItemIds || [])
+const isPet = ref(props.modelValue.isPet)
+const isParking = ref(props.modelValue.isParking)
+
+const allValidIds = computed(() => {
+  return Object.values(utilityItems)
+    .flat()
+    .map((item) => item.id)
+})
 
 // 데이터베이스의 'facility_item' 테이블과 일치하도록 수정되었습니다.
 const utilityItems = {
@@ -106,29 +116,29 @@ const categoryLabels = {
 }
 
 function updateCheckbox(itemId, checked) {
-  const allValidIds = Object.values(utilityItems)
-    .flat()
-    .map((item) => item.id)
   const index = localSelectedIds.value.indexOf(itemId)
-
-  // 유효한 ID인지 확인하는 로직 추가
-  if (!allValidIds.includes(itemId)) {
+  if (!allValidIds.value.includes(itemId)) {
     console.warn(`Attempted to update an invalid itemId: ${itemId}`)
     return
   }
-
   if (checked && index === -1) {
     localSelectedIds.value.push(itemId)
   } else if (!checked && index !== -1) {
     localSelectedIds.value.splice(index, 1)
   }
-  emit('update:modelValue', localSelectedIds.value)
 }
 
 watch(
-  () => props.modelValue,
-  (newVal) => {
-    localSelectedIds.value = [...newVal]
+  [localSelectedIds, isPet, isParking],
+  () => {
+    // facilityItemIds 배열의 현재 상태를 콘솔에 출력합니다.
+    console.log('현재 선택된 시설 ID:', localSelectedIds.value)
+
+    emit('update:modelValue', {
+      facilityItemIds: localSelectedIds.value,
+      isPet: isPet.value,
+      isParking: isParking.value,
+    })
   },
   { deep: true },
 )
