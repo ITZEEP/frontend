@@ -81,27 +81,25 @@ defineProps({
 })
 
 function formatNumber(value) {
-  if (typeof value === 'number') {
-    // 억 단위 처리
-    // if (value >= 100000000) {
-    //   const billion = Math.floor(value / 100000000)
-    //   const remainder = value % 100000000
-    //   if (remainder > 0) {
-    //     return `${billion}억 ${remainder.toLocaleString()}`
-    //   } else {
-    //     return `${billion}억`
-    //   }
-    // }
-    // 천만 단위 처리
-    // if (value >= 10000) {
-    //   const tenThousand = Math.floor(value / 10000)
-    //   const remainder = value % 10000
-    //   if (remainder > 0) {
-    //     return `${tenThousand}만 ${remainder.toLocaleString()}`
-    //   } else {
-    //     return `${tenThousand}만`
-    //   }
-    // }
+  if (typeof value === 'number' && value > 0) {
+    if (value >= 100000000) {
+      const billion = Math.floor(value / 100000000)
+      const remainder = value % 100000000
+      return remainder > 0 ? `${billion}억 ${formatNumber(remainder)}` : `${billion}억`
+    }
+
+    if (value >= 10000) {
+      const tenThousand = Math.floor(value / 10000)
+      const remainder = value % 10000
+      return remainder > 0 ? `${tenThousand}만 ${formatNumber(remainder)}` : `${tenThousand}만`
+    }
+
+    if (value >= 1000) {
+      const thousand = Math.floor(value / 1000)
+      const remainder = value % 1000
+      return remainder > 0 ? `${thousand}천 ${remainder.toLocaleString()}` : `${thousand}천`
+    }
+
     return value.toLocaleString()
   }
   return value ?? '0'
