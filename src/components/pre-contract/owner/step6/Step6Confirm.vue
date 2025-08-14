@@ -151,10 +151,10 @@
         </div>
       </section>
     </div>
-    <LoadingOverlay
+    <LoadingToolTip
       :loading="isLoading"
-      message="계약서 저장 중..."
-      sub-message="잠시만 기다려주세요"
+      title="AI가 계약서 초안을 생성하고 있어요"
+      sub-message="계약서 초안 생성 중..."
     />
   </div>
 </template>
@@ -164,7 +164,7 @@ import { onMounted, ref, watchEffect } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { OwnerPreContractAPI } from '@/apis/preContractOwner'
 import { usePreContractStore } from '@/stores/preContract'
-import LoadingOverlay from '@/components/common/LoadingOverlay.vue'
+import LoadingToolTip from '@/components/common/LoadingToolTip.vue'
 
 const store = usePreContractStore()
 const route = useRoute()
@@ -191,9 +191,9 @@ const saveMongo = async () => {
       return
     }
 
-    if (contractChatId) {
-      router.push(`/contract/${contractChatId}`)
-    }
+    await router.push({
+      path: `/contract/${contractChatId}?step=1`,
+    })
   } catch (error) {
     console.error('Mongo 저장 중 오류:', error)
     alert('저장에 실패했습니다. 다시 시도해주세요!')
