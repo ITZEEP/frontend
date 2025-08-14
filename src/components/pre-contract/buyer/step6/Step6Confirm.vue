@@ -388,7 +388,7 @@ const saveMongoDB = async () => {
       return
     }
 
-    await router.push({ path: `/contract/${contractChatId}` })
+    await router.replace(`/contract/${contractChatId}`)
   } catch (err) {
     console.error('실패 ❌', err)
     alert(err?.response?.data?.message || '저장에 실패했습니다. 다시 시도해주세요!')
