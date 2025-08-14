@@ -1,4 +1,3 @@
-// step=3 일 때만 round<->URL 동기화
 import { computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useSpecialContractStore } from '@/stores/useContractTermStore'
@@ -8,26 +7,30 @@ export function useRoundQuerySync(stepFromProps) {
   const router = useRouter()
   const store = useSpecialContractStore()
 
-  const step = computed(() => Number(stepFromProps ?? route.query.step ?? 3))
+  const step = computed(() => {
+    if (stepFromProps != null) return Number(stepFromProps)
+    const qs = route.query.step
+    return qs != null ? Number(qs) : null
+  })
+
   const roundFromQuery = computed(() => {
     const r = Number(route.query.round)
     return Number.isNaN(r) ? undefined : r
   })
 
   const replaceQuery = (next = {}) => {
-    router.replace({ query: { ...route.query, ...next } })
+    router.replace({ query: next })
   }
 
   const ensureInitialRound = () => {
-    if (Number(step.value) !== 3) {
-      store.setRound(0) // step≠3이면 라운드 0
+    if (step.value !== 3) {
+      store.setRound(0)
       return
     }
     if (roundFromQuery.value !== undefined) {
-      store.setRound(roundFromQuery.value) // URL round 우선
+      store.setRound(roundFromQuery.value)
     } else {
-      // URL에 없으면 store.currentRound(기본 0) 반영
-      replaceQuery({ round: store.currentRound ?? 0 })
+      replaceQuery({ step: '3', round: store.currentRound ?? 0 })
     }
   }
 
@@ -37,21 +40,18 @@ export function useRoundQuerySync(stepFromProps) {
   watch(
     () => store.currentRound,
     (r) => {
-      if (Number(step.value) === 3) replaceQuery({ round: r })
+      if (step.value === 3) replaceQuery({ step: '3', round: r })
     },
   )
 
-  // 필요 시 외부에서 강제로 round를 특정 값으로 설정하고 URL에 반영
   const setRoundInUrl = (r) => {
     store.setRound(r)
-    if (Number(step.value) === 3) replaceQuery({ round: r })
+    if (step.value === 3) replaceQuery({ step: '3', round: r })
   }
 
   const gotoStep4 = () => {
-    const nextQuery = { ...route.query, step: '4' }
-    delete nextQuery.round
     localStorage.removeItem('specialContract_allCompleted')
-    router.replace({ query: nextQuery })
+    router.replace({ query: { step: '4' } })
   }
 
   return { setRoundInUrl, gotoStep4 }
