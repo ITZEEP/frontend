@@ -148,18 +148,21 @@ watch(
     petCount,
   ],
   ([repair, clean, install, parking, count, pet, info, pets]) => {
-    const basicFilled =
+    // 토글 필수값
+    const toggleFilled =
       repair !== null &&
       clean !== null &&
       install !== null &&
       pet !== null &&
-      info !== '' &&
-      pets !== null &&
-      Number(pets) >= 1
+      (!storeHasParking.value || parking !== null)
 
+    // 주차 토글이 예일 때만 대수 필수
     const parkingFilled = parking === true ? count !== null && Number(count) >= 1 : true
 
-    const allFilled = basicFilled && parkingFilled
+    // 반려동물 토글이 예일 때만 정보 필수
+    const petFilled = pet === true ? info.trim() !== '' && pets !== null && Number(pets) >= 1 : true
+
+    const allFilled = toggleFilled && parkingFilled && petFilled
 
     store.setCanProceed(allFilled)
   },
