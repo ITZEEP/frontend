@@ -1,9 +1,9 @@
-<!-- src/components/contract/chat/ContractPresence.vue -->
 <template>
   <div class="flex gap-4 items-center bg-white px-4 py-2 rounded-lg">
     <!-- 임대인 -->
     <div class="flex items-center gap-2">
       <span class="w-3 h-3 rounded-full transition-colors" :class="ownerDotClass"></span>
+      <img src="@/assets/images/character/panda_face.svg" alt="임대인" class="w-5 h-5" />
       <span class="text-sm font-medium" :class="ownerTextClass">임대인</span>
       <span class="text-xs text-gray-500">
         {{ ownerIn ? '입장' : '미입장' }}
@@ -13,14 +13,17 @@
     <!-- 임차인 -->
     <div class="flex items-center gap-2">
       <span class="w-3 h-3 rounded-full transition-colors" :class="buyerDotClass"></span>
+      <img src="@/assets/images/character/lion_face.svg" alt="임차인" class="w-5 h-5" />
       <span class="text-sm font-medium" :class="buyerTextClass">임차인</span>
       <span class="text-xs text-gray-500">
         {{ buyerIn ? '입장' : '미입장' }}
       </span>
     </div>
 
+    <!-- AI -->
     <div class="flex items-center gap-2">
       <span class="w-3 h-3 rounded-full bg-blue-500 ai-glow"></span>
+      <img src="@/assets/images/character/ai_face.svg" alt="AI 어시스턴트" class="w-5 h-5" />
       <span class="text-sm font-medium text-blue-600">AI 어시스턴트 뀨</span>
       <span class="text-xs text-gray-500">활성</span>
     </div>
