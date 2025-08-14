@@ -9,17 +9,8 @@
       </header>
 
       <div class="flex-1 flex flex-col gap-8">
-        <!-- 참여자 목록 -->
-        <div class="flex gap-6 items-center bg-white px-4 py-2 rounded-lg">
-          <ParticipantItem
-            v-for="participant in participants"
-            :key="participant.id"
-            :name="participant.name"
-            :role="participant.role"
-            :isOnline="participant.isOnline"
-            :isAi="participant.isAi"
-          />
-        </div>
+        <!-- 온라인 상태 바 (자식이 직접 조회) -->
+        <ContractPresence :contractChatId="roomId" :pollIntervalMs="10000" />
 
         <div class="flex-1 flex justify-between gap-4 overflow-hidden">
           <!-- 채팅 영역 -->
@@ -36,38 +27,23 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-
 import ContractChat from '@/components/contract/chat/ContractChat.vue'
-import ParticipantItem from '@/components/contract/chat/ParticipantItem.vue'
 import StepContentWrapper from '@/components/contract/form/StepContentWrapper.vue'
-import { getContractChatOnlineStatus } from '@/apis/contractChatApi'
+import ContractPresence from '@/components/contract/chat/ContractPresence.vue'
 
 const route = useRoute()
-
-// 경로 파라미터에서 roomId 추출
 const roomId = computed(() => route.params.id)
 
-// 쿼리에서 step/round 읽기
 const step = computed(() => {
   const s = Number(route.query.step)
   return Number.isNaN(s) ? null : s
 })
 
-// step=3일 때만 round를 의미 있게 사용(없으면 0)
 const round = computed(() => {
   if (Number(step.value) !== 3) return null
   const r = Number(route.query.round)
   return Number.isNaN(r) ? 0 : r
-})
-
-const participants = [
-  { id: 1, name: '이임차', role: '임차인', isOnline: true, isAi: false },
-  { id: 2, name: 'AI 어시스턴트', role: '', isOnline: true, isAi: true },
-]
-
-onMounted(async () => {
-  await getContractChatOnlineStatus(roomId.value)
 })
 </script>
