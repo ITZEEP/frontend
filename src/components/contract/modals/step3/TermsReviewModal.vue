@@ -60,6 +60,15 @@ const handleSelectionChange = ({ id, selected }) => {
 }
 
 const confirm = async () => {
+  // 모든 조항이 선택됐는지 검사
+  const allReviewed = clauses.value.every(
+    (c) => selections.value[c.id] === true || selections.value[c.id] === false,
+  )
+  if (!allReviewed) {
+    alert('모든 특약에 대해 검토해주세요.')
+    return
+  }
+
   try {
     console.log('제출할 데이터:', selections.value)
 
