@@ -186,6 +186,7 @@ watch(
   },
 )
 
+// 🔧 sendMessage 함수 수정 - 결과 확인 후 처리
 const sendMessage = async () => {
   const content = messageInput.value.trim()
 
@@ -195,6 +196,11 @@ const sendMessage = async () => {
       isSending: isSending.value,
       canSendMessage: props.canSendMessage,
     })
+
+    // 🔧 오프라인 상태에서 전송 시도 시 알림
+    if (!props.canSendMessage && content) {
+      alert('상대방이 오프라인 상태입니다. 상대방이 접속한 후 메시지를 보내주세요.')
+    }
     return
   }
 
@@ -207,18 +213,50 @@ const sendMessage = async () => {
       isTypingActive.value = false
     }
 
-    // 메시지 전송
-    emit('sendMessage', content)
+    // 🔧 메시지 전송을 Promise로 처리하여 결과 확인
+    const result = await new Promise((resolve) => {
+      // emit에 콜백 함수를 전달하여 결과를 받음
+      emit('sendMessage', content, resolve)
+    })
 
-    // 입력창 초기화
-    messageInput.value = ''
+    console.log('📤 메시지 전송 결과:', result)
 
-    // 포커스 유지
-    if (messageInputRef.value && props.canSendMessage) {
-      messageInputRef.value.focus()
+    // 🔧 전송 성공한 경우에만 입력창 초기화
+    if (result && result.success) {
+      messageInput.value = ''
+
+      // 포커스 유지
+      if (messageInputRef.value && props.canSendMessage) {
+        messageInputRef.value.focus()
+      }
+    } else {
+      // 🔧 전송 실패 시 처리 (더 자세한 로그)
+      console.error('메시지 전송 실패 상세:', {
+        result,
+        canSendMessage: props.canSendMessage,
+        content: content,
+      })
+
+      if (result && result.isOffline) {
+        alert(result.error)
+      } else if (result && result.error) {
+        console.warn('메시지 전송 실패:', result.error)
+        // 🔧 오프라인 관련 에러가 아닐 때만 알림 표시
+        if (!result.error.includes('오프라인')) {
+          alert('메시지 전송에 실패했습니다: ' + result.error)
+        }
+      } else {
+        console.warn('메시지 전송 실패: 알 수 없는 오류')
+      }
+
+      // 실패 시 입력창 유지하고 포커스
+      if (messageInputRef.value && props.canSendMessage) {
+        messageInputRef.value.focus()
+      }
     }
   } catch (error) {
     console.error('❌ ContractChatInput: 메시지 전송 실패:', error)
+    alert('메시지 전송 중 오류가 발생했습니다.')
   } finally {
     setTimeout(() => {
       isSending.value = false

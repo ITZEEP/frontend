@@ -41,7 +41,9 @@
             <div v-if="message.type === 'TEXT'" class="break-words">
               {{ message.content }}
             </div>
-
+            <div v-if="message.type === 'URLLINK'" class="break-words">
+              {{ message.content }}
+            </div>
             <!-- 파일 메시지 -->
             <div v-else-if="message.type === 'FILE'" class="space-y-2">
               <!-- 이미지 파일 -->

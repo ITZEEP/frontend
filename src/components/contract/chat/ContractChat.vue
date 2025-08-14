@@ -77,6 +77,7 @@
       :chatRoomId="actualContractChatId"
       :receiverId="contractReceiverId"
       :isOwner="isOwner"
+      :canSendMessage="canSendMessage"
       @sendMessage="sendMessageUi"
       @typing="() => {}"
       @setStartPoint="handleSetStartPoint"
@@ -156,13 +157,13 @@ const {
 
 // 3) round ↔ URL 동기화(step=3 전용), step4 전환
 const { gotoStep4 } = useRoundQuerySync(props.currentStep)
-const { setRoundInUrl } = useRoundQuerySync(props.currentStep)
 
 // 4) 실시간(WebSocket)
 const {
   messages: hookMessages,
   isReady: hookIsReady,
   sendContractMessage,
+  canSendMessage,
 } = useContractChat(actualContractChatId, currentUserId, contractData)
 
 // 5) AI 버튼 규칙
@@ -246,20 +247,49 @@ const handleAiAction = (payload) => {
 }
 
 // 전송
-const sendMessageUi = async (content) => {
-  if (!isInputReady.value) return
-  const ok = sendContractMessage(content, 'TEXT')
-  if (!ok) return
-  hookMessages.value.push({
-    id: Date.now(),
-    senderId: currentUserId.value,
-    receiverId: contractReceiverId.value,
-    content,
-    sendTime: new Date().toISOString(),
-    type: 'TEXT',
-    isRead: false,
-  })
-  nextTick(forceScrollToBottom)
+const sendMessageUi = async (content, callback) => {
+  console.log('📨 ContractChat: 메시지 전송 요청:', content)
+
+  if (!isInputReady.value) {
+    const result = { success: false, error: '채팅방이 준비되지 않았습니다.' }
+    if (callback) callback(result)
+    return result
+  }
+
+  try {
+    // useContractChat의 sendContractMessage 호출
+    const result = sendContractMessage(content, 'TEXT')
+
+    console.log('📤 ContractChat: 전송 결과:', result)
+
+    // 🔧 전송 성공한 경우에만 화면에 메시지 추가
+    if (result) {
+      hookMessages.value.push({
+        id: Date.now(),
+        senderId: currentUserId.value,
+        receiverId: contractReceiverId.value,
+        content,
+        sendTime: new Date().toISOString(),
+        type: 'TEXT',
+        isRead: false,
+      })
+      nextTick(forceScrollToBottom)
+    } else {
+      console.warn('메시지 전송 실패:', result?.error || '알 수 없는 오류')
+    }
+
+    // 🔧 콜백으로 결과 전달
+    if (callback) callback(result)
+    return result
+  } catch (error) {
+    console.error('계약 메시지 전송 중 오류:', error)
+    const errorResult = {
+      success: false,
+      error: error.message || '메시지 전송 중 오류가 발생했습니다.',
+    }
+    if (callback) callback(errorResult)
+    return errorResult
+  }
 }
 
 // 시작점/내보내기
