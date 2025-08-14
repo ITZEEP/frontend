@@ -66,7 +66,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import FilterSidebar from '@/components/homes/homelist/FilterSidebar.vue'
 import ListingCard from '@/components/homes/homelist/ListingCard.vue'
@@ -90,7 +90,7 @@ const filters = ref({
 })
 
 const page = ref(1)
-const size = ref(21) // 초기 로딩 시 모든 매물을 가져오기 위해 충분히 큰 값으로 설정
+const size = ref(21)
 const totalItems = ref(0)
 const totalPages = computed(() => Math.ceil(totalItems.value / size.value))
 
@@ -109,10 +109,13 @@ const otherCount = computed(() => {
 })
 
 function onFilterChange(newFilters) {
+  // FilterSidebar에서 전달받은 원본 필터 객체로 filters.value를 업데이트합니다.
   filters.value = { ...newFilters }
   page.value = 1
-  size.value = 21
-  loadListings()
+  // 페이지네이션 정보를 포함한 filters 객체로 API 요청을 보냅니다.
+  nextTick(() => {
+    loadListings()
+  })
 }
 
 function changePage(newPage) {
@@ -144,23 +147,54 @@ async function loadListings() {
             ? filters.value.district
             : filters.value.city
           : undefined,
+      homeDirection: filters.value.direction || undefined,
     }
 
-    if (filters.value.dealType === '월세' && filters.value.depositRange > 0) {
-      params.maxDepositPrice = filters.value.depositRange * 10000
+    if (filters.value.dealType === '월세') {
+      if (filters.value.depositRange > 0) {
+        params.maxDepositPrice = filters.value.depositRange * 10000
+      }
+      if (filters.value.monthlyRange > 0) {
+        params.maxMonthlyRent = filters.value.monthlyRange * 10000
+      }
+    } else if (filters.value.dealType === '전세') {
+      if (filters.value.leaseRange > 0) {
+        params.maxDepositPrice = filters.value.leaseRange * 10000
+      }
     }
-    if (filters.value.dealType === '월세' && filters.value.monthlyRange > 0) {
-      params.maxMonthlyRent = filters.value.monthlyRange * 10000
+
+    if (filters.value.floor) {
+      if (filters.value.floor === '반지하') {
+        params.minFloor = -1
+        params.maxFloor = -1
+      } else if (filters.value.floor === '1층') {
+        params.minFloor = 1
+        params.maxFloor = 1
+      } else if (filters.value.floor === '2~5층') {
+        params.minFloor = 2
+        params.maxFloor = 5
+      } else if (filters.value.floor === '6~9층') {
+        params.minFloor = 6
+        params.maxFloor = 9
+      } else if (filters.value.floor === '10층 이상') {
+        params.minFloor = 10
+        params.maxFloor = 9999
+      }
     }
-    if (filters.value.dealType === '전세' && filters.value.leaseRange > 0) {
-      params.maxDepositPrice = filters.value.leaseRange * 10000
+
+    if (filters.value.conditions && filters.value.conditions.includes('반려동물 가능')) {
+      params.isPet = true
+    }
+    if (filters.value.conditions && filters.value.conditions.includes('주차 가능')) {
+      params.isParking = true
     }
 
     const response = await fetchListings(params)
 
+    // TODO: 백엔드 응답 형식에 따라 수정
     if (response && response.content) {
       listings.value = response.content
-      totalItems.value = response.totalElements || response.data.length
+      totalItems.value = response.totalElements
     } else {
       listings.value = []
       totalItems.value = 0

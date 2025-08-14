@@ -236,115 +236,16 @@ function resetFilters() {
     conditions: [],
   }
   districtList.value = []
+  // 가공되지 않은 초기화된 filters 객체를 통째로 전달
   emit('filter-change', filters.value)
 }
 
 function emitFilterChange() {
-  const searchParams = {}
-
-  if (filters.value.houseType !== '전체') {
-    searchParams.residenceType = filters.value.houseType
-  }
-
-  if (filters.value.dealType !== '전체') {
-    searchParams.leaseType = filters.value.dealType
-    if (filters.value.dealType === '월세') {
-      if (filters.value.depositRange > 0) {
-        searchParams.maxDepositPrice = filters.value.depositRange * 10000
-      }
-      if (filters.value.monthlyRange > 0) {
-        searchParams.maxMonthlyRent = filters.value.monthlyRange * 10000
-      }
-    } else if (filters.value.dealType === '전세') {
-      if (filters.value.leaseRange > 0) {
-        searchParams.maxDepositPrice = filters.value.leaseRange * 10000
-      }
-    }
-  }
-
-  if (filters.value.area > 0) {
-    searchParams.maxSupplyArea = filters.value.area * 3.30578
-  }
-
-  if (filters.value.city !== '전체') {
-    searchParams.addr1 =
-      filters.value.district !== '전체' ? filters.value.district : filters.value.city
-  }
-
-  if (filters.value.direction) {
-    searchParams.homeDirection = filters.value.direction
-  }
-
-  if (filters.value.floor) {
-    if (filters.value.floor === '반지하') {
-      searchParams.minFloor = -1
-      searchParams.maxFloor = -1
-    } else if (filters.value.floor === '1층') {
-      searchParams.minFloor = 1
-      searchParams.maxFloor = 1
-    } else if (filters.value.floor === '2~5층') {
-      searchParams.minFloor = 2
-      searchParams.maxFloor = 5
-    } else if (filters.value.floor === '6~9층') {
-      searchParams.minFloor = 6
-      searchParams.maxFloor = 9
-    } else if (filters.value.floor === '10층 이상') {
-      searchParams.minFloor = 10
-      searchParams.maxFloor = 9999
-    }
-  }
-
-  if (filters.value.conditions.includes('반려동물 가능')) {
-    searchParams.isPet = true
-  }
-  if (filters.value.conditions.includes('주차 가능')) {
-    searchParams.isParking = true
-  }
-
-  emit('filter-change', searchParams)
+  // 가공하지 않고, filters.value 객체 자체를 전달합니다.
+  emit('filter-change', filters.value)
 }
 
 const directions = ['남향', '동향', '서향', '북향', '남동향', '남서향', '북동향', '북서향']
 const floors = ['반지하', '1층', '2~5층', '6~9층', '10층 이상']
 const conditions = ['주차 가능', '반려동물 가능', '엘리베이터']
 </script>
-
-<style>
-/* 슬라이더 스타일 */
-input[type='range'].custom-range {
-  appearance: none;
-  height: 4px;
-  background: #e5e7eb; /* gray-200 */
-  border-radius: 9999px;
-  overflow: hidden;
-  position: relative;
-}
-
-input[type='range'].custom-range::-webkit-slider-thumb {
-  appearance: none;
-  height: 16px;
-  width: 16px;
-  background: #ffd600; /* primary yellow */
-  border-radius: 50%;
-  box-shadow: -1000px 0 0 1000px #ffd600; /* fill bar */
-  cursor: pointer;
-}
-
-input[type='range'].custom-range::-moz-range-thumb {
-  height: 16px;
-  width: 16px;
-  background: #ffd600;
-  border: none;
-  border-radius: 50%;
-  box-shadow: -1000px 0 0 1000px #ffd600;
-  cursor: pointer;
-}
-
-input[type='range'].custom-range::-ms-thumb {
-  height: 16px;
-  width: 16px;
-  background: #ffd600;
-  border-radius: 50%;
-  cursor: pointer;
-}
-</style>
