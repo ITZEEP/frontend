@@ -27,22 +27,35 @@ const contractChatId = route.params.id
 const store = usePreContractStore()
 
 onMounted(async () => {
+  // 1) 로컬스토리지 우선 (이미 saveTenantInfo가 실행된 케이스)
+  const cachedRentType = localStorage.getItem('rent_type')
+  if (cachedRentType === 'JEONSE' || cachedRentType === 'WOLSE') {
+    store.setLeaseType(cachedRentType)
+  }
+
+  // 2) 없으면 최초 초기화 API 호출
   try {
-    // 1. API로부터 초기 임차인 정보 가져오기
     const { data } = await buyerApi.saveTenantInfo(contractChatId)
-
-    // 2. 받아온 데이터를 localStorage에 저장
     if (data) {
-      localStorage.setItem('rent_type', data.rentType)
-      localStorage.setItem('has_pet', data.hasPet.toString())
-      localStorage.setItem('has_parking', data.hasParking.toString())
-
-      // 3. Pinia store에도 필요한 값 반영
-      const raw = localStorage.getItem('rent_type')
-      store.setLeaseType(raw)
+      if (data.rentType) {
+        localStorage.setItem('rent_type', data.rentType)
+        store.setLeaseType(data.rentType)
+      }
+      if (typeof data.hasPet === 'boolean') {
+        localStorage.setItem('has_pet', String(data.hasPet))
+      }
+      if (typeof data.hasParking === 'boolean') {
+        localStorage.setItem('has_parking', String(data.hasParking))
+      }
     }
   } catch (error) {
     console.error('초기 임차인 정보 가져오기 실패 ❌', error)
+    const fallback = localStorage.getItem('rent_type')
+    if (fallback === 'JEONSE' || fallback === 'WOLSE') {
+      store.setLeaseType(fallback)
+    } else {
+      store.setLeaseType(null)
+    }
   }
 })
 
@@ -50,6 +63,6 @@ onMounted(async () => {
 const currentComponent = computed(() => {
   if (store.leaseType === 'JEONSE') return Step4JeonseTerms
   if (store.leaseType === 'WOLSE') return Step4WolseTerms
-  return null // 아무것도 렌더링하지 않음
+  return null
 })
 </script>
