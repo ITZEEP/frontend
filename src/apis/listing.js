@@ -27,7 +27,7 @@ async function uploadImageToS3(file) {
 export async function fetchListings(params = {}) {
   try {
     const response = await api.get(API_BASE_URL, { params })
-    return response.data.data
+    return response.data
   } catch (error) {
     console.error('매물 리스트 조회/검색 실패', error)
     throw error

@@ -1,4 +1,3 @@
-//
 <template>
   <aside class="w-full md:w-64 bg-white px-4 py-6 border-r border-gray-200 space-y-6">
     <div>
@@ -183,11 +182,11 @@ const filters = ref({
   city: '전체',
   district: '전체',
   houseType: '전체',
-  dealType: '월세',
-  depositRange: 500,
-  monthlyRange: 50,
-  leaseRange: 10000,
-  area: 30, // 평 단위
+  dealType: '전체',
+  depositRange: 0,
+  monthlyRange: 0,
+  leaseRange: 0,
+  area: 0,
   direction: null,
   floor: null,
   conditions: [],
@@ -227,11 +226,11 @@ function resetFilters() {
     city: '전체',
     district: '전체',
     houseType: '전체',
-    dealType: '월세',
-    depositRange: 500,
-    monthlyRange: 50,
-    leaseRange: 10000,
-    area: 30,
+    dealType: '전체',
+    depositRange: 0,
+    monthlyRange: 0,
+    leaseRange: 0,
+    area: 0,
     direction: null,
     floor: null,
     conditions: [],
@@ -241,7 +240,68 @@ function resetFilters() {
 }
 
 function emitFilterChange() {
-  emit('filter-change', filters.value)
+  const searchParams = {}
+
+  if (filters.value.houseType !== '전체') {
+    searchParams.residenceType = filters.value.houseType
+  }
+
+  if (filters.value.dealType !== '전체') {
+    searchParams.leaseType = filters.value.dealType
+    if (filters.value.dealType === '월세') {
+      if (filters.value.depositRange > 0) {
+        searchParams.maxDepositPrice = filters.value.depositRange * 10000
+      }
+      if (filters.value.monthlyRange > 0) {
+        searchParams.maxMonthlyRent = filters.value.monthlyRange * 10000
+      }
+    } else if (filters.value.dealType === '전세') {
+      if (filters.value.leaseRange > 0) {
+        searchParams.maxDepositPrice = filters.value.leaseRange * 10000
+      }
+    }
+  }
+
+  if (filters.value.area > 0) {
+    searchParams.maxSupplyArea = filters.value.area * 3.30578
+  }
+
+  if (filters.value.city !== '전체') {
+    searchParams.addr1 =
+      filters.value.district !== '전체' ? filters.value.district : filters.value.city
+  }
+
+  if (filters.value.direction) {
+    searchParams.homeDirection = filters.value.direction
+  }
+
+  if (filters.value.floor) {
+    if (filters.value.floor === '반지하') {
+      searchParams.minFloor = -1
+      searchParams.maxFloor = -1
+    } else if (filters.value.floor === '1층') {
+      searchParams.minFloor = 1
+      searchParams.maxFloor = 1
+    } else if (filters.value.floor === '2~5층') {
+      searchParams.minFloor = 2
+      searchParams.maxFloor = 5
+    } else if (filters.value.floor === '6~9층') {
+      searchParams.minFloor = 6
+      searchParams.maxFloor = 9
+    } else if (filters.value.floor === '10층 이상') {
+      searchParams.minFloor = 10
+      searchParams.maxFloor = 9999
+    }
+  }
+
+  if (filters.value.conditions.includes('반려동물 가능')) {
+    searchParams.isPet = true
+  }
+  if (filters.value.conditions.includes('주차 가능')) {
+    searchParams.isParking = true
+  }
+
+  emit('filter-change', searchParams)
 }
 
 const directions = ['남향', '동향', '서향', '북향', '남동향', '남서향', '북동향', '북서향']
