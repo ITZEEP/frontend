@@ -1,3 +1,4 @@
+<script src="../../../apis/listing.js"></script>
 <script setup>
 import { reactive, ref } from 'vue'
 import { KakaoMap, KakaoMapMarker } from 'vue3-kakao-maps'

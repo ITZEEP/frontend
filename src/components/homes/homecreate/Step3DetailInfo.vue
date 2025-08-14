@@ -1,42 +1,8 @@
-<script setup>
-import { toRefs } from 'vue'
-import OptionChecklist from './OptionChecklist.vue'
-
-const props = defineProps({
-  form: {
-    type: Object,
-    required: true,
-  },
-})
-const emit = defineEmits(['update:form'])
-
-const { form } = toRefs(props)
-
-const handleChange = (key, value) => {
-  emit('update:form', {
-    ...props.form,
-    [key]: value,
-  })
-}
-
-const homeDirectionOptions = [
-  { label: '남향', value: '남향' },
-  { label: '동향', value: '동향' },
-  { label: '서향', value: '서향' },
-  { label: '북향', value: '북향' },
-  { label: '남동향', value: '남동향' },
-  { label: '남서향', value: '남서향' },
-  { label: '북동향', value: '북동향' },
-  { label: '북서향', value: '북서향' },
-]
-</script>
-
 <template>
   <form class="max-w-4xl mx-auto p-6 space-y-6 border rounded-md">
     <h2 class="text-lg font-semibold mb-2">상세 정보</h2>
     <p class="mb-4 text-gray-700">전용면적과 건물 정보를 입력해주세요.</p>
 
-    <!-- 전용면적 & 공급면적 -->
     <div class="grid grid-cols-2 gap-6">
       <div>
         <label class="block mb-1 text-sm font-medium"
@@ -72,7 +38,31 @@ const homeDirectionOptions = [
       </div>
     </div>
 
-    <!-- 방/욕실 -->
+    <div class="grid grid-cols-2 gap-6">
+      <div>
+        <label class="block mb-1 text-sm font-medium">면적 (m2)</label>
+        <input
+          type="number"
+          min="0"
+          class="border rounded p-2 w-full"
+          :value="form.area"
+          @input="handleChange('area', $event.target.valueAsNumber)"
+          placeholder="0"
+        />
+      </div>
+
+      <div>
+        <label class="block mb-1 text-sm font-medium">지목</label>
+        <input
+          type="text"
+          class="border rounded p-2 w-full"
+          :value="form.landCategory"
+          @input="handleChange('landCategory', $event.target.value)"
+          placeholder="ex) 대, 전, 답"
+        />
+      </div>
+    </div>
+
     <div class="grid grid-cols-2 gap-6">
       <div>
         <label class="block mb-1 text-sm font-medium"
@@ -100,8 +90,8 @@ const homeDirectionOptions = [
             type="number"
             min="0"
             class="border rounded p-2 pr-12 w-full no-spin"
-            :value="form.bathroomCount"
-            @input="handleChange('bathroomCount', $event.target.valueAsNumber)"
+            :value="form.bathroomCnt"
+            @input="handleChange('bathroomCnt', $event.target.valueAsNumber)"
             required
             placeholder="0"
           />
@@ -110,7 +100,6 @@ const homeDirectionOptions = [
       </div>
     </div>
 
-    <!-- 층 정보 -->
     <div class="grid grid-cols-2 gap-6">
       <div>
         <label class="block mb-1 text-sm font-medium"
@@ -142,7 +131,6 @@ const homeDirectionOptions = [
       </div>
     </div>
 
-    <!-- 사용 승인일 -->
     <div>
       <label class="block mb-1 text-sm font-medium"
         >사용 승인일<span class="text-red-500">*</span></label
@@ -155,7 +143,6 @@ const homeDirectionOptions = [
       />
     </div>
 
-    <!-- 방향 -->
     <fieldset>
       <legend class="font-semibold mb-2">방향</legend>
       <div class="grid grid-cols-4 gap-2 max-w-xl">
@@ -176,15 +163,58 @@ const homeDirectionOptions = [
       </div>
     </fieldset>
 
-    <!-- 옵션 체크리스트 -->
     <fieldset class="rounded-md p-4">
       <OptionChecklist
-        :modelValue="form.options"
-        @update:modelValue="(val) => handleChange('options', val)"
+        :modelValue="{
+          facilityItemIds: form.facilityItemIds,
+          isPet: form.isPet,
+          isParking: form.isParking,
+        }"
+        @update:modelValue="updateForm"
       />
     </fieldset>
   </form>
 </template>
+
+<script setup>
+import { toRefs } from 'vue'
+import OptionChecklist from './OptionChecklist.vue'
+
+const props = defineProps({
+  form: {
+    type: Object,
+    required: true,
+  },
+})
+const emit = defineEmits(['update:form'])
+
+const { form } = toRefs(props)
+
+const handleChange = (key, value) => {
+  emit('update:form', {
+    ...props.form,
+    [key]: value,
+  })
+}
+
+const updateForm = (updatedFields) => {
+  emit('update:form', {
+    ...props.form,
+    ...updatedFields,
+  })
+}
+
+const homeDirectionOptions = [
+  { label: '남향', value: 'S' },
+  { label: '동향', value: 'E' },
+  { label: '서향', value: 'W' },
+  { label: '북향', value: 'N' },
+  { label: '남동향', value: 'SE' },
+  { label: '남서향', value: 'SW' },
+  { label: '북동향', value: 'NE' },
+  { label: '북서향', value: 'NW' },
+]
+</script>
 
 <style scoped>
 input[type='number'].no-spin::-webkit-inner-spin-button,

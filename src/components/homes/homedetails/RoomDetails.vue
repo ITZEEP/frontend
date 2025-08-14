@@ -51,7 +51,7 @@
             방 / 욕실 수
           </div>
           <div class="text-black font-medium">
-            {{ listing.roomCnt }}개 / {{ listing.bathroomCount }}개
+            {{ listing.roomCnt }}개 / {{ listing.bathroomCnt }}개
           </div>
         </div>
       </div>
@@ -63,7 +63,7 @@
         <div class="flex justify-between items-center">
           <div class="font-semibold">월 관리비</div>
           <div class="text-yellow-primary font-bold text-lg">
-            {{ listing.maintenanceFee ?? 0 }}만원
+            {{ formatNumber(listing.maintenaceFee) }}원
           </div>
         </div>
 
@@ -71,11 +71,11 @@
           <div class="text-gray-600 mb-2">관리비 포함 항목</div>
           <div class="flex flex-wrap gap-2">
             <span
-              v-for="item in listing.maintenanceFeeItems"
-              :key="item.itemName"
+              v-for="item in listing.maintenanceFees"
+              :key="item.maintenanceId"
               class="bg-gray-100 text-xs px-3 py-1 rounded-full"
             >
-              {{ item.itemName }}
+              {{ getMaintenanceNameById(item.maintenanceId) }}
             </span>
           </div>
         </div>
@@ -89,98 +89,38 @@
         <h3 class="font-semibold mb-3 text-sm text-gray-600">건물 시설</h3>
         <div class="grid grid-cols-5 gap-5 text-center text-xs">
           <div
-            class="flex flex-col items-center bg-gray-100 px-3 py-2 rounded-md shadow-sm text-gray-700"
-          >
-            <ElevatorIcon class="text-yellow-primary w-4 h-4 mb-1" />
-            <span class="text-xs font-medium">엘리베이터</span>
-          </div>
-          <div
-            class="flex flex-col items-center bg-gray-100 px-3 py-2 rounded-md shadow-sm text-gray-700"
-          >
-            <IndividualHeatingIcon class="text-yellow-primary w-4 h-4 mb-1" />
-            <span class="text-xs font-medium">개별난방</span>
-          </div>
-          <div
-            class="flex flex-col items-center bg-gray-100 px-3 py-2 rounded-md shadow-sm text-gray-700"
-          >
-            <CenterHeatingIcon class="text-yellow-primary w-4 h-4 mb-1" />
-            <span class="text-xs font-medium">전체난방</span>
-          </div>
-          <div
-            v-if="listing.isParkingAvailable"
+            v-if="listing.isParking"
             class="flex flex-col items-center bg-gray-100 px-3 py-2 rounded-md shadow-sm text-gray-700"
           >
             <ParkingIcon class="text-yellow-primary w-4 h-4 mb-1" />
             <span class="text-xs font-medium">주차가능</span>
           </div>
+
           <div
             v-if="listing.isPet"
             class="flex flex-col items-center bg-gray-100 px-3 py-2 rounded-md shadow-sm text-gray-700"
           >
             <span class="text-xs font-medium">반려동물</span>
           </div>
+
+          <template v-if="categorizedFacilities['건물시설']">
+            <div
+              v-for="item in categorizedFacilities['건물시설']"
+              :key="item.itemId"
+              class="flex flex-col items-center bg-gray-100 px-3 py-2 rounded-md shadow-sm text-gray-700"
+            >
+              <component :is="getIcon(item.itemName)" class="text-yellow-primary w-4 h-4 mb-1" />
+              <span class="text-xs font-medium">{{ item.itemName }}</span>
+            </div>
+          </template>
         </div>
       </div>
 
-      <div
-        v-if="categorizedFacilities['가구'] && categorizedFacilities['가구'].length > 0"
-        class="mb-6"
-      >
-        <h3 class="font-semibold mb-3 text-sm text-gray-600">가구</h3>
+      <div v-for="(facilities, category) in filteredFacilities" :key="category" class="mb-6">
+        <h3 class="font-semibold mb-3 text-sm text-gray-600">{{ category }}</h3>
         <div class="grid grid-cols-5 gap-5 text-center text-xs">
           <div
-            v-for="item in categorizedFacilities['가구']"
-            :key="item.itemId"
-            class="flex flex-col items-center bg-gray-100 px-3 py-2 rounded-md shadow-sm text-gray-700"
-          >
-            <component :is="getIcon(item.itemName)" class="text-yellow-primary w-4 h-4 mb-1" />
-            <span class="text-xs font-medium">{{ item.itemName }}</span>
-          </div>
-        </div>
-      </div>
-
-      <div
-        v-if="categorizedFacilities['가전제품'] && categorizedFacilities['가전제품'].length > 0"
-        class="mb-6"
-      >
-        <h3 class="font-semibold mb-3 text-sm text-gray-600">가전제품</h3>
-        <div class="grid grid-cols-6 gap-4 text-center text-xs">
-          <div
-            v-for="item in categorizedFacilities['가전제품']"
-            :key="item.itemId"
-            class="flex flex-col items-center bg-gray-100 px-3 py-2 rounded-md shadow-sm text-gray-700"
-          >
-            <component :is="getIcon(item.itemName)" class="text-yellow-primary w-4 h-4 mb-1" />
-            <span class="text-xs font-medium">{{ item.itemName }}</span>
-          </div>
-        </div>
-      </div>
-
-      <div
-        v-if="categorizedFacilities['편의시설'] && categorizedFacilities['편의시설'].length > 0"
-        class="mb-6"
-      >
-        <h3 class="font-semibold mb-3 text-sm text-gray-600">편의시설</h3>
-        <div class="grid grid-cols-6 gap-4 text-center text-xs">
-          <div
-            v-for="item in categorizedFacilities['편의시설']"
-            :key="item.itemId"
-            class="flex flex-col items-center bg-gray-100 px-3 py-2 rounded-md shadow-sm text-gray-700"
-          >
-            <component :is="getIcon(item.itemName)" class="text-yellow-primary w-4 h-4 mb-1" />
-            <span class="text-xs font-medium">{{ item.itemName }}</span>
-          </div>
-        </div>
-      </div>
-
-      <div
-        v-if="categorizedFacilities['보안시설'] && categorizedFacilities['보안시설'].length > 0"
-        class="mb-6"
-      >
-        <h3 class="font-semibold mb-3 text-sm text-gray-600">보안 시설</h3>
-        <div class="grid grid-cols-6 gap-4 text-center text-xs">
-          <div
-            v-for="item in categorizedFacilities['보안시설']"
+            v-for="item in facilities"
             :key="item.itemId"
             class="flex flex-col items-center bg-gray-100 px-3 py-2 rounded-md shadow-sm text-gray-700"
           >
@@ -195,21 +135,16 @@
 
 <script setup>
 import { computed } from 'vue'
-
 import NetAreaIcon from '@/assets/icons/NetAreaIcon.vue'
 import GrossAreaIcon from '@/assets/icons/GrossAreaIcon.vue'
 import FloorIcon from '@/assets/icons/FloorIcon.vue'
 import CalendarIcon from '@/assets/icons/CalendarIcon.vue'
 import DirectionIcon from '@/assets/icons/DirectionIcon.vue'
 import RoomIcon from '@/assets/icons/RoomIcon.vue'
-
-// 건물 시설
 import ElevatorIcon from '@/assets/icons/ElevatorIcon.vue'
 import IndividualHeatingIcon from '@/assets/icons/IndividualHeatingIcon.vue'
 import CenterHeatingIcon from '@/assets/icons/CenterHeatingIcon.vue'
 import ParkingIcon from '@/assets/icons/ParkingIcon.vue'
-// import DogIcon from '@/assets/icons/DogIcon.vue' // 반려동물 아이콘
-// 가전제품
 import AirconIcon from '@/assets/icons/AirconIcon.vue'
 import TvIcon from '@/assets/icons/TvIcon.vue'
 import LaunIcon from '@/assets/icons/launIcon.vue'
@@ -219,16 +154,13 @@ import GasrangeIcon from '@/assets/icons/GasrangeIcon.vue'
 import ElectronicrangeIcon from '@/assets/icons/ElectronicrangeIcon.vue'
 import WallairconIcon from '@/assets/icons/WallairconIcon.vue'
 import Builtinaorcon from '@/assets/icons/builtinaorcon.vue'
-
-// 가구
 import BathIcon from '@/assets/icons/BathIcon.vue'
 import SinkIcon from '@/assets/icons/SinkIcon.vue'
 import DeskIcon from '@/assets/icons/DeskIcon.vue'
 import ClosetIcon from '@/assets/icons/ClosetIcon.vue'
 import BootbacIcon from '@/assets/icons/BootbacIcon.vue'
 import ShoeseIcon from '@/assets/icons/ShoeseIcon.vue'
-import SofaIcon from '@/assets/icons/SofaIcon.vue' // 소파 아이콘
-// 보안 시설
+import SofaIcon from '@/assets/icons/SofaIcon.vue'
 import CctvIcon from '@/assets/icons/CctvIcon.vue'
 import InterphoneIcon from '@/assets/icons/InterphoneIcon.vue'
 import DoorlockIcon from '@/assets/icons/DoorlockIcon.vue'
@@ -246,7 +178,6 @@ const { listing } = defineProps({
   },
 })
 
-// `homeDirection` 영문 값을 한글로 매핑하는 객체
 const homeDirectionMap = {
   E: '동향',
   W: '서향',
@@ -267,9 +198,19 @@ const displayedHomeDirection = computed(() => {
   return homeDirectionMap[upperCaseDirection] || upperCaseDirection
 })
 
-// `itemName`과 아이콘 컴포넌트를 매핑하는 객체
+const maintenanceIdMap = {
+  1: '전기료',
+  2: '수도료',
+  3: '가스료',
+  4: '인터넷',
+  5: '청소비',
+}
+
+const getMaintenanceNameById = (id) => {
+  return maintenanceIdMap[id] || '알 수 없음'
+}
+
 const iconMap = {
-  // 가전제품
   에어컨: AirconIcon,
   세탁기: LaunIcon,
   냉장고: RefrigIcon,
@@ -279,8 +220,6 @@ const iconMap = {
   '벽걸이 에어컨': WallairconIcon,
   '빌트인 에어컨': Builtinaorcon,
   TV: TvIcon,
-
-  // 가구
   욕조: BathIcon,
   싱크대: SinkIcon,
   책상: DeskIcon,
@@ -288,8 +227,6 @@ const iconMap = {
   붙박이장: BootbacIcon,
   신발장: ShoeseIcon,
   소파: SofaIcon,
-
-  // 보안 시설
   CCTV: CctvIcon,
   인터폰: InterphoneIcon,
   도어락: DoorlockIcon,
@@ -299,16 +236,42 @@ const iconMap = {
   화재경보기: FirewarningIcon,
   소화기: SohwagiIcon,
   현관보안: HyungwansecuIcon,
-
-  // 편의시설 (API 응답에 따라 추가)
   엘리베이터: ElevatorIcon,
   주차장: ParkingIcon,
+  택배보관함: null,
   개별난방: IndividualHeatingIcon,
   전체난방: CenterHeatingIcon,
+  반려동물: null,
 }
 
 const getIcon = (itemName) => {
-  return iconMap[itemName] || null // 매핑되지 않은 경우 null 반환
+  return iconMap[itemName] || null
+}
+
+function formatNumber(value) {
+  if (typeof value === 'number') {
+    if (value >= 100000000) {
+      const billion = Math.floor(value / 100000000)
+      const remainder = value % 100000000
+      if (remainder > 0) {
+        return `${billion}억 ${formatNumber(remainder)}`
+      } else {
+        return `${billion}억`
+      }
+    }
+
+    if (value >= 10000) {
+      const tenThousand = Math.floor(value / 10000)
+      const remainder = value % 10000
+      if (remainder > 0) {
+        return `${tenThousand}만 ${formatNumber(remainder)}`
+      } else {
+        return `${tenThousand}만`
+      }
+    }
+    return value.toLocaleString()
+  }
+  return value ?? '0'
 }
 
 const categorizedFacilities = computed(() => {
@@ -316,11 +279,33 @@ const categorizedFacilities = computed(() => {
     return {}
   }
   return listing.facilities.reduce((acc, item) => {
-    if (!acc[item.categoryType]) {
-      acc[item.categoryType] = []
+    const categoryName = getCategoryName(item.categoryId)
+    if (!acc[categoryName]) {
+      acc[categoryName] = []
     }
-    acc[item.categoryType].push(item)
+    acc[categoryName].push(item)
     return acc
   }, {})
+})
+
+const getCategoryName = (categoryId) => {
+  switch (categoryId) {
+    case 1:
+      return '가전제품'
+    case 2:
+      return '가구'
+    case 3:
+      return '보안시설'
+    case 4:
+      return '편의시설'
+    default:
+      return '기타'
+  }
+}
+
+const filteredFacilities = computed(() => {
+  const facilities = { ...categorizedFacilities.value }
+  delete facilities['건물시설']
+  return facilities
 })
 </script>
