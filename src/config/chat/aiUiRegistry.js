@@ -44,6 +44,13 @@ export const contentRulesByStep = {
         { label: '수락', action: 'step3.finalConfirm.accept' },
       ],
     },
+    {
+      when: (message) => {
+        const t = String(message?.content || '')
+        return t.includes('최종 특약서가 생성')
+      },
+      buttons: [{ label: '특약 수정 과정 확인하기', action: 'step3.openFinalClause' }],
+    },
   ],
   4: [],
 }
@@ -55,7 +62,6 @@ export const buttonsByStep = {
   3: {
     [AI_SENDER.PLAIN]: [],
     [AI_SENDER.BUTTON]: [{ label: '특약 검토', action: 'step3.openTermsReview' }],
-    [AI_SENDER.COMPLETE]: [{ label: '특약 수정 과정 확인하기', action: 'step3.openFinalClause' }],
   },
   4: {},
 }
