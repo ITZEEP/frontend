@@ -237,8 +237,8 @@ const getRepairLabel = (val) => {
 
 const getBurdenLabel = (val) => {
   if (val === 'OWNER') return '임대인'
-  if (val === 'BUYER') return '임차인'
-  if (val === 'PARTIAL') return '일부 부담'
+  if (val === 'TENANT') return '임차인'
+  if (val === 'UNDECIDED') return '일부 부담'
   return '-'
 }
 
