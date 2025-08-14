@@ -90,7 +90,7 @@ const filters = ref({
 })
 
 const page = ref(1)
-const size = ref(20) // 초기 로딩 시 모든 매물을 가져오기 위해 충분히 큰 값으로 설정
+const size = ref(21) // 초기 로딩 시 모든 매물을 가져오기 위해 충분히 큰 값으로 설정
 const totalItems = ref(0)
 const totalPages = computed(() => Math.ceil(totalItems.value / size.value))
 
@@ -111,7 +111,7 @@ const otherCount = computed(() => {
 function onFilterChange(newFilters) {
   filters.value = { ...newFilters }
   page.value = 1
-  size.value = 20 // 필터링 시 페이지네이션을 위해 size를 20으로 변경
+  size.value = 21
   loadListings()
 }
 
