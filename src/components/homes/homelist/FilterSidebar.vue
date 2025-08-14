@@ -25,7 +25,7 @@
       <h3 class="font-bold text-gray-800 mb-2">매물종류</h3>
       <div class="flex flex-wrap gap-2">
         <button
-          v-for="type in ['전체', '원룸', '투룸/빌라', '오피스텔']"
+          v-for="type in ['전체', '원룸', '투룸', '빌라', '오피스텔']"
           :key="type"
           :class="[
             'px-3 py-1 border rounded-full text-sm',
@@ -47,7 +47,9 @@
           :key="deal"
           :class="[
             'px-3 py-1 border rounded-full text-sm',
-            filters.dealType === deal ? 'bg-yellow-primary text-white' : 'bg-white text-gray-700',
+            filters.dealType === (deal === '월세' ? 'WOLSE' : 'JEONSE')
+              ? 'bg-yellow-primary text-white'
+              : 'bg-white text-gray-700',
           ]"
           @click="setDealType(deal)"
           type="button"
@@ -56,7 +58,7 @@
         </button>
       </div>
 
-      <div v-if="filters.dealType === '월세'">
+      <div v-if="filters.dealType === 'WOLSE'">
         <label class="text-sm font-semibold">보증금</label>
         <input
           type="range"
@@ -80,7 +82,7 @@
         <div class="text-xs text-gray-500">최대: {{ filters.monthlyRange }}만원</div>
       </div>
 
-      <div v-else-if="filters.dealType === '전세'">
+      <div v-else-if="filters.dealType === 'JEONSE'">
         <label class="text-sm font-semibold">전세가</label>
         <input
           type="range"
@@ -105,24 +107,6 @@
         class="w-full custom-range"
       />
       <div class="text-xs text-gray-500">최대: {{ filters.area }}평</div>
-    </div>
-
-    <div>
-      <h3 class="font-bold text-gray-800 mb-2">방향</h3>
-      <div class="flex flex-wrap gap-2">
-        <button
-          v-for="dir in directions"
-          :key="dir"
-          :class="[
-            'px-3 py-1 border rounded-full text-sm',
-            filters.direction === dir ? 'bg-yellow-primary text-white' : 'bg-white text-gray-700',
-          ]"
-          @click="setDirection(dir)"
-          type="button"
-        >
-          {{ dir }}
-        </button>
-      </div>
     </div>
 
     <div>
@@ -206,15 +190,28 @@ function onCityChange() {
 }
 
 function sethouseType(type) {
-  filters.value.houseType = type
+  // '원룸', '투룸'과 '빌라'를 분리하여 필터링
+  if (type === '원룸') {
+    filters.value.houseType = ['OPEN_ONE_ROOM', 'SEPARATED_ONE_ROOM']
+  } else if (type === '투룸') {
+    filters.value.houseType = 'TWO_ROOM'
+  } else if (type === '빌라') {
+    filters.value.houseType = 'VILLA'
+  } else if (type === '오피스텔') {
+    filters.value.houseType = 'OFFICETEL'
+  } else {
+    filters.value.houseType = '전체'
+  }
 }
 
 function setDealType(deal) {
-  filters.value.dealType = deal
-}
-
-function setDirection(dir) {
-  filters.value.direction = filters.value.direction === dir ? null : dir
+  if (deal === '월세') {
+    filters.value.dealType = 'WOLSE'
+  } else if (deal === '전세') {
+    filters.value.dealType = 'JEONSE'
+  } else {
+    filters.value.dealType = '전체'
+  }
 }
 
 function setFloor(floor) {
@@ -236,16 +233,13 @@ function resetFilters() {
     conditions: [],
   }
   districtList.value = []
-  // 가공되지 않은 초기화된 filters 객체를 통째로 전달
   emit('filter-change', filters.value)
 }
 
 function emitFilterChange() {
-  // 가공하지 않고, filters.value 객체 자체를 전달합니다.
   emit('filter-change', filters.value)
 }
 
-const directions = ['남향', '동향', '서향', '북향', '남동향', '남서향', '북동향', '북서향']
 const floors = ['반지하', '1층', '2~5층', '6~9층', '10층 이상']
 const conditions = ['주차 가능', '반려동물 가능', '엘리베이터']
 </script>
