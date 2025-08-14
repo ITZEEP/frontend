@@ -14,8 +14,8 @@
       v-model="insuranceBurden"
       :options="[
         { label: '임대인', value: 'OWNER' },
-        { label: '임차인', value: 'BUYER' },
-        { label: '일부 부담', value: 'PARTIAL' },
+        { label: '임차인', value: 'TENANT' },
+        { label: '일부 부담', value: 'UNDECIDED' },
       ]"
     />
 
@@ -96,10 +96,10 @@ const patchLivingStep = async () => {
     await OwnerPreContractAPI.updateLivingStep1(contractChatId, {
       hasNotice: hasNotice.value,
       insuranceBurden: insuranceBurden.value,
-      lateFeeInterestRate: lateFeeInterestRate.value,
+      lateFeeInterestRate: rentType.value == 'WOLSE' ? lateFeeInterestRate.value : null,
       ownerAccountNumber: ownerAccountNumber.value,
       ownerBankName: ownerBankName.value,
-      paymentDueDate: paymentDueDate.value,
+      paymentDueDate: rentType.value == 'WOLSE' ? paymentDueDate.value : null,
       requireRentGuaranteeInsurance: requireRentGuaranteeInsurance.value,
     })
   } catch (error) {
@@ -118,15 +118,26 @@ watch(
     lateFeeInterestRate,
     rentType,
   ],
-  ([insurance, burden, notice, bank, account, dueDate, lateFee, type]) => {
-    const commonValid =
-      insurance !== null && burden !== '' && notice !== '' && bank !== '' && account !== ''
+  () => {
+    const insuranceOk = typeof requireRentGuaranteeInsurance.value === 'boolean'
 
-    const isValid =
-      type === 'JEONSE' ? commonValid : commonValid && dueDate !== null && lateFee !== null
+    const burdenOk = ['OWNER', 'TENANT', 'UNDECIDED'].includes(String(insuranceBurden.value || ''))
+
+    const noticeOk = ['YES', 'NO'].includes(String(hasNotice.value || ''))
+
+    const bankOk = String(ownerBankName.value || '').trim().length > 0
+    const accountOk = String(ownerAccountNumber.value || '').trim().length > 0
+
+    const isWolse = rentType.value === 'WOLSE'
+    const dueOk = paymentDueDate.value !== null && paymentDueDate.value !== ''
+    const lateFeeOk = lateFeeInterestRate.value !== null && lateFeeInterestRate.value !== ''
+
+    const commonValid = insuranceOk && burdenOk && noticeOk && bankOk && accountOk
+    const isValid = isWolse ? commonValid && dueOk && lateFeeOk : commonValid
 
     store.setCanProceed(isValid)
   },
+  { immediate: true },
 )
 
 onMounted(async () => {
