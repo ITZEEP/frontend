@@ -109,6 +109,7 @@ const otherCount = computed(() => {
 })
 
 function onFilterChange(newFilters) {
+  // Directly use the payload received from the sidebar
   filters.value = { ...newFilters }
   page.value = 1
   size.value = 21
@@ -146,14 +147,18 @@ async function loadListings() {
           : undefined,
     }
 
-    if (filters.value.dealType === '월세' && filters.value.depositRange > 0) {
+    // Handle lease-specific price filtering
+    if (filters.value.dealType === 'WOLSE' && filters.value.depositRange > 0) {
       params.maxDepositPrice = filters.value.depositRange * 10000
     }
-    if (filters.value.dealType === '월세' && filters.value.monthlyRange > 0) {
+    if (filters.value.dealType === 'WOLSE' && filters.value.monthlyRange > 0) {
       params.maxMonthlyRent = filters.value.monthlyRange * 10000
     }
-    if (filters.value.dealType === '전세' && filters.value.leaseRange > 0) {
+    if (filters.value.dealType === 'JEONSE' && filters.value.leaseRange > 0) {
+      // 전세는 보증금 필터를 사용하며, leaseRange 값을 maxDepositPrice에 매핑
       params.maxDepositPrice = filters.value.leaseRange * 10000
+      // 전세의 경우 월세 필터는 제외
+      delete params.maxMonthlyRent
     }
 
     if (filters.value.direction) {
@@ -179,11 +184,14 @@ async function loadListings() {
       }
     }
 
-    if (filters.value.conditions.includes('반려동물 가능')) {
-      params.isPet = true
-    }
-    if (filters.value.conditions.includes('주차 가능')) {
-      params.isParking = true
+    // 조건 필터링
+    if (Array.isArray(filters.value.conditions)) {
+      if (filters.value.conditions.includes('반려동물 가능')) {
+        params.isPet = true
+      }
+      if (filters.value.conditions.includes('주차 가능')) {
+        params.isParking = true
+      }
     }
 
     const response = await fetchListings(params)

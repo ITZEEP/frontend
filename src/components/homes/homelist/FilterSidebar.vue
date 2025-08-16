@@ -66,9 +66,10 @@
           type="range"
           v-model="filters.depositRange"
           min="0"
-          max="50000"
+          max="30000"
           step="10"
-          class="w-full custom-range"
+          class="w-full custom-range-deposit"
+          ref="depositRangeInput"
         />
         <div class="text-xs text-gray-500">최대: {{ filters.depositRange }}만원</div>
 
@@ -79,7 +80,8 @@
           min="0"
           max="500"
           step="5"
-          class="w-full custom-range"
+          class="w-full custom-range-monthly"
+          ref="monthlyRangeInput"
         />
         <div class="text-xs text-gray-500">최대: {{ filters.monthlyRange }}만원</div>
       </div>
@@ -92,7 +94,8 @@
           min="0"
           max="80000"
           step="10"
-          class="w-full custom-range"
+          class="w-full custom-range-lease"
+          ref="leaseRangeInput"
         />
         <div class="text-xs text-gray-500">최대: {{ filters.leaseRange }}만원</div>
       </div>
@@ -106,7 +109,8 @@
         min="0"
         max="70"
         step="1"
-        class="w-full custom-range"
+        class="w-full custom-range-area"
+        ref="areaRangeInput"
       />
       <div class="text-xs text-gray-500">최대: {{ filters.area }}평</div>
     </div>
@@ -159,7 +163,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { guToDong } from './gu-to-dong'
 
 const emit = defineEmits(['filter-change'])
@@ -177,6 +181,12 @@ const filters = ref({
   floor: null,
   conditions: [],
 })
+
+// range input에 대한 ref 생성
+const depositRangeInput = ref(null)
+const monthlyRangeInput = ref(null)
+const leaseRangeInput = ref(null)
+const areaRangeInput = ref(null)
 
 const guList = Object.keys(guToDong)
 const districtList = ref([])
@@ -239,13 +249,122 @@ function resetFilters() {
 function emitFilterChange() {
   const payload = {
     ...filters.value,
-    depositRange: filters.value.depositRange * 10000,
-    monthlyRange: filters.value.monthlyRange * 10000,
-    leaseRange: filters.value.leaseRange * 10000,
+    conditions: filters.value.conditions,
   }
   emit('filter-change', payload)
 }
 
 const floors = ['1층', '2~5층', '6~9층', '10층 이상']
 const conditions = ['주차 가능', '반려동물 가능', '엘리베이터']
+
+// 슬라이더 바 색상 업데이트 로직
+function updateRangeProgress(inputElement, value, max) {
+  if (inputElement) {
+    const percentage = (value / max) * 100
+    inputElement.style.setProperty('--range-progress', `${percentage}%`)
+  }
+}
+
+watch(
+  () => filters.value.depositRange,
+  (newValue) => {
+    updateRangeProgress(depositRangeInput.value, newValue, 30000)
+  },
+)
+watch(
+  () => filters.value.monthlyRange,
+  (newValue) => {
+    updateRangeProgress(monthlyRangeInput.value, newValue, 500)
+  },
+)
+watch(
+  () => filters.value.leaseRange,
+  (newValue) => {
+    updateRangeProgress(leaseRangeInput.value, newValue, 80000)
+  },
+)
+watch(
+  () => filters.value.area,
+  (newValue) => {
+    updateRangeProgress(areaRangeInput.value, newValue, 70)
+  },
+)
+
+// 컴포넌트 마운트 시 초기값 설정
+onMounted(() => {
+  updateRangeProgress(depositRangeInput.value, filters.value.depositRange, 30000)
+  updateRangeProgress(monthlyRangeInput.value, filters.value.monthlyRange, 500)
+  updateRangeProgress(leaseRangeInput.value, filters.value.leaseRange, 80000)
+  updateRangeProgress(areaRangeInput.value, filters.value.area, 70)
+})
 </script>
+
+<style scoped>
+/* 커스텀 CSS 추가: range input의 색상을 노란색으로 변경 */
+input[type='range'] {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 8px;
+  background: transparent;
+  border-radius: 4px;
+}
+
+/* 슬라이더 바 (옅은 회색) */
+input[type='range']::-webkit-slider-runnable-track {
+  background: #e5e7eb; /* tailwind gray-200 */
+  border-radius: 4px;
+  height: 8px;
+}
+
+input[type='range']::-moz-range-track {
+  background: #e5e7eb; /* tailwind gray-200 */
+  border-radius: 4px;
+  height: 8px;
+}
+
+/* 슬라이더 채워지는 부분 (노란색) */
+input[type='range']::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 8px;
+  background-color: #facc15; /* tailwind yellow-400 */
+  border-radius: 4px;
+  width: var(--range-progress, 0%);
+}
+
+/* 슬라이더 버튼 (Thumb) */
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #facc15; /* 노란색 Thumb */
+  border-radius: 50%;
+  cursor: pointer;
+  margin-top: -4px;
+}
+
+input[type='range']::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: #facc15; /* 노란색 Thumb */
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+/* JavaScript로 조작할 CSS 변수 */
+.custom-range-deposit,
+.custom-range-monthly,
+.custom-range-lease,
+.custom-range-area {
+  position: relative;
+  overflow: hidden;
+}
+
+/* IE/Edge를 위한 채워지는 부분 */
+input[type='range']::-ms-fill-lower {
+  background: #facc15;
+  border-radius: 4px;
+}
+</style>
