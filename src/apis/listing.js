@@ -44,7 +44,6 @@ export async function fetchListingById(id) {
   }
 }
 
-// apis/listing.js 파일의 createListing 함수
 export async function createListing(listingData, images) {
   try {
     const formData = new FormData()
@@ -88,10 +87,13 @@ export async function createListing(listingData, images) {
   }
 }
 
-export async function updateListing(id, updatedData) {
+// 수정된 updateListing 함수: createListing과 유사한 방식으로 FormData를 사용
+export async function updateListing(id, formData) {
   try {
-    const response = await api.put(`${API_BASE_URL}/${id}`, updatedData, {
-      headers: { 'Content-Type': 'application/json' },
+    const response = await api.put(`${API_BASE_URL}/${id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
     })
     return response.data.data
   } catch (error) {

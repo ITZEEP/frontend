@@ -1,94 +1,205 @@
 <template>
-  <div class="bg-white p-6 rounded-lg">
-    <h2 class="text-lg font-semibold mb-4">기본 정보</h2>
+  <div class="bg-white p-6 rounded-lg space-y-6">
+    <h2 class="text-lg font-semibold mb-2">상세 정보</h2>
+    <p class="mb-4 text-gray-700">전용면적과 건물 정보를 입력해주세요.</p>
 
-    <!-- 방 수 -->
-    <div class="mb-4">
-      <label class="block text-sm font-medium text-gray-700 mb-1">방 수</label>
-      <div class="flex gap-2">
-        <button
-          v-for="num in 5"
-          :key="num"
-          type="button"
-          @click="selectedRooms = num"
-          :class="[
-            'px-4 py-2 rounded border',
-            selectedRooms === num
-              ? 'bg-yellow-primary text-white border-yellow-primary'
-              : 'bg-white border-gray-300',
-          ]"
+    <div class="grid grid-cols-2 gap-6">
+      <div>
+        <label class="block mb-1 text-sm font-medium"
+          >전용면적 <span class="text-red-500">*</span></label
         >
-          {{ num }}개
-        </button>
+        <div class="relative">
+          <input
+            type="number"
+            min="0"
+            class="border rounded p-2 pr-20 w-full no-spin"
+            :value="form.exclusiveArea"
+            @input="handleChange('exclusiveArea', $event.target.valueAsNumber)"
+            required
+            placeholder="0"
+          />
+          <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">제곱미터</span>
+        </div>
+      </div>
+
+      <div>
+        <label class="block mb-1 text-sm font-medium">공급면적</label>
+        <div class="relative">
+          <input
+            type="number"
+            min="0"
+            class="border rounded p-2 pr-20 w-full no-spin"
+            :value="form.supplyArea"
+            @input="handleChange('supplyArea', $event.target.valueAsNumber)"
+            placeholder="0"
+          />
+          <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">제곱미터</span>
+        </div>
       </div>
     </div>
 
-    <!-- 욕실 수 -->
-    <div class="mb-4">
-      <label class="block text-sm font-medium text-gray-700 mb-1">욕실 수</label>
-      <div class="flex gap-2">
-        <button
-          v-for="num in 3"
-          :key="num"
-          type="button"
-          @click="selectedBathrooms = num"
-          :class="[
-            'px-4 py-2 rounded border',
-            selectedBathrooms === num
-              ? 'bg-yellow-primary text-white border-yellow-primary'
-              : 'bg-white border-gray-300',
-          ]"
+    <div class="grid grid-cols-2 gap-6">
+      <div>
+        <label class="block mb-1 text-sm font-medium"
+          >방 개수 <span class="text-red-500">*</span></label
         >
-          {{ num }}개
-        </button>
+        <div class="relative">
+          <input
+            type="number"
+            min="0"
+            class="border rounded p-2 pr-12 w-full no-spin"
+            :value="form.roomCnt"
+            @input="handleChange('roomCnt', $event.target.valueAsNumber)"
+            required
+            placeholder="0"
+          />
+          <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">개</span>
+        </div>
+      </div>
+      <div>
+        <label class="block mb-1 text-sm font-medium"
+          >욕실 개수 <span class="text-red-500">*</span></label
+        >
+        <div class="relative">
+          <input
+            type="number"
+            min="0"
+            class="border rounded p-2 pr-12 w-full no-spin"
+            :value="form.bathroomCnt"
+            @input="handleChange('bathroomCnt', $event.target.valueAsNumber)"
+            required
+            placeholder="0"
+          />
+          <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">개</span>
+        </div>
       </div>
     </div>
 
-    <!-- 방향 -->
-    <div class="mb-4">
-      <label class="block text-sm font-medium text-gray-700 mb-1">방향</label>
-      <div class="flex flex-wrap gap-2">
-        <button
-          v-for="dir in directions"
-          :key="dir"
-          type="button"
-          @click="selectedDirection = dir"
-          :class="[
-            selectedDirection === dir
-              ? 'bg-yellow-primary text-white border-yellow-primary'
-              : 'bg-white border-gray-300',
-            'px-4 py-2 rounded border',
-          ]"
+    <div class="grid grid-cols-2 gap-6">
+      <div>
+        <label class="block mb-1 text-sm font-medium"
+          >현재 층 <span class="text-red-500">*</span></label
         >
-          {{ dir }}
-        </button>
+        <input
+          type="number"
+          min="0"
+          class="border rounded p-2 w-full"
+          :value="form.homeFloor"
+          @input="handleChange('homeFloor', $event.target.valueAsNumber)"
+          required
+          placeholder="0"
+        />
+      </div>
+      <div>
+        <label class="block mb-1 text-sm font-medium"
+          >총 층수 <span class="text-red-500">*</span></label
+        >
+        <input
+          type="number"
+          min="0"
+          class="border rounded p-2 w-full"
+          :value="form.buildingTotalFloors"
+          @input="handleChange('buildingTotalFloors', $event.target.valueAsNumber)"
+          required
+          placeholder="0"
+        />
       </div>
     </div>
 
-    <!-- 상세 설명 -->
     <div>
-      <label for="details" class="block text-sm font-medium text-gray-700 mb-1">상세 내용</label>
-      <textarea
-        id="details"
-        v-model="details"
-        rows="5"
-        placeholder="매물에 대한 상세한 설명을 입력하세요."
-        class="w-full border rounded p-3 resize-none"
-      ></textarea>
+      <label class="block mb-1 text-sm font-medium"
+        >사용 승인일<span class="text-red-500">*</span></label
+      >
+      <input
+        type="date"
+        class="border rounded p-2 w-full max-w-xs"
+        :value="form.buildDate"
+        @input="handleChange('buildDate', $event.target.value)"
+      />
     </div>
+
+    <fieldset>
+      <legend class="font-semibold mb-2">방향</legend>
+      <div class="grid grid-cols-4 gap-2 max-w-xl">
+        <button
+          v-for="opt in homeDirectionOptions"
+          :key="opt.value"
+          type="button"
+          @click="handleChange('homeDirection', opt.value)"
+          :class="[
+            'py-2 px-4 border rounded text-center cursor-pointer w-full',
+            form.homeDirection === opt.value
+              ? 'bg-yellow-primary text-white border-yellow-primary'
+              : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100',
+          ]"
+        >
+          {{ opt.label }}
+        </button>
+      </div>
+    </fieldset>
+
+    <fieldset class="rounded-md p-4">
+      <OptionChecklist
+        :modelValue="{
+          facilityItemIds: form.facilityItemIds,
+          isPet: form.isPet,
+          isParking: form.isParking,
+        }"
+        @update:modelValue="updateForm"
+      />
+    </fieldset>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-// import axios from 'axios'  // 저장 기능 제거되었으므로 axios도 필요 없음
+import { toRefs } from 'vue'
+import OptionChecklist from '../homecreate/OptionChecklist.vue'
 
-const selectedRooms = ref(null)
-const selectedBathrooms = ref(null)
-const selectedDirection = ref(null)
-const details = ref('')
+const props = defineProps({
+  form: {
+    type: Object,
+    required: true,
+  },
+})
+const emit = defineEmits(['update:form'])
 
-const directions = ['동향', '서향', '남향', '북향', '동남향', '동북향', '서남향', '서북향']
+const { form } = toRefs(props)
 
-// 저장 기능 제거됨 (submit 함수 필요 없음)
+const handleChange = (key, value) => {
+  const updatedValue = typeof value === 'number' && isNaN(value) ? 0 : value
+  emit('update:form', {
+    ...props.form,
+    [key]: updatedValue,
+  })
+}
+
+const updateForm = (updatedFields) => {
+  emit('update:form', {
+    ...props.form,
+    ...updatedFields,
+  })
+}
+
+const homeDirectionOptions = [
+  { label: '남향', value: 'S' },
+  { label: '동향', value: 'E' },
+  { label: '서향', value: 'W' },
+  { label: '북향', value: 'N' },
+  { label: '남동향', value: 'SE' },
+  { label: '남서향', value: 'SW' },
+  { label: '북동향', value: 'NE' },
+  { label: '북서향', value: 'NW' },
+]
 </script>
+
+<style scoped>
+input[type='number'].no-spin::-webkit-inner-spin-button,
+input[type='number'].no-spin::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type='number'].no-spin {
+  -moz-appearance: textfield;
+}
+</style>
