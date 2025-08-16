@@ -73,7 +73,7 @@
             <span
               v-for="item in listing.maintenanceFees"
               :key="item.maintenanceId"
-              class="bg-gray-100 text-xs px-3 py-1 rounded-full"
+              class="bg-gray-100 text-xs px-3 py-1 rounded-full whitespace-nowrap"
             >
               {{ getMaintenanceNameById(item.maintenanceId) }}
             </span>
@@ -87,10 +87,10 @@
 
       <div class="mb-6">
         <h3 class="font-semibold mb-3 text-sm text-gray-600">건물 시설</h3>
-        <div class="grid grid-cols-5 gap-5 text-center text-xs">
+        <div class="grid grid-cols-3 md:grid-cols-5 gap-3 md:gap-5 text-center text-xs">
           <div
             v-if="listing.isParking"
-            class="flex flex-col items-center bg-gray-100 px-3 py-2 rounded-md shadow-sm text-gray-700"
+            class="flex flex-col items-center bg-gray-100 px-1 py-2 rounded-md shadow-sm text-gray-700"
           >
             <ParkingIcon class="text-yellow-primary w-4 h-4 mb-1" />
             <span class="text-xs font-medium">주차가능</span>
@@ -98,8 +98,9 @@
 
           <div
             v-if="listing.isPet"
-            class="flex flex-col items-center bg-gray-100 px-3 py-2 rounded-md shadow-sm text-gray-700"
+            class="flex flex-col items-center bg-gray-100 px-1 py-2 rounded-md shadow-sm text-gray-700"
           >
+            <component :is="getIcon('반려동물')" class="text-yellow-primary w-4 h-4 mb-1" />
             <span class="text-xs font-medium">반려동물</span>
           </div>
 
@@ -107,7 +108,7 @@
             <div
               v-for="item in categorizedFacilities['건물시설']"
               :key="item.itemId"
-              class="flex flex-col items-center bg-gray-100 px-3 py-2 rounded-md shadow-sm text-gray-700"
+              class="flex flex-col items-center bg-gray-100 px-1 py-2 rounded-md shadow-sm text-gray-700"
             >
               <component :is="getIcon(item.itemName)" class="text-yellow-primary w-4 h-4 mb-1" />
               <span class="text-xs font-medium">{{ item.itemName }}</span>
@@ -118,11 +119,11 @@
 
       <div v-for="(facilities, category) in filteredFacilities" :key="category" class="mb-6">
         <h3 class="font-semibold mb-3 text-sm text-gray-600">{{ category }}</h3>
-        <div class="grid grid-cols-5 gap-5 text-center text-xs">
+        <div class="grid grid-cols-3 md:grid-cols-5 gap-3 md:gap-5 text-center text-xs">
           <div
             v-for="item in facilities"
             :key="item.itemId"
-            class="flex flex-col items-center bg-gray-100 px-3 py-2 rounded-md shadow-sm text-gray-700"
+            class="flex flex-col items-center bg-gray-100 px-1 py-2 rounded-md shadow-sm text-gray-700"
           >
             <component :is="getIcon(item.itemName)" class="text-yellow-primary w-4 h-4 mb-1" />
             <span class="text-xs font-medium">{{ item.itemName }}</span>
@@ -170,6 +171,7 @@ import SecurityIcon from '@/assets/icons/SecurityIcon.vue'
 import FirewarningIcon from '@/assets/icons/FirewarningIcon.vue'
 import SohwagiIcon from '@/assets/icons/SohwagiIcon.vue'
 import HyungwansecuIcon from '@/assets/icons/HyungwansecuIcon.vue'
+import PetA from '@/assets/icons/PetA.vue'
 
 const { listing } = defineProps({
   listing: {
@@ -238,10 +240,10 @@ const iconMap = {
   현관보안: HyungwansecuIcon,
   엘리베이터: ElevatorIcon,
   주차장: ParkingIcon,
-  택배보관함: null,
+  택배보관함: ClosetIcon,
   개별난방: IndividualHeatingIcon,
   전체난방: CenterHeatingIcon,
-  반려동물: null,
+  반려동물: PetA,
 }
 
 const getIcon = (itemName) => {

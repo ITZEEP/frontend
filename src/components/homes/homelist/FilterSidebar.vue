@@ -1,5 +1,25 @@
 <template>
   <aside class="w-full md:w-64 bg-white px-4 py-6 border-r border-gray-200 space-y-6">
+    <button
+      @click="$emit('close')"
+      class="absolute top-4 right-4 md:hidden text-gray-500 hover:text-gray-800"
+    >
+      <svg
+        class="w-6 h-6"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M6 18L18 6M6 6l12 12"
+        ></path>
+      </svg>
+    </button>
+
     <div>
       <h3 class="font-bold text-gray-800 mb-2">지역선택</h3>
       <select
@@ -136,10 +156,13 @@
     <div>
       <h3 class="font-bold text-gray-800 mb-2">매물조건</h3>
       <div class="flex flex-col gap-1">
-        <label v-for="opt in conditions" :key="opt" class="flex items-center gap-2 text-sm">
-          <input type="checkbox" :value="opt" v-model="filters.conditions" />
-          {{ opt }}
-        </label>
+        <BaseCheckbox
+          v-for="opt in conditions"
+          :key="opt"
+          :label="opt"
+          :modelValue="filters.conditions.includes(opt)"
+          @update:modelValue="toggleCondition(opt)"
+        />
       </div>
     </div>
 
@@ -165,8 +188,9 @@
 <script setup>
 import { onMounted, ref, watch } from 'vue'
 import { guToDong } from './gu-to-dong'
+import BaseCheckbox from '@/components/common/BaseCheckbox.vue'
 
-const emit = defineEmits(['filter-change'])
+const emit = defineEmits(['filter-change', 'close'])
 
 const filters = ref({
   city: '전체',
@@ -179,10 +203,9 @@ const filters = ref({
   area: 0,
   direction: null,
   floor: null,
-  conditions: [],
+  conditions: [], // 초기값은 빈 배열이어야 합니다.
 })
 
-// range input에 대한 ref 생성
 const depositRangeInput = ref(null)
 const monthlyRangeInput = ref(null)
 const leaseRangeInput = ref(null)
@@ -257,7 +280,16 @@ function emitFilterChange() {
 const floors = ['1층', '2~5층', '6~9층', '10층 이상']
 const conditions = ['주차 가능', '반려동물 가능', '엘리베이터']
 
-// 슬라이더 바 색상 업데이트 로직
+// 새롭게 추가된 로직: 체크박스 상태를 수동으로 토글
+function toggleCondition(condition) {
+  const index = filters.value.conditions.indexOf(condition)
+  if (index > -1) {
+    filters.value.conditions.splice(index, 1)
+  } else {
+    filters.value.conditions.push(condition)
+  }
+}
+
 function updateRangeProgress(inputElement, value, max) {
   if (inputElement) {
     const percentage = (value / max) * 100
@@ -290,7 +322,6 @@ watch(
   },
 )
 
-// 컴포넌트 마운트 시 초기값 설정
 onMounted(() => {
   updateRangeProgress(depositRangeInput.value, filters.value.depositRange, 30000)
   updateRangeProgress(monthlyRangeInput.value, filters.value.monthlyRange, 500)
@@ -300,7 +331,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* 커스텀 CSS 추가: range input의 색상을 노란색으로 변경 */
+/* 커스텀 CSS는 그대로 유지 */
 input[type='range'] {
   -webkit-appearance: none;
   width: 100%;
@@ -309,37 +340,34 @@ input[type='range'] {
   border-radius: 4px;
 }
 
-/* 슬라이더 바 (옅은 회색) */
 input[type='range']::-webkit-slider-runnable-track {
-  background: #e5e7eb; /* tailwind gray-200 */
+  background: #e5e7eb;
   border-radius: 4px;
   height: 8px;
 }
 
 input[type='range']::-moz-range-track {
-  background: #e5e7eb; /* tailwind gray-200 */
+  background: #e5e7eb;
   border-radius: 4px;
   height: 8px;
 }
 
-/* 슬라이더 채워지는 부분 (노란색) */
 input[type='range']::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   height: 8px;
-  background-color: #facc15; /* tailwind yellow-400 */
+  background-color: #facc15;
   border-radius: 4px;
   width: var(--range-progress, 0%);
 }
 
-/* 슬라이더 버튼 (Thumb) */
 input[type='range']::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 16px;
   height: 16px;
-  background: #facc15; /* 노란색 Thumb */
+  background: #facc15;
   border-radius: 50%;
   cursor: pointer;
   margin-top: -4px;
@@ -348,12 +376,11 @@ input[type='range']::-webkit-slider-thumb {
 input[type='range']::-moz-range-thumb {
   width: 16px;
   height: 16px;
-  background: #facc15; /* 노란색 Thumb */
+  background: #facc15;
   border-radius: 50%;
   cursor: pointer;
 }
 
-/* JavaScript로 조작할 CSS 변수 */
 .custom-range-deposit,
 .custom-range-monthly,
 .custom-range-lease,
@@ -362,7 +389,6 @@ input[type='range']::-moz-range-thumb {
   overflow: hidden;
 }
 
-/* IE/Edge를 위한 채워지는 부분 */
 input[type='range']::-ms-fill-lower {
   background: #facc15;
   border-radius: 4px;

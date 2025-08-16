@@ -42,7 +42,7 @@
       </div>
       <div>
         <h4 class="font-semibold mt-4 mb-2">관리비 포함 항목</h4>
-        <div class="grid grid-cols-2 gap-2">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
           <BaseCheckBox
             v-for="item in maintenanceItems"
             :key="item.maintenanceId"
@@ -110,7 +110,7 @@
       </div>
       <div>
         <h4 class="font-semibold mt-4 mb-2">관리비 포함 항목</h4>
-        <div class="grid grid-cols-2 gap-2">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
           <BaseCheckBox
             v-for="item in maintenanceItems"
             :key="item.maintenanceId"

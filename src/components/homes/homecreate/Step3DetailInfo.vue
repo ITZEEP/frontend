@@ -1,9 +1,9 @@
 <template>
-  <form class="max-w-4xl mx-auto p-6 space-y-6 border rounded-md">
+  <form class="max-w-4xl mx-auto p-4 md:p-6 space-y-6 border rounded-md">
     <h2 class="text-lg font-semibold mb-2">상세 정보</h2>
     <p class="mb-4 text-gray-700">전용면적과 건물 정보를 입력해주세요.</p>
 
-    <div class="grid grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div>
         <label class="block mb-1 text-sm font-medium"
           >전용면적 <span class="text-red-500">*</span></label
@@ -38,9 +38,9 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div>
-        <label class="block mb-1 text-sm font-medium">면적 (m2)</label>
+        <label class="block mb-1 text-sm font-medium">면적 (㎡)</label>
         <input
           type="number"
           min="0"
@@ -63,7 +63,7 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div>
         <label class="block mb-1 text-sm font-medium"
           >방 개수 <span class="text-red-500">*</span></label
@@ -100,7 +100,7 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div>
         <label class="block mb-1 text-sm font-medium"
           >현재 층 <span class="text-red-500">*</span></label
@@ -124,7 +124,7 @@
           min="0"
           class="border rounded p-2 w-full"
           :value="form.buildingTotalFloors"
-          @input="handleChange('buildingTotalFloors', $event.target.valueAsNumber)"
+          @input="handleChange('buildingTotalTotalFloors', $event.target.valueAsNumber)"
           required
           placeholder="0"
         />
@@ -145,7 +145,7 @@
 
     <fieldset>
       <legend class="font-semibold mb-2">방향</legend>
-      <div class="grid grid-cols-4 gap-2 max-w-xl">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-2 max-w-xl">
         <button
           v-for="opt in homeDirectionOptions"
           :key="opt.value"

@@ -1,5 +1,5 @@
 <template>
-  <div class="max-w-4xl mx-auto p-6">
+  <div class="max-w-4xl mx-auto p-4 md:p-6">
     <ImageGallery
       v-if="images.length > 0"
       :images="images"
@@ -17,7 +17,7 @@
         class="rounded-md shadow-md"
       />
 
-      <div class="w-full flex gap-4">
+      <div class="w-full flex flex-col md:flex-row gap-4">
         <BaseButton class="w-full" variant="primary" size="lg" @click="goChat">
           연락하기
         </BaseButton>
