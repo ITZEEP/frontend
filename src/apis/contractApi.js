@@ -10,6 +10,9 @@ export const contractApi = {
       return response.data
     } catch (error) {
       console.error('계약서 전체 조회 실패: ', error)
+      if (error.response?.data) {
+        return error.response.data
+      }
     }
   },
 
@@ -30,6 +33,48 @@ export const contractApi = {
       return response.data
     } catch (error) {
       console.error('정보 조회에서 금액 조율로 넘어가기 실패: ', error)
+    }
+  },
+
+  // ======= 금액 조율 =======
+
+  // 금액 조회
+  postGetPrice: async (contractChatId) => {
+    try {
+      const response = await api.post(`${CONTRACT_BASE_URL}/${contractChatId}/getPrice`)
+      return response.data
+    } catch (error) {
+      console.error('금액 조회 실패: ', error)
+    }
+  },
+
+  // 금액 확정 요청
+  postRequestPrice: async (contractChatId, data) => {
+    try {
+      const response = await api.post(`${CONTRACT_BASE_URL}/${contractChatId}/price`, data)
+      return response.data
+    } catch (error) {
+      console.error('금액 확정 요청 실패: ', error)
+    }
+  },
+
+  // 금액 확정 거절
+  postRejectPrice: async (contractChatId) => {
+    try {
+      const response = await api.delete(`${CONTRACT_BASE_URL}/${contractChatId}/price`)
+      return response.data
+    } catch (error) {
+      console.error('금액 확정 거절 실패: ', error)
+    }
+  },
+
+  // 금액 확정 수락
+  postAcceptPrice: async (contractChatId) => {
+    try {
+      const response = await api.patch(`${CONTRACT_BASE_URL}/${contractChatId}/price`)
+      return response.data
+    } catch (error) {
+      console.error('금액 확정 수락 실패: ', error)
     }
   },
 }
