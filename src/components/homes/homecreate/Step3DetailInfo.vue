@@ -18,7 +18,7 @@
             required
             placeholder="0"
           />
-          <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">제곱미터</span>
+          <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">㎡</span>
         </div>
       </div>
 
@@ -33,22 +33,25 @@
             @input="handleChange('supplyArea', $event.target.valueAsNumber)"
             placeholder="0"
           />
-          <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">제곱미터</span>
+          <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">㎡</span>
         </div>
       </div>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div>
-        <label class="block mb-1 text-sm font-medium">면적 (㎡)</label>
-        <input
-          type="number"
-          min="0"
-          class="border rounded p-2 w-full"
-          :value="form.area"
-          @input="handleChange('area', $event.target.valueAsNumber)"
-          placeholder="0"
-        />
+        <label class="block mb-1 text-sm font-medium">면적</label>
+        <div class="relative">
+          <input
+            type="number"
+            min="0"
+            class="border rounded p-2 pr-20 w-full no-spin"
+            :value="form.area"
+            @input="handleChange('area', $event.target.valueAsNumber)"
+            placeholder="0"
+          />
+          <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">㎡</span>
+        </div>
       </div>
 
       <div>
