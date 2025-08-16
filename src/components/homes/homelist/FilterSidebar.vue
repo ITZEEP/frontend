@@ -25,16 +25,18 @@
       <h3 class="font-bold text-gray-800 mb-2">매물종류</h3>
       <div class="flex flex-wrap gap-2">
         <button
-          v-for="type in ['전체', '원룸', '투룸', '빌라', '오피스텔']"
-          :key="type"
+          v-for="type in houseTypes"
+          :key="type.value"
           :class="[
             'px-3 py-1 border rounded-full text-sm',
-            filters.houseType === type ? 'bg-yellow-primary text-white' : 'bg-white text-gray-700',
+            filters.houseType === type.value
+              ? 'bg-yellow-primary text-white'
+              : 'bg-white text-gray-700',
           ]"
-          @click="sethouseType(type)"
+          @click="setHouseType(type.value)"
           type="button"
         >
-          {{ type }}
+          {{ type.label }}
         </button>
       </div>
     </div>
@@ -64,8 +66,8 @@
           type="range"
           v-model="filters.depositRange"
           min="0"
-          max="200000"
-          step="100"
+          max="50000"
+          step="10"
           class="w-full custom-range"
         />
         <div class="text-xs text-gray-500">최대: {{ filters.depositRange }}만원</div>
@@ -75,8 +77,8 @@
           type="range"
           v-model="filters.monthlyRange"
           min="0"
-          max="5000"
-          step="10"
+          max="500"
+          step="5"
           class="w-full custom-range"
         />
         <div class="text-xs text-gray-500">최대: {{ filters.monthlyRange }}만원</div>
@@ -88,8 +90,8 @@
           type="range"
           v-model="filters.leaseRange"
           min="0"
-          max="200000"
-          step="100"
+          max="80000"
+          step="10"
           class="w-full custom-range"
         />
         <div class="text-xs text-gray-500">최대: {{ filters.leaseRange }}만원</div>
@@ -179,6 +181,15 @@ const filters = ref({
 const guList = Object.keys(guToDong)
 const districtList = ref([])
 
+const houseTypes = [
+  { label: '전체', value: '전체' },
+  { label: '오픈형 원룸', value: 'OPEN_ONE_ROOM' },
+  { label: '분리형 원룸', value: 'SEPARATED_ONE_ROOM' },
+  { label: '투룸', value: 'TWO_ROOM' },
+  { label: '빌라', value: 'VILLA' },
+  { label: '오피스텔', value: 'OFFICETEL' },
+]
+
 function onCityChange() {
   if (filters.value.city === '전체') {
     districtList.value = []
@@ -189,19 +200,8 @@ function onCityChange() {
   }
 }
 
-function sethouseType(type) {
-  // '원룸', '투룸'과 '빌라'를 분리하여 필터링
-  if (type === '원룸') {
-    filters.value.houseType = ['OPEN_ONE_ROOM', 'SEPARATED_ONE_ROOM']
-  } else if (type === '투룸') {
-    filters.value.houseType = 'TWO_ROOM'
-  } else if (type === '빌라') {
-    filters.value.houseType = 'VILLA'
-  } else if (type === '오피스텔') {
-    filters.value.houseType = 'OFFICETEL'
-  } else {
-    filters.value.houseType = '전체'
-  }
+function setHouseType(type) {
+  filters.value.houseType = type
 }
 
 function setDealType(deal) {
@@ -237,9 +237,15 @@ function resetFilters() {
 }
 
 function emitFilterChange() {
-  emit('filter-change', filters.value)
+  const payload = {
+    ...filters.value,
+    depositRange: filters.value.depositRange * 10000,
+    monthlyRange: filters.value.monthlyRange * 10000,
+    leaseRange: filters.value.leaseRange * 10000,
+  }
+  emit('filter-change', payload)
 }
 
-const floors = ['반지하', '1층', '2~5층', '6~9층', '10층 이상']
+const floors = ['1층', '2~5층', '6~9층', '10층 이상']
 const conditions = ['주차 가능', '반려동물 가능', '엘리베이터']
 </script>
