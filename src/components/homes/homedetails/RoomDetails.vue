@@ -228,6 +228,7 @@ const iconMap = {
   옷장: ClosetIcon,
   붙박이장: BootbacIcon,
   신발장: ShoeseIcon,
+  침대: SofaIcon,
   소파: SofaIcon,
   CCTV: CctvIcon,
   인터폰: InterphoneIcon,

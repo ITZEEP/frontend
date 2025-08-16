@@ -103,7 +103,7 @@
             placeholder="0"
           />
           <span class="absolute right-4 top-1/2 transform -translate-y-1/2 text-sm text-gray-500"
-            >만원</span
+            >원</span
           >
         </div>
       </div>
