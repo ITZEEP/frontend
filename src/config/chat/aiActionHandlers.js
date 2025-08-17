@@ -17,12 +17,8 @@ export function createActionDispatchers({
 
   const handlers = {
     // Step1
-    // 'step1.openGuide': () => {
-    //   safeCall(step1.openGuide)
-    // },
-    // 'step1.openResult': () => {
-    //   safeCall(step1.openResult)
-    // },
+    'step1.gotoStep2.accept': (payload) => safeCall(step1.respondGoToStep2, true, payload),
+    'step1.gotoStep2.reject': (payload) => safeCall(step1.respondGoToStep2, false, payload),
 
     // Step2
     // 'step2.openHelp': () => {
@@ -61,6 +57,9 @@ export function createActionDispatchers({
     // 'step4.openSubmitResult': () => {
     //   safeCall(step4.openSubmitResult)
     // },
+
+    'legal.terms': () => safeCall(step1.openLegalTerms),
+    'legal.tips': () => safeCall(step1.openLegalTips),
   }
 
   // 레거시 액션명 호환 (기존 코드에서 쓰던 명칭)

@@ -6,12 +6,23 @@ export const AI_SENDER = {
 
 // 콘텐츠 기반 규칙
 export const contentRulesByStep = {
-  1: [],
+  1: [
+    {
+      when: (message) => {
+        const t = String(message?.content || '')
+        return t.includes('작성한 사전 조사를 토대로') && t.includes('다음 단계로 넘어갈까요')
+      },
+      buttons: [
+        { label: '거절', action: 'step1.gotoStep2.reject' },
+        { label: '수락', action: 'step1.gotoStep2.accept' },
+      ],
+    },
+  ],
   2: [],
   3: [
     {
       when: (message) =>
-        typeof message?.content === 'string' && message.content.includes('초안이 완성되었습니다'),
+        typeof message?.content === 'string' && message.content.includes('초안이 생성되었습니다'),
       buttons: [{ label: '특약 검토', action: 'step3.openTermsReview' }],
     },
     {
@@ -75,6 +86,20 @@ export const metaActionButtons = {
 export function getAiButtonsForMessage(step, message) {
   const stepNum = Number(step)
   const sid = String(message?.senderId ?? '')
+
+  if (sid === AI_SENDER.BUTTON) {
+    const t = String(message?.content || '')
+    if (
+      t.includes('기다리는 동안') &&
+      t.includes('어려운 법률 용어') &&
+      t.includes('법률 팁을 알아볼까요')
+    ) {
+      return [
+        { label: '법률 용어 알아보기', action: 'legal.terms' },
+        { label: '법률 팁 알아보기', action: 'legal.tips' },
+      ]
+    }
+  }
 
   // meta.action 우선
   const metaKey = message?.meta?.action
