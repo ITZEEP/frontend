@@ -131,6 +131,13 @@
         </div>
       </div>
     </section>
+
+    <section v-if="listing.description">
+      <h2 class="font-bold text-lg mb-4 border-b border-gray-300 pb-2">상세 설명</h2>
+      <div class="prose max-w-none text-gray-700 leading-relaxed">
+        <p>{{ listing.description }}</p>
+      </div>
+    </section>
   </div>
 </template>
 

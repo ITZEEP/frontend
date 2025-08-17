@@ -135,6 +135,7 @@ const handleSubmit = async () => {
       landCategory: rawForm.landCategory,
       facilityItemIds: rawForm.facilityItemIds,
       maintenanceFees: rawForm.maintenanceFees,
+      description: rawForm.description,
     }
 
     console.log('📦 최종 제출 데이터 (payload):', payload)
