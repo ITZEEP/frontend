@@ -47,7 +47,7 @@
       <div class="p-4">
         <div class="flex items-start">
           <div class="flex-shrink-0">
-            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+            <div class="w-8 h-8 bg-yellow-primary rounded-full flex items-center justify-center">
               <i class="fas fa-bell text-white text-sm"></i>
             </div>
           </div>
@@ -333,7 +333,7 @@ onUnmounted(() => {
 
 .progress-bar {
   height: 100%;
-  background: #3b82f6;
+  background: #ffbc00;
   width: 100%;
   transition: width 3s linear;
 }
