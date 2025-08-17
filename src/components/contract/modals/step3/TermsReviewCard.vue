@@ -16,7 +16,7 @@
             selected === 'check' ? 'bg-green-100' : 'hover:bg-green-100',
           ]"
         >
-          <CheckIcon class="w-4 h-4" />
+          <i class="fas fa-check text-green-400 text-sm"></i>
         </button>
         <button
           @click="select('x')"
@@ -25,7 +25,7 @@
             selected === 'x' ? 'bg-red-100' : 'hover:bg-red-100',
           ]"
         >
-          <XIcon class="w-4 h-4" />
+          <i class="fas fa-times text-red-400 text-sm"></i>
         </button>
       </div>
     </div>
@@ -54,8 +54,6 @@
 
 <script setup>
 import { ref } from 'vue'
-import CheckIcon from '@/assets/icons/CheckIcon.vue'
-import XIcon from '@/assets/icons/XIcon.vue'
 
 const props = defineProps({
   clause: Object,
