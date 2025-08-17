@@ -244,5 +244,6 @@ const getBurdenLabel = (val) => {
 
 watchEffect(() => {
   store.setTriggerSubmit(6, saveMongo)
+  store.setCanProceed(true)
 })
 </script>

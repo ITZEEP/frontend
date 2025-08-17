@@ -96,10 +96,10 @@ const patchLivingStep = async () => {
     await OwnerPreContractAPI.updateLivingStep1(contractChatId, {
       hasNotice: hasNotice.value,
       insuranceBurden: insuranceBurden.value,
-      lateFeeInterestRate: rentType.value == 'WOLSE' ? lateFeeInterestRate.value : null,
+      lateFeeInterestRate: rentType.value === 'WOLSE' ? lateFeeInterestRate.value : null,
       ownerAccountNumber: ownerAccountNumber.value,
       ownerBankName: ownerBankName.value,
-      paymentDueDate: rentType.value == 'WOLSE' ? paymentDueDate.value : null,
+      paymentDueDate: rentType.value === 'WOLSE' ? paymentDueDate.value : null,
       requireRentGuaranteeInsurance: requireRentGuaranteeInsurance.value,
     })
   } catch (error) {
@@ -119,18 +119,20 @@ watch(
     rentType,
   ],
   () => {
-    const insuranceOk = typeof requireRentGuaranteeInsurance.value === 'boolean'
+    const asBoolOk = (v) => v === true || v === false || v === 'true' || v === 'false'
+    const toUpper = (v) => String(v || '').toUpperCase()
 
-    const burdenOk = ['OWNER', 'TENANT', 'UNDECIDED'].includes(String(insuranceBurden.value || ''))
-
-    const noticeOk = ['YES', 'NO'].includes(String(hasNotice.value || ''))
+    const insuranceOk = asBoolOk(requireRentGuaranteeInsurance.value)
+    const burdenOk = ['OWNER', 'TENANT', 'UNDECIDED'].includes(toUpper(insuranceBurden.value))
+    const noticeOk = ['YES', 'NO'].includes(toUpper(hasNotice.value))
 
     const bankOk = String(ownerBankName.value || '').trim().length > 0
     const accountOk = String(ownerAccountNumber.value || '').trim().length > 0
 
     const isWolse = rentType.value === 'WOLSE'
-    const dueOk = paymentDueDate.value !== null && paymentDueDate.value !== ''
-    const lateFeeOk = lateFeeInterestRate.value !== null && lateFeeInterestRate.value !== ''
+    const dueOk = !isWolse || (paymentDueDate.value !== null && paymentDueDate.value !== '')
+    const lateFeeOk =
+      !isWolse || (lateFeeInterestRate.value !== null && lateFeeInterestRate.value !== '')
 
     const commonValid = insuranceOk && burdenOk && noticeOk && bankOk && accountOk
     const isValid = isWolse ? commonValid && dueOk && lateFeeOk : commonValid
@@ -143,15 +145,16 @@ watch(
 onMounted(async () => {
   try {
     const response = await OwnerPreContractAPI.getLivingStep1(contractChatId)
-    const data = response.data
+    const data = response.data || {}
 
-    requireRentGuaranteeInsurance.value = data.requireRentGuaranteeInsurance ?? null
-    insuranceBurden.value = data.insuranceBurden ?? ''
-    hasNotice.value = data.hasNotice ?? ''
-    ownerBankName.value = data.ownerBankName ?? ''
-    ownerAccountNumber.value = data.ownerAccountNumber ?? ''
-    paymentDueDate.value = data.paymentDueDate ?? null
-    lateFeeInterestRate.value = data.lateFeeInterestRate ?? null
+    requireRentGuaranteeInsurance.value =
+      data.requireRentGuaranteeInsurance ?? requireRentGuaranteeInsurance.value
+    insuranceBurden.value = data.insuranceBurden ?? insuranceBurden.value
+    hasNotice.value = data.hasNotice ?? hasNotice.value
+    ownerBankName.value = data.ownerBankName ?? ownerBankName.value
+    ownerAccountNumber.value = data.ownerAccountNumber ?? ownerAccountNumber.value
+    paymentDueDate.value = data.paymentDueDate ?? paymentDueDate.value
+    lateFeeInterestRate.value = data.lateFeeInterestRate ?? lateFeeInterestRate.value
   } catch (err) {
     console.error('거주 조건 Step1 조회 실패', err)
   }
