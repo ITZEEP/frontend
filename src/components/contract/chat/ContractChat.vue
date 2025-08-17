@@ -11,15 +11,19 @@
 
     <!-- 메시지 영역 -->
     <div class="w-full flex-1 p-4 bg-gray-50 max-h-[420px] overflow-y-auto" ref="messagesContainer">
-      <div v-if="loadingMessages" class="text-center text-gray-500">메시지 로딩 중...</div>
+      <div v-if="loadingMessages && !hasLoadedOnce" class="text-center text-gray-500">
+        메시지 로딩 중...
+      </div>
 
       <div v-else-if="messagesError" class="text-center text-red-500 py-4">
         <div class="mb-2">{{ messagesError }}</div>
       </div>
 
       <template v-else>
-        <!-- API 로드 메시지 -->
-        <template v-for="m in apiMessages" :key="'api-' + m.id">
+        <template
+          v-for="(m, i) in mergedMessages"
+          :key="m.id || m._localId || m.tempId || m.sendTime || i"
+        >
           <AiChatMessage
             v-if="isAi(m)"
             :message="m.content"
@@ -35,34 +39,11 @@
             :userId="m.senderId"
             :myUserId="currentUserId"
             :isRead="m.isRead"
-            :sendStatus="'sent'"
-          />
-        </template>
-
-        <!-- 실시간 메시지 -->
-        <template v-for="(m, i) in hookMessages" :key="'live-' + (m.id || m.sendTime || i)">
-          <AiChatMessage
-            v-if="isAi(m)"
-            :message="m.content"
-            :buttons="aiButtons(m)"
-            @action="handleAiAction"
-          />
-          <UserChatMessage
-            v-else
-            :name="getMessageSenderName(m)"
-            :message="m.content"
-            :time="formatMessageTime(m.sendTime)"
-            :userId="m.senderId"
-            :myUserId="currentUserId"
-            :isRead="m.isRead"
             :sendStatus="getMessageStatus(m)"
           />
         </template>
 
-        <div
-          v-if="!apiMessages.length && !hookMessages.length"
-          class="text-center text-gray-400 py-8"
-        >
+        <div v-if="!mergedMessages.length" class="text-center text-gray-400 py-8">
           아직 메시지가 없습니다. 첫 메시지를 보내보세요!
         </div>
       </template>
@@ -124,6 +105,11 @@ import TermsReviewModal from '@/components/contract/modals/step3/TermsReviewModa
 import FinalClauseSelectModal from '@/components/contract/modals/step3/FinalClauseSelectModal.vue'
 import { useModalStore } from '@/stores/modal'
 import { createActionDispatchers } from '@/config/chat/aiActionHandlers'
+import { useStep1Auto } from '@/composables/contract/useStep1Auto'
+import { contractApi } from '@/apis/contractApi'
+import LegalTermsModal from '../modals/common/LegalTermsModal.vue'
+import LegalTipsModal from '../modals/common/LegalTipsModal.vue'
+import { useRoute, useRouter } from 'vue-router'
 
 const props = defineProps({
   contractChatId: { type: [String, Number], required: false },
@@ -133,6 +119,11 @@ const props = defineProps({
 
 const modalStore = useModalStore()
 const store = useSpecialContractStore()
+const route = useRoute()
+const router = useRouter()
+
+const inflightSync = ref(false)
+let syncTimer = null
 
 // 1) 기본 정보
 const {
@@ -149,6 +140,7 @@ const {
 const {
   apiMessages,
   loadingMessages,
+  hasLoadedOnce,
   messagesError,
   messagesContainer,
   loadMessages,
@@ -208,7 +200,44 @@ const formatMessageTime = (ds) => {
   return d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
 }
 
-// 모달/액션
+// ======== 단계별 버튼 액션 =======
+
+// 0단계 임대인 입장 전
+const openLegalTerms = () => modalStore.open(LegalTermsModal, { onClose: () => modalStore.close() })
+const openLegalTips = () => modalStore.open(LegalTipsModal, { onClose: () => modalStore.close() })
+
+const amOwner = computed(() => {
+  const me = String(currentUserId.value ?? '')
+  const owner = String(contractData.value?.ownerId ?? '')
+  return !!me && !!owner && me === owner
+})
+
+const mkStep2Body = (accepted) => (amOwner.value ? { owner: !!accepted } : { buyer: !!accepted })
+
+const step2Inflight = ref(false)
+// 1단계 정보 확인
+const respondGoToStep2 = async (accepted) => {
+  const id = String(actualContractChatId.value)
+  if (!id || step2Inflight.value) return
+
+  step2Inflight.value = true
+  try {
+    const body = mkStep2Body(accepted)
+    const res = await contractApi.postGoToStep2(id, body)
+    if (!res?.success) {
+      console.warn('postGoToStep2 실패:', res?.message)
+      return
+    }
+    await loadMessages(id)
+    nextTick(forceScrollToBottom)
+  } catch (e) {
+    console.error('postGoToStep2 에러:', e)
+  } finally {
+    step2Inflight.value = false
+  }
+}
+
+// 3단계 모달/액션
 const openTermsReview = () =>
   modalStore.open(TermsReviewModal, { onClose: () => modalStore.close() })
 const openFinalClause = () =>
@@ -230,6 +259,11 @@ const responseFinalConfirm = async (accepted) => {
 
 const dispatchAction = createActionDispatchers({
   modalStore,
+  step1: {
+    respondGoToStep2,
+    openLegalTerms,
+    openLegalTips,
+  },
   step3: {
     openTermsReview,
     openFinalClause,
@@ -310,7 +344,151 @@ const handleExportMessages = async () => {
   }
 }
 
+const throttledLoadMessages = async (id) => {
+  if (!id) return
+  if (loadingMessages.value || inflightSync.value) return
+  inflightSync.value = true
+  try {
+    await loadMessages(id)
+  } finally {
+    inflightSync.value = false
+  }
+}
+
+// 정보 확인
+useStep1Auto({
+  chatId: actualContractChatId,
+  apiMessages,
+  hookMessages,
+  isOwner,
+  runApiBy: 'tenant',
+  hookIsReady,
+  loadMessagesFn: throttledLoadMessages,
+})
+
+const mergedMessages = computed(() => {
+  const a = Array.isArray(apiMessages.value) ? apiMessages.value : []
+  const b = Array.isArray(hookMessages.value) ? hookMessages.value : []
+
+  const keyOf = (m, i) => String(m?.id ?? m?.sendTime ?? m?._localId ?? m?.tempId ?? `tmp-${i}`)
+
+  const tsOf = (m, i) => {
+    const t =
+      new Date(m?.sendTime || m?.createdAt || 0).getTime() ||
+      Number(m?.id) ||
+      Number(m?.tempId) ||
+      (typeof m?._localId === 'number' ? m._localId : 0) ||
+      0
+    return t || i
+  }
+
+  const map = new Map()
+  a.forEach((m, i) => map.set(keyOf(m, i), m))
+  b.forEach((m, i) => map.set(keyOf(m, i + 10000), m))
+
+  const arr = [...map.values()]
+  arr.sort((x, y) => tsOf(x, 0) - tsOf(y, 0))
+  return arr
+})
+
+const isNewerThanApi = (live) => {
+  if (!live || String(live.senderId) !== '9999') return false
+  const liveTs = new Date(live?.sendTime || live?.createdAt || 0).getTime()
+  const apiLast = apiMessages.value.at(-1)
+  const apiTs = new Date(apiLast?.sendTime || apiLast?.createdAt || 0).getTime()
+  return liveTs > apiTs
+}
+
+// 단일 디바운스 + 중복 방지
+const scheduleSync = () => {
+  const id = actualContractChatId.value
+  if (!id) return
+  if (loadingMessages.value || inflightSync.value) return
+
+  const liveLast = hookMessages.value.at(-1)
+  if (!isNewerThanApi(liveLast)) return
+
+  if (syncTimer) clearTimeout(syncTimer)
+  syncTimer = setTimeout(async () => {
+    if (loadingMessages.value || inflightSync.value) return
+    inflightSync.value = true
+    try {
+      await loadMessages(id)
+    } finally {
+      inflightSync.value = false
+    }
+  }, 300)
+}
+
+const latestMsg = computed(() => mergedMessages.value.at(-1) || null)
+
 // watch들
+const safeReplaceQuery = (nextPartial = {}) => {
+  const base = { ...(route.query || {}) }
+  const next = { ...base, ...nextPartial }
+  if (next.step != null) next.step = String(next.step)
+  if (next.round != null) next.round = String(next.round)
+  const same =
+    JSON.stringify(base, Object.keys(base).sort()) ===
+    JSON.stringify(next, Object.keys(next).sort())
+  if (!same) {
+    router.replace({ path: route.path, query: next })
+  }
+}
+
+const normalizeText = (s) =>
+  String(s || '')
+    .replace(/[\u2018-\u201F]/g, "'") // ‘ ’ “ ” → '
+    .replace(/\s+/g, ' ')
+    .trim()
+
+watch(
+  latestMsg,
+  (m) => {
+    if (!m) return
+    const sid = String(m.senderId)
+    if (sid !== '9998' && sid !== '9999') return
+
+    const t = normalizeText(m.content)
+
+    // --- 1단계 감지 ---
+    if (t.includes(`사전 조사를 토대로`)) {
+      const next = { ...route.query, step: '1' }
+      delete next.round
+      safeReplaceQuery(next)
+      return
+    }
+
+    // --- 2단계 감지 ---
+    if (t.includes(`2단계 '금액 조율' 단계입니다.`) || /2단계.*금액\s*조율/.test(t)) {
+      safeReplaceQuery({ step: '2' })
+      return
+    }
+
+    // --- 3단계 감지 ---
+    if (
+      t.includes(`3단계: '특약 조율' 단계입니다.`) ||
+      /3단계.*특약\s*조율/.test(t) ||
+      t.includes('특약 초안이 생성되었습니다')
+    ) {
+      const round = String(store.currentRound ?? 0)
+      safeReplaceQuery({ step: '3', round })
+      return
+    }
+  },
+  { immediate: true },
+)
+
+watch(
+  () => hookMessages.value.at(-1),
+  (m) => {
+    if (!m) return
+    if (String(m.senderId) === '9999') {
+      scheduleSync()
+    }
+  },
+)
+
 watch(
   hookMessages,
   (list, old) => {
@@ -320,10 +498,8 @@ watch(
     if (String(latest.senderId) === '9999') store.markAiMessageReceived()
     if (String(latest.senderId) === AI_SENDER.COMPLETE) {
       store.markAllCompleted()
-      // 문구 매칭: 적법성 검토 단계 진입 알림
       const t = String(latest.content || '')
       if (t.includes('적법성 검토')) {
-        // step=4로 URL 쿼리 변경 (round는 제거/무시)
         gotoStep4()
       }
     }
@@ -335,7 +511,13 @@ watch(
   actualContractChatId,
   async (id) => {
     if (!id) return
-    await loadMessages(id)
+    if (loadingMessages.value || inflightSync.value) return
+    inflightSync.value = true
+    try {
+      await loadMessages(id)
+    } finally {
+      inflightSync.value = false
+    }
     if (currentUserId.value) await loadContractInfo()
   },
   { immediate: true },
@@ -344,10 +526,8 @@ watch(
 onMounted(async () => {
   await loadUserInfo()
   if (actualContractChatId.value) {
-    await loadMessages(actualContractChatId.value)
     if (currentUserId.value) await loadContractInfo()
 
-    // 히스토리에도 9997 적법성 문구가 있으면 step=4로 보정
     const all = [...apiMessages.value, ...hookMessages.value]
     const lastComplete = [...all]
       .reverse()
@@ -359,6 +539,13 @@ onMounted(async () => {
     if (lastComplete) gotoStep4()
   }
 })
+
+watch(
+  () => mergedMessages.value.length,
+  (len, old) => {
+    if (len > (old || 0)) nextTick(forceScrollToBottom)
+  },
+)
 </script>
 
 <style scoped>
