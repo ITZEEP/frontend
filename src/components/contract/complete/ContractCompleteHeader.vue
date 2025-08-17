@@ -4,7 +4,7 @@
       <div
         class="w-14 h-14 rounded-full bg-yellow-primary flex items-center justify-center text-center"
       >
-        <CheckIcon class="w-10 h-10 text-white" />
+        <i class="fas fa-check w-10 h-10 text-white text-2xl"></i>
       </div>
 
       <div>
@@ -14,7 +14,3 @@
     </div>
   </div>
 </template>
-
-<script setup>
-import CheckIcon from '@/assets/icons/CheckIcon.vue'
-</script>
