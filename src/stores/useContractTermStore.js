@@ -8,18 +8,30 @@ export const useSpecialContractStore = defineStore('specialContract', () => {
   const contractOrders = ref([])
   const aiMessageReceived = ref(false)
   const currentRound = ref(0)
+  const allCompleted = ref(false)
+  const finalContractVersion = ref(0)
+  const bumpFinalContractVersion = () => {
+    finalContractVersion.value++
+  }
 
   if (typeof window !== 'undefined') {
     const savedOrder = localStorage.getItem('currentOrder')
     if (savedOrder !== null) {
       currentOrder.value = parseInt(savedOrder)
     }
+
+    const savedAll = localStorage.getItem('specialContract_allCompleted')
+    if (savedAll === 'true') allCompleted.value = true
   }
 
   watch(currentOrder, (val) => {
     if (val !== null) {
       localStorage.setItem('currentOrder', String(val))
     }
+  })
+
+  watch(allCompleted, (v) => {
+    localStorage.setItem('specialContract_allCompleted', v ? 'true' : 'false')
   })
 
   const setOrder = (order) => {
@@ -92,6 +104,17 @@ export const useSpecialContractStore = defineStore('specialContract', () => {
     currentRound.value = round
   }
 
+  const markAllCompleted = () => {
+    allCompleted.value = true
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('specialContract_allCompleted', 'true')
+    }
+  }
+  const clearAllCompleted = () => {
+    allCompleted.value = false
+  }
+
   return {
     currentOrder,
     contractOrders,
@@ -109,5 +132,10 @@ export const useSpecialContractStore = defineStore('specialContract', () => {
     isAllReviewCompleted,
     currentRound,
     setRound,
+    allCompleted,
+    markAllCompleted,
+    clearAllCompleted,
+    finalContractVersion,
+    bumpFinalContractVersion,
   }
 })

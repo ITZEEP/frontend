@@ -191,9 +191,8 @@ const saveMongo = async () => {
       return
     }
 
-    const id = contractChatId
-    if (id) {
-      router.push(`/contract/${id}`)
+    if (contractChatId) {
+      router.push(`/contract/${contractChatId}`)
     }
   } catch (error) {
     console.error('Mongo 저장 중 오류:', error)

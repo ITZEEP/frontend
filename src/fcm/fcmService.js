@@ -6,6 +6,11 @@ import { getCurrentUser } from '@/apis/chatApi'
 const vapidKey =
   'BBwhqrm3fd9077YciPjcCv1H7E1rrEbfIko3CwjtE4PlpkY-3PGnV0V1TBUAU_epvIP9ug_ktwaDvxQsYAQobk0'
 
+// 알림 상태 관리를 위한 전역 상태
+let hasNewNotifications = false
+let notificationBadgeCallback = null
+let unreadNotificationCount = 0
+
 const sendTokenToServer = async (token) => {
   try {
     const userResponse = await getCurrentUser()
@@ -128,6 +133,9 @@ const setupForegroundMessageListener = () => {
 
     const { notification, data } = payload
 
+    // 새 알림이 왔음을 표시
+    setHasNewNotifications(true)
+
     // 브라우저 알림 표시 (포그라운드에서는 DB 저장 안함 - 백엔드에서 이미 저장)
     if (notification && Notification.permission === 'granted') {
       const { title, body, icon } = notification
@@ -136,7 +144,7 @@ const setupForegroundMessageListener = () => {
         body: body,
         icon: icon || '/favicon.ico',
         badge: '/favicon.ico',
-        tag: data?.chatRoomId || 'chat-notification',
+        tag: data?.chatRoomId || data?.notificationId || 'chat-notification',
         data: data,
         requireInteraction: true,
         actions: [
@@ -168,6 +176,19 @@ const setupForegroundMessageListener = () => {
         detail: payload,
       }),
     )
+
+    // 새 알림 표시 업데이트 이벤트 발생 (개수는 UI에서 자체 증가)
+    window.dispatchEvent(
+      new CustomEvent('new-notification', {
+        detail: {
+          hasNew: true,
+          payload: payload,
+          source: 'fcm', // FCM에서 온 알림임을 표시
+        },
+      }),
+    )
+
+    console.log('새 FCM 알림 처리 완료')
   })
 }
 
@@ -231,6 +252,143 @@ export const getFCMToken = async () => {
   }
 }
 
+/**
+ * 새 알림 상태 설정
+ */
+export const setHasNewNotifications = (hasNew) => {
+  hasNewNotifications = hasNew
+
+  // 등록된 콜백이 있으면 실행
+  if (notificationBadgeCallback) {
+    notificationBadgeCallback(hasNew)
+  }
+
+  // 로컬 스토리지에도 저장 (페이지 새로고침 시에도 유지)
+  localStorage.setItem('hasNewNotifications', hasNew.toString())
+
+  console.log('새 알림 상태 업데이트:', hasNew)
+}
+
+/**
+ * 새 알림 상태 가져오기
+ */
+export const getHasNewNotifications = () => {
+  // 메모리의 상태를 우선 확인하고, 없으면 로컬 스토리지에서 가져오기
+  if (hasNewNotifications) {
+    return true
+  }
+
+  const stored = localStorage.getItem('hasNewNotifications')
+  return stored === 'true'
+}
+
+/**
+ * 읽지 않은 알림 개수 설정
+ */
+export const setUnreadNotificationCount = (count) => {
+  unreadNotificationCount = Math.max(0, count)
+  localStorage.setItem('unreadNotificationCount', unreadNotificationCount.toString())
+
+  console.log('읽지 않은 알림 개수 업데이트:', unreadNotificationCount)
+}
+
+/**
+ * 읽지 않은 알림 개수 가져오기
+ */
+export const getUnreadNotificationCount = () => {
+  if (unreadNotificationCount > 0) {
+    return unreadNotificationCount
+  }
+
+  const stored = localStorage.getItem('unreadNotificationCount')
+  const count = parseInt(stored) || 0
+  unreadNotificationCount = count
+  return count
+}
+
+/**
+ * 읽지 않은 알림 개수 증가
+ */
+export const incrementUnreadCount = () => {
+  unreadNotificationCount += 1
+  localStorage.setItem('unreadNotificationCount', unreadNotificationCount.toString())
+
+  console.log('읽지 않은 알림 개수 증가:', unreadNotificationCount)
+  return unreadNotificationCount
+}
+
+/**
+ * 읽지 않은 알림 개수 감소
+ */
+export const decrementUnreadCount = () => {
+  unreadNotificationCount = Math.max(0, unreadNotificationCount - 1)
+  localStorage.setItem('unreadNotificationCount', unreadNotificationCount.toString())
+
+  console.log('읽지 않은 알림 개수 감소:', unreadNotificationCount)
+  return unreadNotificationCount
+}
+
+/**
+ * 알림 배지 업데이트 콜백 등록
+ */
+export const setNotificationBadgeCallback = (callback) => {
+  notificationBadgeCallback = callback
+}
+
+/**
+ * 알림을 읽었을 때 호출 (새 알림 상태 초기화)
+ */
+export const markNotificationsAsRead = () => {
+  setHasNewNotifications(false)
+
+  // 읽음 처리 이벤트 발생
+  window.dispatchEvent(
+    new CustomEvent('notifications-read', {
+      detail: {
+        timestamp: Date.now(),
+      },
+    }),
+  )
+
+  console.log('모든 알림 읽음 처리 완료')
+}
+
+/**
+ * 단일 알림 읽음 처리
+ */
+export const markSingleNotificationAsRead = () => {
+  // 개수 감소
+  decrementUnreadCount()
+
+  // 개수가 0이 되면 새 알림 상태도 false로
+  if (unreadNotificationCount <= 0) {
+    setHasNewNotifications(false)
+  }
+
+  // 개수 업데이트 이벤트 발생
+  window.dispatchEvent(
+    new CustomEvent('notification-count-updated', {
+      detail: {
+        unreadCount: unreadNotificationCount,
+      },
+    }),
+  )
+
+  console.log('단일 알림 읽음 처리, 남은 개수:', unreadNotificationCount)
+}
+
+/**
+ * 알림 상태 초기화 (로그아웃 시 등)
+ */
+export const resetNotificationState = () => {
+  hasNewNotifications = false
+  unreadNotificationCount = 0
+  localStorage.removeItem('hasNewNotifications')
+  localStorage.removeItem('unreadNotificationCount')
+
+  console.log('알림 상태 초기화 완료')
+}
+
 // 기존 Vue 컴포넌트에서 사용하던 메서드들 (호환성 유지)
 export const requestPermission = requestNotificationPermission
 
@@ -254,4 +412,14 @@ export default {
   requestPermission,
   getToken,
   onMessageListener,
+  setHasNewNotifications,
+  getHasNewNotifications,
+  setUnreadNotificationCount,
+  getUnreadNotificationCount,
+  incrementUnreadCount,
+  decrementUnreadCount,
+  setNotificationBadgeCallback,
+  markNotificationsAsRead,
+  markSingleNotificationAsRead,
+  resetNotificationState,
 }

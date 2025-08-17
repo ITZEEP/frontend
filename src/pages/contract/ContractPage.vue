@@ -24,7 +24,7 @@
         <div class="flex-1 flex justify-between gap-4 overflow-hidden">
           <!-- 채팅 영역 -->
           <div class="w-1/3 h-[865px]">
-            <ContractChat :currentStep="step" :contractChatId="roomId" />
+            <ContractChat :currentStep="step" :currentRound="round" :contractChatId="roomId" />
           </div>
 
           <!-- 단계별 컴포넌트 -->
@@ -36,29 +36,38 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 
 import ContractChat from '@/components/contract/chat/ContractChat.vue'
 import ParticipantItem from '@/components/contract/chat/ParticipantItem.vue'
 import StepContentWrapper from '@/components/contract/form/StepContentWrapper.vue'
+import { getContractChatOnlineStatus } from '@/apis/contractChatApi'
 
 const route = useRoute()
 
 // 경로 파라미터에서 roomId 추출
 const roomId = computed(() => route.params.id)
-console.log('contractPage의 roomId: ' + roomId.value)
 
-// 쿼리 파라미터에서 step 추출
+// 쿼리에서 step/round 읽기
 const step = computed(() => {
   const s = Number(route.query.step)
   return Number.isNaN(s) ? null : s
+})
+
+// step=3일 때만 round를 의미 있게 사용(없으면 0)
+const round = computed(() => {
+  if (Number(step.value) !== 3) return null
+  const r = Number(route.query.round)
+  return Number.isNaN(r) ? 0 : r
 })
 
 const participants = [
   { id: 1, name: '이임차', role: '임차인', isOnline: true, isAi: false },
   { id: 2, name: 'AI 어시스턴트', role: '', isOnline: true, isAi: true },
 ]
-</script>
 
-<style scoped></style>
+onMounted(async () => {
+  await getContractChatOnlineStatus(roomId.value)
+})
+</script>
