@@ -108,29 +108,35 @@
         <label class="block mb-1 text-sm font-medium"
           >현재 층 <span class="text-red-500">*</span></label
         >
-        <input
-          type="number"
-          min="0"
-          class="border rounded p-2 w-full"
-          :value="form.homeFloor"
-          @input="handleChange('homeFloor', $event.target.valueAsNumber)"
-          required
-          placeholder="0"
-        />
+        <div class="relative">
+          <input
+            type="number"
+            min="0"
+            class="border rounded p-2 pr-12 w-full no-spin"
+            :value="form.homeFloor"
+            @input="handleChange('homeFloor', $event.target.valueAsNumber)"
+            required
+            placeholder="0"
+          />
+          <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">층</span>
+        </div>
       </div>
       <div>
         <label class="block mb-1 text-sm font-medium"
           >총 층수 <span class="text-red-500">*</span></label
         >
-        <input
-          type="number"
-          min="0"
-          class="border rounded p-2 w-full"
-          :value="form.buildingTotalFloors"
-          @input="handleChange('buildingTotalTotalFloors', $event.target.valueAsNumber)"
-          required
-          placeholder="0"
-        />
+        <div class="relative">
+          <input
+            type="number"
+            min="0"
+            class="border rounded p-2 pr-12 w-full no-spin"
+            :value="form.buildingTotalFloors"
+            @input="handleChange('buildingTotalFloors', $event.target.valueAsNumber)"
+            required
+            placeholder="0"
+          />
+          <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">층</span>
+        </div>
       </div>
     </div>
 
