@@ -1,4 +1,3 @@
-<!-- StepContentWrapper.vue -->
 <template>
   <div class="w-3/5 max-h-[1002px] bg-white rounded-lg overflow-auto flex flex-col gap-4 py-4 px-6">
     <header class="flex flex-col justify-center gap-5 border-b pb-4">
@@ -8,7 +7,13 @@
 
     <!-- 로딩/에러 -->
     <div v-if="loading" class="py-12 text-center text-gray-500">기본 정보 불러오는 중...</div>
-    <div v-else-if="error" class="py-12 text-center text-red-500">{{ error }}</div>
+    <div
+      v-else-if="error"
+      class="py-12 text-center"
+      :class="errorGray ? 'text-gray-500' : 'text-red-500'"
+    >
+      {{ error }}
+    </div>
 
     <template v-else>
       <template v-if="showBoth">
@@ -26,22 +31,20 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import StepProgress from './StepProgress.vue'
 import { contractApi } from '@/apis/contractApi'
-
 import Step1Compare from './step1/Step1Compare.vue'
 import Step2Price from './Step2Price.vue'
 import Step3Terms from './Step3Terms.vue'
 import Step4Legal from './Step4Legal.vue'
 import Step5Done from './Step5Done.vue'
 
-const props = defineProps({
-  step: { type: Number, required: true },
-})
+const props = defineProps({ step: { type: Number, required: true } })
 
 const route = useRoute()
 const contractChatId = route.params.id ?? route.query.id ?? null
 
 const loading = ref(false)
 const error = ref('')
+const errorGray = ref(false)
 const contractBasic = ref(null)
 
 onMounted(async () => {
@@ -49,13 +52,26 @@ onMounted(async () => {
     error.value = 'contractChatId가 없습니다.'
     return
   }
+  loading.value = true
   try {
-    loading.value = true
     const res = await contractApi.getContractBasic(String(contractChatId))
+
+    if (!res?.success) {
+      if (res?.error?.code === 'CONTRACT_4001') {
+        error.value = '임대인이 입장하면 계약서가 표시돼요'
+        errorGray.value = true
+      } else {
+        error.value = res?.message || '계약 기본 정보 조회에 실패했습니다.'
+        errorGray.value = false
+      }
+      return
+    }
+
     contractBasic.value = res.data
   } catch (e) {
     console.error(e)
     error.value = '계약 기본 정보 조회에 실패했습니다.'
+    errorGray.value = false
   } finally {
     loading.value = false
   }
@@ -63,10 +79,6 @@ onMounted(async () => {
 
 const showBoth = computed(() => props.step === 1 || props.step === 2)
 
-const stepMap = {
-  3: Step3Terms,
-  4: Step4Legal,
-  5: Step5Done,
-}
+const stepMap = { 3: Step3Terms, 4: Step4Legal, 5: Step5Done }
 const currentComponent = computed(() => stepMap[props.step])
 </script>
