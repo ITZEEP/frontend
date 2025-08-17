@@ -49,6 +49,15 @@ const updateField = (field, value) => {
     />
 
     <OCRFormField
+      :modelValue="modelValue.대지면적"
+      @update:modelValue="(value) => updateField('대지면적', value)"
+      label="대지면적"
+      placeholder="예: 185"
+      :error="errors.대지면적"
+      :shake="shake"
+    />
+
+    <OCRFormField
       :modelValue="modelValue.연면적"
       @update:modelValue="(value) => updateField('연면적', value)"
       label="연면적"
@@ -94,5 +103,12 @@ const updateField = (field, value) => {
         label="위반건축물 표시 있음"
       />
     </div>
+
+    <OCRFormField
+      :modelValue="modelValue.발급일"
+      label="발급일"
+      :disabled="true"
+      :shake="false"
+    />
   </OCRFormBox>
 </template>

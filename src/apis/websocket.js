@@ -37,7 +37,7 @@ class WebSocketService {
 
       this.isConnecting.value = true
 
-      const socket = new SockJS('http://localhost:8080/ws')
+      const socket = new SockJS(import.meta.env.VITE_WS_URL || 'ws://localhost:8080/ws')
       this.stompClient = new Client({
         webSocketFactory: () => socket,
         reconnectDelay: 5000,

@@ -1,7 +1,8 @@
 <script setup>
 import IconCheckCircle from '@/components/icons/IconCheckCircle.vue'
-import IconQuestionCircle from '@/components/icons/IconQuestionCircle.vue'
+import IconError from '@/components/icons/IconError.vue'
 import IconWarningTriangle from '@/components/icons/IconWarningTriangle.vue'
+import IconQuestionCircle from '@/components/icons/IconQuestionCircle.vue'
 
 defineProps({
   analysisData: {
@@ -26,22 +27,26 @@ const sections = [
   { key: 'financialSafety', title: '금융 안전성' }
 ]
 
-const getStatusIcon = (status) => {
-  switch (status) {
-    case 'safe':
+const getRiskIcon = (riskLevel) => {
+  switch (riskLevel) {
+    case 'SAFE':
       return IconCheckCircle
-    case 'warning':
+    case 'WARN':
       return IconWarningTriangle
+    case 'DANGER':
+      return IconError
     default:
       return IconQuestionCircle
   }
 }
 
-const getIconClass = (status) => {
-  switch (status) {
-    case 'safe':
+const getRiskIconClass = (riskLevel) => {
+  switch (riskLevel) {
+    case 'SAFE':
       return 'text-yellow-primary'
-    case 'warning':
+    case 'WARN':
+      return 'text-yellow-500'
+    case 'DANGER':
       return 'text-red-500'
     default:
       return 'text-gray-warm-500'
@@ -66,7 +71,7 @@ const getIconClass = (status) => {
             class="p-3 sm:p-4 bg-gray-100 rounded-lg sm:rounded-xl"
           >
             <div class="flex items-start gap-2 mb-1.5 sm:mb-2">
-              <IconCheckCircle class="text-yellow-primary w-4 h-4 sm:w-5 sm:h-5 mt-0.5 flex-shrink-0" />
+              <component :is="getRiskIcon(item.riskLevel)" :class="[getRiskIconClass(item.riskLevel), 'w-4 h-4 sm:w-5 sm:h-5 mt-0.5 flex-shrink-0']" />
               <span class="text-sm font-medium text-gray-warm-700">{{ item.title }}</span>
             </div>
             <p class="text-sm sm:text-base text-gray-warm-500 pl-6 sm:pl-7">{{ item.content }}</p>
@@ -88,7 +93,7 @@ const getIconClass = (status) => {
             class="p-3 sm:p-4 bg-gray-100 rounded-lg sm:rounded-xl"
           >
             <div class="flex items-start gap-2 mb-1.5 sm:mb-2">
-              <component :is="getStatusIcon(item.status)" :class="[getIconClass(item.status), 'w-4 h-4 sm:w-5 sm:h-5 mt-0.5 flex-shrink-0']" />
+              <component :is="getRiskIcon(item.riskLevel)" :class="[getRiskIconClass(item.riskLevel), 'w-4 h-4 sm:w-5 sm:h-5 mt-0.5 flex-shrink-0']" />
               <span class="text-sm font-medium text-gray-warm-700">{{ item.name }}</span>
             </div>
             <p class="text-sm sm:text-base text-gray-warm-500 pl-6 sm:pl-7">{{ item.description }}</p>
@@ -110,7 +115,7 @@ const getIconClass = (status) => {
             class="p-3 sm:p-4 bg-gray-100 rounded-lg sm:rounded-xl"
           >
             <div class="flex items-start gap-2 mb-1.5 sm:mb-2">
-              <component :is="getStatusIcon(item.status)" :class="[getIconClass(item.status), 'w-4 h-4 sm:w-5 sm:h-5 mt-0.5 flex-shrink-0']" />
+              <component :is="getRiskIcon(item.riskLevel)" :class="[getRiskIconClass(item.riskLevel), 'w-4 h-4 sm:w-5 sm:h-5 mt-0.5 flex-shrink-0']" />
               <span class="text-sm font-medium text-gray-warm-700">{{ item.name }}</span>
             </div>
             <p class="text-sm sm:text-base text-gray-warm-500 pl-6 sm:pl-7">{{ item.description }}</p>

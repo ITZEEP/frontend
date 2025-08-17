@@ -16,6 +16,10 @@ defineProps({
     type: Boolean,
     default: false,
   },
+  disabled: {
+    type: Boolean,
+    default: false,
+  },
   error: {
     type: String,
     default: '',
@@ -42,10 +46,12 @@ const handleInput = (event) => {
       :value="modelValue"
       @input="handleInput"
       type="text"
+      :disabled="disabled"
       :class="[
         'input-field',
         error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : '',
         shake && error ? 'animate-shake' : '',
+        disabled ? 'bg-gray-100 cursor-not-allowed opacity-60' : '',
       ]"
       :placeholder="placeholder"
     />
