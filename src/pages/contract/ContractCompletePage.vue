@@ -12,4 +12,5 @@
 <script setup>
 import ContractCompleteHeader from '@/components/contract/complete/ContractCompleteHeader.vue'
 import ContractPreviewBox from '@/components/contract/complete/ContractPreviewBox.vue'
+import ContractSidePanel from '@/components/contract/complete/ContractSidePanel.vue'
 </script>

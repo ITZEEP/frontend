@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col gap-4">
+  <div class="w-[600px] flex flex-col gap-4">
     <ContractDownloadPanel />
     <PostContractTodo />
   </div>

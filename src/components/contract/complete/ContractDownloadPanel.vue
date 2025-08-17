@@ -23,29 +23,21 @@
       />
     </div>
 
-    <BaseButton class="mt-6 w-full" variant="primary" size="lg" @click="handleSign">
-      🖋 전자서명 요청
-    </BaseButton>
+    <button
+      class="mt-6 w-full rounded-xl bg-blue-500 hover:bg-blue-700 text-white font-semibold py-3 transition"
+      @click="handleSign"
+    >
+      <i class="fa-solid fa-pen-nib mr-2"></i>
+      전자서명 요청
+    </button>
   </div>
 </template>
 
 <script setup>
-import BaseButton from '@/components/common/BaseButton.vue'
 import DownloadItem from './DownloadItem.vue'
 
-const handleDownload = () => {
-  console.log('PDF 다운로드')
-}
-
-const handlePrint = () => {
-  console.log('인쇄하기')
-}
-
-const handleEmail = () => {
-  console.log('이메일 전송')
-}
-
-const handleSign = () => {
-  console.log('전자서명 요청')
-}
+const handleDownload = () => console.log('PDF 다운로드')
+const handlePrint = () => console.log('인쇄하기')
+const handleEmail = () => console.log('이메일 전송')
+const handleSign = () => console.log('전자서명 요청')
 </script>
