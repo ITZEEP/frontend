@@ -1,6 +1,6 @@
 <template>
   <div
-    class="flex flex-col gap-10 transition-opacity duration-300"
+    class="flex flex-col gap-6 transition-opacity duration-300"
     :class="{ 'opacity-50 pointer-events-none': currentStep !== 1 }"
   >
     <ContractParties :basic="basic" />
