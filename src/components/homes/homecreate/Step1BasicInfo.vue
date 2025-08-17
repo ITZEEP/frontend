@@ -33,7 +33,16 @@ const updateForm = (field, value) => {
 }
 
 const onAddressSelect = (selectedAddress) => {
-  updateForm('addr1', selectedAddress)
+  // ✨ 추가된 부분: 디버깅을 위해 선택된 주소값을 콘솔에 출력
+  console.log('✅ onAddressSelect 함수 호출됨. 선택된 주소:', selectedAddress)
+
+  if (selectedAddress) {
+    updateForm('addr1', selectedAddress)
+  }
+
+  // ✨ 추가된 부분: 업데이트된 form.addr1 값 확인
+  console.log('업데이트 후 form 객체:', props.form)
+
   modalStore.close()
 }
 
@@ -59,7 +68,6 @@ const leaseTypeOptions = [
   <div class="space-y-6">
     <h2 class="text-lg font-semibold">기본 정보</h2>
 
-    <!-- 매물 종류 -->
     <div>
       <label class="block text-sm font-medium text-gray-700 mb-1">
         매물 종류 <span class="text-red-500">*</span>
@@ -82,7 +90,6 @@ const leaseTypeOptions = [
       </div>
     </div>
 
-    <!-- 거래 유형 -->
     <div>
       <label class="block text-sm font-medium text-gray-700 mb-1">
         거래 유형 <span class="text-red-500">*</span>
@@ -100,7 +107,6 @@ const leaseTypeOptions = [
       </div>
     </div>
 
-    <!-- 주소 -->
     <div>
       <label class="block mb-1 text-sm font-medium text-gray-600">
         주소<span class="text-red-500">*</span>
@@ -124,7 +130,6 @@ const leaseTypeOptions = [
       </div>
     </div>
 
-    <!-- 상세 주소 -->
     <div>
       <label class="block mb-1 text-sm font-medium text-gray-600">상세 주소</label>
       <input
@@ -136,7 +141,6 @@ const leaseTypeOptions = [
       />
     </div>
 
-    <!-- 주소 검색 모달 -->
     <BaseModal :closable="true" :maskCloseable="true">
       <SearchAddress @select="onAddressSelect" />
     </BaseModal>

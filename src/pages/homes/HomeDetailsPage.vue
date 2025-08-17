@@ -1,6 +1,11 @@
 <template>
   <div class="max-w-4xl mx-auto p-6">
-    <ImageGallery v-if="images.length > 0" :images="images" />
+    <ImageGallery
+      v-if="images.length > 0"
+      :images="images"
+      :homeId="id"
+      :initialIsFavorite="isFavorite"
+    />
 
     <div v-if="listing" class="mt-6 space-y-10">
       <ListingBasicInfo :listing="listing" />
@@ -8,7 +13,7 @@
 
       <TravelMap
         :title="listing.residenceType + ' 매물 위치'"
-        :address="listing.addr1 + ' ' + listing.addr2"
+        :address="processedAddress"
         class="rounded-md shadow-md"
       />
 
@@ -44,6 +49,8 @@ const id = Number(route.params.no)
 
 const listing = ref(null)
 const images = ref([])
+const isFavorite = ref(false)
+const processedAddress = ref('')
 
 onMounted(async () => {
   try {
@@ -53,6 +60,14 @@ onMounted(async () => {
     if (data) {
       listing.value = data
       images.value = data.imageUrls || []
+
+      if (data.addr1) {
+        processedAddress.value = data.addr1
+      } else {
+        processedAddress.value = data.addr2 || '주소정보 없음'
+      }
+
+      console.log('최종 가공된 주소:', processedAddress.value)
     }
   } catch (err) {
     console.error('매물 조회 실패:', err)

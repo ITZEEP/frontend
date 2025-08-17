@@ -14,105 +14,159 @@
       <div class="flex flex-wrap gap-6">
         <BaseCheckBox
           v-for="item in items"
-          :key="item"
-          :label="item"
-          :modelValue="(form[category] ?? []).includes(item)"
-          @update:modelValue="(checked) => updateCheckbox(category, item, checked)"
+          :key="item.id"
+          :label="item.name"
+          :modelValue="localSelectedIds.includes(item.id)"
+          @update:modelValue="(checked) => updateCheckbox(item.id, checked)"
         />
       </div>
     </fieldset>
+
+    <div class="border border-gray-300 rounded-md p-4">
+      <h3 class="font-semibold mb-2">기타 상세 정보</h3>
+      <div class="flex flex-wrap gap-6">
+        <BaseCheckBox
+          label="반려동물 가능"
+          :modelValue="localIsPet"
+          @update:modelValue="(checked) => updateToggleOption('isPet', checked)"
+        />
+        <BaseCheckBox
+          label="주차 가능"
+          :modelValue="localIsParking"
+          @update:modelValue="(checked) => updateToggleOption('isParking', checked)"
+        />
+      </div>
+    </div>
   </form>
 </template>
 
 <script setup>
-import { reactive, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import BaseCheckBox from '@/components/common/BaseCheckbox.vue'
 
-// props 및 emit
 const props = defineProps({
   modelValue: {
     type: Object,
-    default: () => ({}),
+    default: () => ({
+      facilityItemIds: [],
+      isPet: false,
+      isParking: false,
+    }),
   },
 })
 
 const emit = defineEmits(['update:modelValue'])
 
-// 모든 카테고리 키
-const categories = [
-  'appliances',
-  'kitchen',
-  'heatingCooling',
-  'furniture',
-  'bathroom',
-  'security',
-  'etc',
-]
+const localSelectedIds = ref([...props.modelValue.facilityItemIds])
+const localIsPet = ref(props.modelValue.isPet)
+const localIsParking = ref(props.modelValue.isParking)
 
-// reactive form 초기화
-const form = reactive({})
-categories.forEach((key) => {
-  form[key] = [...(props.modelValue[key] ?? [])]
+watch(
+  () => props.modelValue.facilityItemIds,
+  (newVal) => {
+    localSelectedIds.value = [...newVal]
+  },
+)
+
+watch(
+  () => props.modelValue.isPet,
+  (newVal) => {
+    localIsPet.value = newVal
+  },
+)
+
+watch(
+  () => props.modelValue.isParking,
+  (newVal) => {
+    localIsParking.value = newVal
+  },
+)
+
+const allValidIds = computed(() => {
+  return Object.values(utilityItems)
+    .flat()
+    .map((item) => item.id)
 })
 
-// 카테고리 → 한글 라벨
-const categoryLabels = {
-  appliances: '가전',
-  kitchen: '주방',
-  heatingCooling: '냉난방',
-  furniture: '가구',
-  bathroom: '욕실',
-  security: '보안/안전',
-  etc: '기타',
-}
-
-// 카테고리별 항목
 const utilityItems = {
-  appliances: ['TV', '세탁기', '냉장고', '전자레인지'],
-  kitchen: ['인덕션', '가스레인지', '싱크대'],
-  heatingCooling: ['에어컨', '벽걸이 에어컨', '빌트인 에어컨', '개별난방', '전체 난방'],
-  furniture: ['책상', '옷장', '붙박이장', '신발장'],
-  bathroom: ['욕조'],
-  security: [
-    '현관 보안',
-    'CCTV',
-    '인터폰',
-    '도어락',
-    '카드키',
-    '방범창',
-    '경비',
-    '화재 경보기',
-    '소화기',
+  appliances: [
+    { id: 1, name: '에어컨' },
+    { id: 2, name: '세탁기' },
+    { id: 3, name: '냉장고' },
+    { id: 4, name: '전자레인지' },
+    { id: 16, name: 'TV' },
+    { id: 19, name: '인덕션' },
+    { id: 20, name: '가스렌지' },
+    { id: 22, name: '벽걸이 에어컨' },
+    { id: 23, name: '빌트인 에어컨' },
   ],
-  etc: ['엘리베이터', '주차', '반려동물 가능'],
+  furniture: [
+    { id: 5, name: '침대' },
+    { id: 6, name: '책상' },
+    { id: 7, name: '옷장' },
+    { id: 8, name: '소파' },
+    { id: 24, name: '욕조' },
+    { id: 25, name: '싱크대' },
+    { id: 28, name: '붙박이장' },
+    { id: 29, name: '신발장' },
+  ],
+  security: [
+    { id: 9, name: '도어락' },
+    { id: 10, name: 'CCTV' },
+    { id: 11, name: '인터폰' },
+    { id: 34, name: '카드키' },
+    { id: 35, name: '방범창' },
+    { id: 36, name: '경비' },
+    { id: 37, name: '화재경보기' },
+    { id: 38, name: '소화기' },
+    { id: 39, name: '현관보안' },
+  ],
+  convenience: [
+    { id: 12, name: '엘리베이터' },
+    { id: 14, name: '택배보관함' },
+    { id: 41, name: '전체난방' },
+  ],
 }
 
-// 체크박스 업데이트 핸들러
-function updateCheckbox(category, item, checked) {
-  const list = form[category]
-  const idx = list.indexOf(item)
-  if (checked && idx === -1) {
-    list.push(item)
-  } else if (!checked && idx !== -1) {
-    list.splice(idx, 1)
+const categoryLabels = {
+  appliances: '가전제품',
+  furniture: '가구',
+  security: '보안시설',
+  convenience: '편의시설',
+}
+
+function updateCheckbox(itemId, checked) {
+  const numericItemId = Number(itemId)
+  const currentIds = new Set(localSelectedIds.value)
+
+  if (!allValidIds.value.includes(numericItemId)) {
+    console.warn(`Attempted to update an invalid itemId: ${itemId}`)
+    return
   }
 
-  // 깊은 복사해서 emit
-  emit('update:modelValue', JSON.parse(JSON.stringify(form)))
+  if (checked) {
+    currentIds.add(numericItemId)
+  } else {
+    currentIds.delete(numericItemId)
+  }
+
+  localSelectedIds.value = Array.from(currentIds)
+  emit('update:modelValue', {
+    ...props.modelValue,
+    facilityItemIds: localSelectedIds.value,
+  })
 }
 
-// 외부에서 modelValue 변경 시 내부 반영
-watch(
-  () => props.modelValue,
-  (newVal) => {
-    categories.forEach((key) => {
-      form[key] = [...(newVal[key] ?? [])]
-    })
-  },
-  { deep: true },
-)
+function updateToggleOption(key, checked) {
+  if (key === 'isPet') {
+    localIsPet.value = checked
+  } else if (key === 'isParking') {
+    localIsParking.value = checked
+  }
+  emit('update:modelValue', {
+    ...props.modelValue,
+    isPet: localIsPet.value,
+    isParking: localIsParking.value,
+  })
+}
 </script>
-
-<style scoped>
-/* Tailwind 사용 중이므로 커스텀 스타일은 생략 */
-</style>
