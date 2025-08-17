@@ -11,7 +11,6 @@ export function useContractChat(contractChatId, currentUserId, contractData) {
 
   const isInitialized = ref(false)
 
-  // 🔧 추가: 온라인 상태 관리
   const canSendMessage = ref(false)
   const onlineStatus = ref({
     ownerInContractRoom: false,
@@ -166,29 +165,22 @@ export function useContractChat(contractChatId, currentUserId, contractData) {
     }
   }
 
-  // 🔧 구독 - 브로드캐스트만 사용
   const subscribeToContractRoom = (roomId) => {
-    const handleNewMessage = (message) => {
-      if (message?.type === 'PRESENCE') return
-      // ...기존 중복 검사/푸시 로직
-    }
     if (!roomId) return
 
-    // 🔧 브로드캐스트 토픽만 구독 (중복 수신 방지)
     websocketService.onMessage(`/topic/contract-chat/${roomId}`, (msg) => {
-      // presence이면 상태만 갱신하고 채팅 리스트에는 넣지 않음
       if (msg?.type === 'PRESENCE') {
         return handleOnlineStatusChange(msg)
       }
       handleNewMessage(msg)
     })
 
-    // 타이핑 구독
+    // 타이핑 토픽
     websocketService.onMessage(`/topic/contract-chat/${roomId}/typing`, (typingData) => {
       isTyping.value = typingData.isTyping
     })
 
-    // 사용자별 구독
+    // 에러/온라인 상태는 user 큐
     if (currentUserId.value) {
       websocketService.onMessage(
         `/user/${currentUserId.value}/queue/contract/error`,
@@ -200,7 +192,6 @@ export function useContractChat(contractChatId, currentUserId, contractData) {
       )
     }
   }
-
   // 구독 해제
   const unsubscribeFromContractRoom = (roomId) => {
     if (!roomId) return
@@ -363,10 +354,8 @@ export function useContractChat(contractChatId, currentUserId, contractData) {
     onlineUsers,
     isReady,
     isTyping,
-    sendContractMessage, // 🔧 수정된 함수
+    sendContractMessage,
     getOtherUserId,
-
-    // 🔧 새로 추가된 반환값들
     canSendMessage,
     onlineStatus,
     checkOnlineStatus,
