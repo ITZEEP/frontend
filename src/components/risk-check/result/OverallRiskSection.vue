@@ -57,23 +57,23 @@ const overallRiskDescription = computed(() => {
 </script>
 
 <template>
-  <div class="bg-white rounded-2xl shadow-sm border border-gray-300 p-6">
-    <h3 class="text-xl font-semibold text-gray-warm-700 mb-4">종합 위험도</h3>
+  <div class="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-300 p-4 sm:p-6">
+    <h3 class="text-lg sm:text-xl font-semibold text-gray-warm-700 mb-3 sm:mb-4">종합 위험도</h3>
 
     <div class="flex justify-center items-center">
-      <div :class="['w-[448px] h-[120px] rounded-xl p-6', getRiskBgColor(overallRisk)]">
-        <div class="flex flex-col items-center">
-          <div :class="['text-5xl font-bold mb-3', getRiskTextColor(overallRisk)]">
+      <div :class="['w-full max-w-[448px] h-[100px] sm:h-[120px] rounded-xl p-4 sm:p-6', getRiskBgColor(overallRisk)]">
+        <div class="flex flex-col items-center justify-center h-full">
+          <div :class="['text-3xl sm:text-4xl lg:text-5xl font-bold mb-2 sm:mb-3', getRiskTextColor(overallRisk)]">
             {{ overallRiskText }}
           </div>
-          <div class="text-lg font-medium text-gray-warm-700 text-center">
+          <div class="text-sm sm:text-base lg:text-lg font-medium text-gray-warm-700 text-center">
             {{ overallRiskMessage }}
           </div>
         </div>
       </div>
     </div>
 
-    <div class="text-center text-gray-warm-500 pt-4">
+    <div class="text-center text-sm sm:text-base text-gray-warm-500 pt-3 sm:pt-4">
       AI 분석 결과, 이 매물은 {{ overallRiskDescription }}
     </div>
   </div>

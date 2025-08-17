@@ -33,7 +33,7 @@
     <div class="w-full flex flex-col gap-1">
       <p class="text-sm font-medium text-gray-600">은행명을 입력하세요.</p>
       <div class="w-40 flex gap-4">
-        <BaseInput v-model="ownerBankName" type="text" class="w-32" placeholder="예) 농협" />
+        <BaseInput v-model="ownerBankName" type="text" class="w-32" placeholder="예) 국민" />
       </div>
     </div>
 

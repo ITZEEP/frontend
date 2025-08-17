@@ -60,7 +60,6 @@ import RoomInfoForm from '@/components/homes/homeupdate/RoomInfoForm.vue'
 import FacilityInfoForm from '@/components/homes/homeupdate/FacilityInfoForm.vue'
 import ImageUploader from '@/components/homes/homeupdate/ImageUploader.vue'
 
-//  API 함수 가져오기
 import { fetchListingById, updateListing } from '@/apis/listing.js'
 
 const route = useRoute()
@@ -72,12 +71,11 @@ const originalListing = ref({})
 const isLoading = ref(false)
 const error = ref(null)
 
-//  데이터 조회 (mounted)
 onMounted(async () => {
   try {
     isLoading.value = true
     listing.value = await fetchListingById(listingId)
-    originalListing.value = JSON.parse(JSON.stringify(listing.value)) // 딥카피
+    originalListing.value = JSON.parse(JSON.stringify(listing.value))
   } catch (err) {
     error.value = '데이터를 불러오는 데 실패했습니다.'
     console.error('조회 실패:', err)
@@ -86,7 +84,6 @@ onMounted(async () => {
   }
 })
 
-//  저장 버튼 클릭 시 호출
 const updateListingData = async () => {
   try {
     isLoading.value = true
@@ -101,7 +98,6 @@ const updateListingData = async () => {
   }
 }
 
-// ✅ 취소 버튼
 const cancelUpdate = () => {
   const hasChanges = JSON.stringify(listing.value) !== JSON.stringify(originalListing.value)
   if (hasChanges) {

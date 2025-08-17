@@ -1,0 +1,141 @@
+import { postAiMessage, putRecentData } from '@/apis/contractChatApi'
+import { defineStore } from 'pinia'
+import { computed, ref, watch } from 'vue'
+
+export const useSpecialContractStore = defineStore('specialContract', () => {
+  const currentOrder = ref(null)
+  const orderStatusMap = ref({})
+  const contractOrders = ref([])
+  const aiMessageReceived = ref(false)
+  const currentRound = ref(0)
+  const allCompleted = ref(false)
+  const finalContractVersion = ref(0)
+  const bumpFinalContractVersion = () => {
+    finalContractVersion.value++
+  }
+
+  if (typeof window !== 'undefined') {
+    const savedOrder = localStorage.getItem('currentOrder')
+    if (savedOrder !== null) {
+      currentOrder.value = parseInt(savedOrder)
+    }
+
+    const savedAll = localStorage.getItem('specialContract_allCompleted')
+    if (savedAll === 'true') allCompleted.value = true
+  }
+
+  watch(currentOrder, (val) => {
+    if (val !== null) {
+      localStorage.setItem('currentOrder', String(val))
+    }
+  })
+
+  watch(allCompleted, (v) => {
+    localStorage.setItem('specialContract_allCompleted', v ? 'true' : 'false')
+  })
+
+  const setOrder = (order) => {
+    console.log('[store.setOrder] 설정된 order:', order)
+    currentOrder.value = order
+  }
+
+  const setOrders = (orders) => {
+    contractOrders.value = orders
+  }
+  const markOrderSuccess = (order) => {
+    orderStatusMap.value[order] = 'SUCCESS'
+  }
+
+  const moveToNextOrder = async (chatId) => {
+    console.log('[store.moveToNextOrder] 현재 currentOrder:', currentOrder.value)
+    console.log('[store.moveToNextOrder] 전체 orders:', contractOrders.value)
+
+    const index = contractOrders.value.findIndex((c) => c.order === currentOrder.value)
+    console.log('[store.moveToNextOrder] index:', index)
+
+    const next = contractOrders.value[index + 1]
+
+    if (next) {
+      const nextOrder = next.order
+
+      await postAiMessage(chatId, nextOrder)
+
+      await putRecentData(chatId, nextOrder)
+
+      // const res = await getContractInfo(chatId)
+      // if (res.success && res.data?.role === '임차인') {
+      //   await setStartPoint(chatId)
+      // }
+
+      setOrder(nextOrder)
+    } else {
+      clearOrder()
+    }
+  }
+
+  const clearOrder = () => {
+    currentOrder.value = null
+    localStorage.removeItem('currentOrder')
+    contractOrders.value = []
+    orderStatusMap.value = {}
+  }
+
+  const isOrderSuccessful = (order) => {
+    return orderStatusMap.value[order] === 'SUCCESS'
+  }
+
+  const resetOrderStatus = () => {
+    orderStatusMap.value = {}
+  }
+
+  const isAllReviewCompleted = computed(() => {
+    return contractOrders.value.every((c) => orderStatusMap.value[c.order] === 'SUCCESS')
+  })
+
+  const markAiMessageReceived = () => {
+    aiMessageReceived.value = true
+  }
+
+  const clearAiMessageFlag = () => {
+    aiMessageReceived.value = false
+  }
+
+  const setRound = (round) => {
+    currentRound.value = round
+  }
+
+  const markAllCompleted = () => {
+    allCompleted.value = true
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('specialContract_allCompleted', 'true')
+    }
+  }
+  const clearAllCompleted = () => {
+    allCompleted.value = false
+  }
+
+  return {
+    currentOrder,
+    contractOrders,
+    orderStatusMap,
+    aiMessageReceived,
+    setOrder,
+    setOrders,
+    clearOrder,
+    markOrderSuccess,
+    isOrderSuccessful,
+    resetOrderStatus,
+    moveToNextOrder,
+    markAiMessageReceived,
+    clearAiMessageFlag,
+    isAllReviewCompleted,
+    currentRound,
+    setRound,
+    allCompleted,
+    markAllCompleted,
+    clearAllCompleted,
+    finalContractVersion,
+    bumpFinalContractVersion,
+  }
+})

@@ -1,27 +1,22 @@
 <template>
   <div class="max-w-4xl mx-auto p-6 space-y-6">
     <StepProgressIndicator :currentStep="currentStep" />
-
-    <section class="bg-white rounded-xl shadow-md p-6 space-y-4">
-      <component :is="currentStepComponent" v-model:form="form" />
-    </section>
-
-    <div :class="currentStep === 1 ? 'flex justify-end' : 'flex justify-between'">
-      <BaseButton v-if="currentStep > 1" variant="outline" @click="goToPreviousStep">
-        이전
-      </BaseButton>
-
-      <BaseButton variant="primary" @click="goToNextStep">
-        {{ currentStep < stepComponents.length ? '다음' : '제출' }}
-      </BaseButton>
+    <component :is="stepComponent" :form="form" @update:form="updateForm" />
+    <div class="flex justify-between mt-10">
+      <BaseButton v-if="currentStep > 1" @click="goToStep(currentStep - 1)">이전</BaseButton>
+      <div class="ml-auto">
+        <BaseButton v-if="currentStep < stepComponents.length" @click="goToStep(currentStep + 1)">
+          다음
+        </BaseButton>
+        <BaseButton v-else @click="handleSubmit" class="ml-2">저장</BaseButton>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, reactive, ref, toRaw, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import axios from 'axios'
 
 import StepProgressIndicator from '@/components/homes/homecreate/StepProgressIndicator.vue'
 import Step1BasicInfo from '@/components/homes/homecreate/Step1BasicInfo.vue'
@@ -30,7 +25,10 @@ import Step3DetailInfo from '@/components/homes/homecreate/Step3DetailInfo.vue'
 import Step4ImageUpload from '@/components/homes/homecreate/Step4ImageUpload.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 
+import { createListing } from '@/apis/listing.js'
+
 const stepComponents = [Step1BasicInfo, Step2PriceInfo, Step3DetailInfo, Step4ImageUpload]
+
 const route = useRoute()
 const router = useRouter()
 const currentStep = ref(1)
@@ -46,109 +44,112 @@ watch(
   { immediate: true },
 )
 
-const form = ref({
-  // Step 1
+const form = reactive({
   residenceType: '',
   leaseType: '',
   addr1: '',
   addr2: '',
-
-  // Step 2
-  deposit: '',
-  monthly: '',
+  depositPrice: '',
+  monthlyRent: '',
   maintenanceFee: '',
-
-  // Step 3
-  exclusiveArea: '',
-  roomCount: '',
-  bathroomCount: '',
-  floor: '',
-  totalFloors: '',
-  approvalDate: '',
-  direction: '',
-  options: [],
-  utilities: {
-    electricity: false,
-    gas: false,
-    water: false,
-    internet: false,
-    cableTV: false,
-    heating: false,
-  },
+  supplyArea: 0,
+  exclusiveArea: 0,
+  roomCnt: 0,
+  bathroomCnt: 0,
+  homeFloor: 0,
+  buildingTotalFloors: 0,
+  buildDate: '',
+  homeDirection: '',
+  facilityItemIds: [],
+  maintenanceFees: [],
   description: '',
-
-  // Step 4
-  images: [], // File[]
+  images: [],
+  isPet: false,
+  isParking: false,
+  area: 0,
+  landCategory: '',
 })
 
-const currentStepComponent = computed(() => stepComponents[currentStep.value - 1])
+const stepComponent = computed(() => stepComponents[currentStep.value - 1])
 
-function goToNextStep() {
-  if (!validateCurrentStep()) {
-    alert('필수 항목을 입력해주세요.')
-    return
-  }
-
-  if (currentStep.value < stepComponents.length) {
-    router.push({ query: { step: currentStep.value + 1 } })
-  } else {
-    submitForm()
-  }
+const updateForm = (updatedFields) => {
+  Object.assign(form, updatedFields)
 }
 
-function goToPreviousStep() {
-  if (currentStep.value > 1) {
-    router.push({ query: { step: currentStep.value - 1 } })
-  }
+const goToStep = (step) => {
+  router.push({ query: { step: step.toString() } })
 }
 
-function validateCurrentStep() {
-  const f = form.value
-  switch (currentStep.value) {
-    case 1:
-      return f.residenceType !== '' && f.leaseType !== ''
-    case 2:
-      return Number(f.deposit) > 0 || Number(f.monthly) > 0
-    default:
-      return true
-  }
-}
-
-async function submitForm() {
-  const f = form.value
-
-  const selectedUtilities = Object.entries(f.utilities)
-    .filter(([, value]) => value)
-    .map(([key]) => key)
-
-  const payload = new FormData()
-  payload.append('houseType', f.residenceType)
-  payload.append('dealType', f.leaseType)
-  payload.append('address', `${f.addr1} ${f.addr2}`)
-  payload.append('deposit', f.deposit)
-  payload.append('monthly', f.monthly)
-  payload.append('maintenanceFee', f.maintenanceFee)
-  payload.append('exclusiveArea', f.exclusiveArea)
-  payload.append('roomCount', f.roomCount)
-  payload.append('bathroomCount', f.bathroomCount)
-  payload.append('floor', f.floor)
-  payload.append('totalFloors', f.totalFloors)
-  payload.append('approvalDate', f.approvalDate)
-  payload.append('direction', f.direction)
-  f.options.forEach((option) => payload.append('options', option))
-  selectedUtilities.forEach((util) => payload.append('utilities', util))
-  payload.append('description', f.description)
-  f.images.forEach((file) => payload.append('images', file))
-
+const handleSubmit = async () => {
   try {
-    await axios.post('/api/homes', payload, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
-    alert('등록이 완료되었습니다.')
-    router.push('/homes')
-  } catch (error) {
-    console.error('등록 실패:', error)
-    alert('등록 중 오류가 발생했습니다.')
+    const safeNumber = (val) => {
+      const num = Number(val)
+      return isNaN(num) ? 0 : num
+    }
+
+    const rawForm = toRaw(form)
+
+    // ⭐ 필수 필드에 대한 유효성 검사 로직
+    if (!rawForm.residenceType) {
+      alert('매물 종류를 선택해주세요.')
+      goToStep(1)
+      return
+    }
+    if (!rawForm.leaseType) {
+      alert('거래 유형을 선택해주세요.')
+      goToStep(1)
+      return
+    }
+    if (!rawForm.addr1) {
+      alert('주소를 입력해주세요.')
+      goToStep(1)
+      return
+    }
+    if (safeNumber(rawForm.exclusiveArea) <= 0) {
+      alert('전용 면적을 0보다 크게 입력해주세요.')
+      goToStep(3)
+      return
+    }
+    // 다른 필수 필드들에 대한 유효성 검사를 여기에 추가할 수 있습니다.
+
+    const payload = {
+      addr1: rawForm.addr1,
+      addr2: rawForm.addr2,
+      residenceType: rawForm.residenceType,
+      leaseType: rawForm.leaseType,
+      depositPrice: safeNumber(rawForm.depositPrice),
+      monthlyRent: safeNumber(rawForm.monthlyRent),
+      maintenanceFee: safeNumber(rawForm.maintenanceFee),
+      supplyArea: safeNumber(rawForm.supplyArea),
+      exclusiveArea: safeNumber(rawForm.exclusiveArea),
+      roomCnt: safeNumber(rawForm.roomCnt),
+      bathroomCnt: safeNumber(rawForm.bathroomCnt),
+      homeFloor: safeNumber(rawForm.homeFloor),
+      buildingTotalFloors: safeNumber(rawForm.buildingTotalFloors),
+      buildDate: rawForm.buildDate,
+      homeDirection: rawForm.homeDirection,
+      isPet: rawForm.isPet,
+      isParking: rawForm.isParking,
+      area: safeNumber(rawForm.area),
+      landCategory: rawForm.landCategory,
+      facilityItemIds: rawForm.facilityItemIds,
+      maintenanceFees: rawForm.maintenanceFees,
+    }
+
+    console.log('📦 최종 제출 데이터 (payload):', payload)
+    console.log('🖼️ 업로드할 이미지 파일:', rawForm.images)
+
+    // createListing 함수에 DTO 객체와 이미지 배열을 분리해서 전달
+    const response = await createListing(payload, rawForm.images)
+
+    const homeId = response
+    console.log('✅ API 응답으로 받은 homeId:', homeId)
+
+    alert('매물 등록 완료')
+    router.push(`/homes/create/${homeId}/verification`)
+  } catch (e) {
+    console.error('❌ 등록 실패:', e)
+    alert('매물 등록 실패')
   }
 }
 </script>

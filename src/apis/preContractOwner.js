@@ -1,5 +1,7 @@
 import api from './index'
 
+const REQUEST_TIMEOUT = 100000
+
 export const OwnerPreContractAPI = {
   // 임대인 DB 기본 세팅 (기본 정보 + 전/월세 정보 insert)
   saveOwnerInfo: async (contractChatId) => {
@@ -111,8 +113,29 @@ export const OwnerPreContractAPI = {
       )
       return response.data
     } catch (error) {
-      console.log('계약서 특약 정보 저장 실패', error)
+      console.log('계약서 특약 정보 저장 실패: ', error)
       throw error
+    }
+  },
+
+  postAnalyzeContract: async (contractChatId, contractFile) => {
+    try {
+      const formData = new FormData()
+      formData.append('file', contractFile, contractFile.name)
+
+      const response = await api.post(
+        `/api/pre-contract/${contractChatId}/owner/analyze-contract`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+          timeout: REQUEST_TIMEOUT,
+        },
+      )
+      return response.data
+    } catch (error) {
+      console.log('계약서 특약 OCR 분석 실패: ', error)
     }
   },
 
@@ -128,9 +151,9 @@ export const OwnerPreContractAPI = {
   },
 
   // 최종 정보 MongoDB 저장
-  saveMongoDB: async (contractChatId, data) => {
+  saveMongoDB: async (contractChatId) => {
     try {
-      const response = await api.post(`/api/pre-contract/${contractChatId}/owner/save-mongo`, data)
+      const response = await api.post(`/api/pre-contract/${contractChatId}/owner/save-mongo`)
       return response.data
     } catch (error) {
       console.log('최종 정보 MongoDB 저장 실패', error)

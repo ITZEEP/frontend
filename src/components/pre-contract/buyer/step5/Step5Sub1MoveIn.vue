@@ -56,7 +56,6 @@
       />
     </div>
   </div>
-  <BaseButton @click="updateTenantStep2"> 테스트 버튼 </BaseButton>
 </template>
 
 <script setup>
@@ -65,7 +64,6 @@ import ToggleRadio from '@/components/common/ToggleRadio.vue'
 import { usePreContractStore } from '@/stores/preContract'
 import buyerApi from '@/apis/pre-contract-buyer.js'
 import { useRoute } from 'vue-router'
-import BaseButton from '@/components/common/BaseButton.vue'
 import BaseInput from '@/components/common/BaseInput.vue'
 
 const store = usePreContractStore()
@@ -111,7 +109,7 @@ watch(
   ],
   ([repair, clean, installation, parking, count]) => {
     const basicFilled = repair !== null && clean !== null && installation !== null
-    const parkingFilled = parking === true ? count !== null && Number(count) >= 0 : true
+    const parkingFilled = parking === true ? count !== null && Number(count) >= 1 : true
     const allFilled = basicFilled && parkingFilled
     store.setCanProceed(allFilled)
   },
@@ -128,7 +126,7 @@ const updateTenantStep2 = async () => {
 
   try {
     await buyerApi.updateTenantStep2(contractChatId, step2DTO)
-    alert('Step2 애완동물 불가 정보가 저장되었습니다! ✅')
+    console.log('Step2 애완동물 불가 정보가 저장되었습니다! ✅')
   } catch (error) {
     console.error('step2 애완동물 불가 저장 실패 ❌', error)
   }

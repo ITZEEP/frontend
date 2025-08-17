@@ -2,14 +2,20 @@
   <div class="w-full">
     <div class="relative w-full">
       <img
+        v-if="images.length > 0"
         :src="images[currentIndex]"
         alt="매물 이미지"
         class="w-full h-80 object-cover rounded-md"
         @error="handleImageError"
         loading="lazy"
       />
+      <div
+        v-else
+        class="w-full h-80 bg-gray-200 flex items-center justify-center text-gray-500 rounded-md"
+      >
+        이미지 없음
+      </div>
 
-      <!-- 이전 버튼 -->
       <button
         @click="prevImage"
         @keydown.left.prevent="prevImage"
@@ -18,8 +24,6 @@
       >
         ◀
       </button>
-
-      <!-- 다음 버튼 -->
       <button
         @click="nextImage"
         @keydown.right.prevent="nextImage"
@@ -30,14 +34,7 @@
       </button>
     </div>
 
-    <!-- 신고/찜하기 버튼 -->
     <div class="flex justify-end gap-2 mt-2">
-      <button
-        @click="openReportModal"
-        class="bg-white text-red-500 border border-red-300 text-sm px-3 py-1 rounded h-8"
-      >
-        🚨 신고
-      </button>
       <button
         @click="toggleFavorite"
         :class="[
@@ -50,70 +47,13 @@
         {{ isFavorite ? '★ 찜함' : '☆ 찜하기' }}
       </button>
     </div>
-
-    <!-- 신고 사유 선택 모달 -->
-    <div
-      v-if="showReportModal"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-      @click.self="closeReportModal"
-    >
-      <div class="bg-white rounded-lg p-6 w-80">
-        <h3 class="text-lg font-semibold mb-4">신고 사유를 선택해주세요</h3>
-        <div class="space-y-2 mb-4">
-          <label
-            class="flex items-center space-x-2"
-            v-for="reason in reportReasons"
-            :key="reason.value"
-          >
-            <input
-              type="radio"
-              name="reportReason"
-              :value="reason.value"
-              v-model="selectedReason"
-              class="form-radio"
-            />
-            <span>{{ reason.label }}</span>
-          </label>
-        </div>
-        <div class="flex justify-end space-x-2">
-          <button
-            @click="closeReportModal"
-            class="px-4 py-1 rounded border border-gray-300 hover:bg-gray-100"
-          >
-            취소
-          </button>
-          <button
-            @click="submitReport"
-            :disabled="!selectedReason"
-            class="px-4 py-1 rounded bg-red-500 text-white disabled:opacity-50"
-          >
-            신고하기
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 신고 완료 알림 모달 -->
-    <div
-      v-if="showReportCompleteModal"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-      @click.self="closeReportCompleteModal"
-    >
-      <div class="bg-white rounded-lg p-6 w-72 text-center">
-        <p class="text-lg mb-4">신고가 접수되었습니다.</p>
-        <button
-          @click="closeReportCompleteModal"
-          class="px-6 py-2 bg-yellow-primary rounded text-white font-semibold"
-        >
-          확인
-        </button>
-      </div>
-    </div>
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
+import { toggleHomeLike } from '@/apis/listing.js'
+// import { submitReport as apiSubmitReport } from '@/apis/listing.js' // 신고 API import도 주석 처리
 
 const props = defineProps({
   images: {
@@ -121,64 +61,77 @@ const props = defineProps({
     required: true,
     validator: (arr) => arr.length > 0 && arr.every((img) => typeof img === 'string'),
   },
+  homeId: {
+    type: Number,
+    required: true,
+  },
+  initialIsFavorite: {
+    type: Boolean,
+    default: false,
+  },
 })
 
-const emit = defineEmits(['report-submitted'])
+// const emit = defineEmits(['report-submitted']) // 사용되지 않으므로 주석 처리
 
 const currentIndex = ref(0)
-const isFavorite = ref(false)
+const isFavorite = ref(props.initialIsFavorite)
 
-const showReportModal = ref(false)
-const showReportCompleteModal = ref(false)
-const selectedReason = ref(null)
-
-const reportReasons = [
-  { value: 'spam', label: '스팸/광고' },
-  { value: 'inappropriate', label: '부적절한 내용' },
-  { value: 'fraud', label: '사기/허위 매물' },
-  { value: 'other', label: '기타' },
-]
+// 신고 관련 상태 변수 주석 처리
+// const showReportModal = ref(false)
+// const showReportCompleteModal = ref(false)
+// const reportContent = ref('')
 
 const nextImage = () => {
-  if (!props.images || props.images.length === 0) return
+  if (!props.images || props.images.length <= 1) return
   currentIndex.value = (currentIndex.value + 1) % props.images.length
 }
 
 const prevImage = () => {
-  if (!props.images || props.images.length === 0) return
+  if (!props.images || props.images.length <= 1) return
   currentIndex.value = (currentIndex.value - 1 + props.images.length) % props.images.length
 }
 
 const handleImageError = (event) => {
-  event.target.src = '/fallback-image.png' // 대체 이미지 경로
+  event.target.src = '/fallback-image.png'
 }
 
-const openReportModal = () => {
-  selectedReason.value = null
-  showReportModal.value = true
-}
+// 신고 관련 함수들 주석 처리
+// const openReportModal = () => {
+//   reportContent.value = ''
+//   showReportModal.value = true
+// }
 
-const closeReportModal = () => {
-  showReportModal.value = false
-}
+// const closeReportModal = () => {
+//   showReportModal.value = false
+// }
 
-const submitReport = () => {
-  if (!selectedReason.value) return
-  // 여기에 서버 신고 API 호출 로직 추가 가능
-  showReportModal.value = false
-  showReportCompleteModal.value = true
-  emit('report-submitted', selectedReason.value)
-}
+// const const submitReport = async () => {
+//   if (!reportContent.value.trim()) return
+//   try {
+//     await apiSubmitReport(props.homeId, reportContent.value)
+//     showReportModal.value = false
+//     showReportCompleteModal.value = true
+//     emit('report-submitted', reportContent.value)
+//   } catch (error) {
+//     console.error('신고 접수 실패:', error)
+//   }
+// }
 
-const closeReportCompleteModal = () => {
-  showReportCompleteModal.value = false
-}
+// const closeReportCompleteModal = () => {
+//   showReportCompleteModal.value = false
+// }
 
-const toggleFavorite = () => {
-  isFavorite.value = !isFavorite.value
+const toggleFavorite = async () => {
+  try {
+    await toggleHomeLike(props.homeId)
+    isFavorite.value = !isFavorite.value
+    console.log(`매물 ID ${props.homeId} 찜하기 상태 변경: ${isFavorite.value}`)
+  } catch (error) {
+    console.error('찜하기 상태 변경 실패:', error)
+  }
 }
 </script>
 
 <style scoped>
-/* 모달 배경 클릭 시 모달 닫기 위한 스타일 및 기타 필요한 스타일을 조정 가능 */
+/* 필요에 따라 스타일 조정 가능 */
 </style>

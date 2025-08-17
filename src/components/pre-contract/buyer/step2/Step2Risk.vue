@@ -1,15 +1,14 @@
 <template>
   <div class="flex flex-col items-center justify-center gap-8">
-    <Step2RiskResult v-if="isRisk" />
-    <Step2RiskCheck v-else />
+    <Step2RiskResult v-if="isRisk == true" />
+    <Step2RiskCheck v-if="isRisk == false" />
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import buyerApi from '@/apis/pre-contract-buyer.js'
 import { useRoute } from 'vue-router'
-import { usePreContractStore } from '@/stores/preContract'
 
 const route = useRoute()
 const contractChatId = route.params.id
@@ -28,6 +27,7 @@ onMounted(async () => {
     // 2. 불린값인지 확인
     if (typeof data === 'boolean') {
       isRisk.value = data
+      console.log('데이터:', data)
     }
   } catch (error) {
     console.error('risk_check 가져오기 실패 ❌', error)

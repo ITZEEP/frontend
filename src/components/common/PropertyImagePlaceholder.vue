@@ -64,7 +64,7 @@ const iconSize = computed(() => {
     </svg>
     
     <!-- 텍스트 -->
-    <span class="text-xs font-medium mt-2 text-center px-2 leading-tight">
+    <span class="text-sm font-medium mt-2 text-center px-2 leading-tight">
       {{ type }}<br />이미지
     </span>
   </div>

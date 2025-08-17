@@ -24,11 +24,12 @@
 <script setup>
 const houseTypes = [
   { label: '오픈형 원룸', value: 'OPEN_ONE_ROOM' },
-  { label: '분리형 원룸', value: 'SEPARATE_ONE_ROOM' },
+  { label: '분리형 원룸', value: 'SEPARATED_ONE_ROOM' },
   { label: '투룸', value: 'TWO_ROOM' },
   { label: '오피스텔', value: 'OFFICETEL' },
   { label: '아파트', value: 'APARTMENT' },
-  { label: '단독/다가구주택', value: 'DETACHED_HOUSE' },
+  { label: '단독주택', value: 'HOUSE' },
+  { label: '빌라', value: 'VILLA' },
 ]
 
 defineProps({

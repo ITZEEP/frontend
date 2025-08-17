@@ -232,6 +232,7 @@ const buildExternalAnalysisData = () => ({
   leaseType: propertyInfo.leaseType,
   propertyPrice: propertyInfo.propertyPrice || 0,
   monthlyRent: propertyInfo.monthlyRent || 0,
+  residenceType: propertyInfo.residenceType || '',
   registeredUserName: propertyInfo.registeredUserName || ocrData.등기부등본.소유자이름,
   registryDocument: {
     regionAddress: ocrData.등기부등본.지역관련주소,

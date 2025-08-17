@@ -108,13 +108,14 @@ const formatPrice = (item) => {
     // 월세인 경우
     const depositInManwon = Math.floor(item.depositPrice / 10000)
     const monthlyInManwon = Math.floor(item.monthlyRent / 10000)
-    
+
     if (depositInManwon >= 10000) {
       const depositBillion = Math.floor(depositInManwon / 10000)
       const depositRemain = depositInManwon % 10000
-      priceDisplay = depositRemain === 0
-        ? `월세 ${depositBillion}억/${monthlyInManwon}만원`
-        : `월세 ${depositBillion}억 ${depositRemain.toLocaleString()}만원/${monthlyInManwon}만원`
+      priceDisplay =
+        depositRemain === 0
+          ? `월세 ${depositBillion}억/${monthlyInManwon}만원`
+          : `월세 ${depositBillion}억 ${depositRemain.toLocaleString()}만원/${monthlyInManwon}만원`
     } else {
       priceDisplay = `월세 ${depositInManwon.toLocaleString()}/${monthlyInManwon}만원`
     }
@@ -124,9 +125,10 @@ const formatPrice = (item) => {
     if (priceInManwon >= 10000) {
       const billion = Math.floor(priceInManwon / 10000)
       const remainder = priceInManwon % 10000
-      priceDisplay = remainder > 0 ? `${billion}억 ${remainder.toLocaleString()}만원` : `${billion}억원`
+      priceDisplay =
+        remainder > 0 ? `전세 ${billion}억 ${remainder.toLocaleString()}만원` : `${billion}억원`
     } else {
-      priceDisplay = `${priceInManwon.toLocaleString()}만원`
+      priceDisplay = `전세 ${priceInManwon.toLocaleString()}만원`
     }
   }
   return priceDisplay
@@ -139,21 +141,23 @@ const fetchLikedHomes = async () => {
     const response = await fraudApi.getLikedHomes()
     if (response.success) {
       // 성공적으로 데이터를 받았을 때만 배열 설정
-      properties.value.favorite = response.data ? response.data.map(item => ({
-        id: item.homeId,
-        name: item.residenceType,
-        address: item.address,
-        detailAddress: item.detailAddress,
-        price: formatPrice(item),
-        image: item.imageUrl,
-        leaseType: item.leaseType,
-        depositPrice: item.depositPrice,
-        monthlyRent: item.monthlyRent
-      })) : []
+      properties.value.favorite = response.data
+        ? response.data.map((item) => ({
+            id: item.homeId,
+            name: item.residenceType,
+            address: item.address,
+            detailAddress: item.detailAddress,
+            price: formatPrice(item),
+            image: item.imageUrl,
+            leaseType: item.leaseType,
+            depositPrice: item.depositPrice,
+            monthlyRent: item.monthlyRent,
+          }))
+        : []
     }
   } catch (error) {
     console.error('찜한 매물 조회 실패:', error)
-    
+
     // 401 에러인 경우 로그인 필요 상태로 설정
     if (error.response?.status === 401) {
       needsAuth.value.favorite = true
@@ -175,7 +179,7 @@ const fetchLikedHomes = async () => {
         errorMessage.value.favorite = error.message || '찜한 매물을 불러오는데 실패했습니다.'
       }
     }
-    
+
     // 에러 시 빈 배열로 설정
     properties.value.favorite = []
   }
@@ -188,7 +192,7 @@ const fetchChattingHomes = async () => {
     const response = await fraudApi.getChattingHomes(1, 50) // 처음 50개 조회
     // PageResponse의 content가 있을 때만 배열 설정
     if (response && response.content !== undefined) {
-      properties.value.chat = response.content.map(item => ({
+      properties.value.chat = response.content.map((item) => ({
         id: item.homeId,
         name: item.residenceType,
         address: item.address,
@@ -197,7 +201,7 @@ const fetchChattingHomes = async () => {
         image: item.imageUrl,
         leaseType: item.leaseType,
         depositPrice: item.depositPrice,
-        monthlyRent: item.monthlyRent
+        monthlyRent: item.monthlyRent,
       }))
     } else {
       // 응답은 있지만 content가 없는 경우
@@ -205,7 +209,7 @@ const fetchChattingHomes = async () => {
     }
   } catch (error) {
     console.error('채팅 중인 매물 조회 실패:', error)
-    
+
     // 401 에러인 경우 로그인 필요 상태로 설정
     if (error.response?.status === 401) {
       needsAuth.value.chat = true
@@ -227,7 +231,7 @@ const fetchChattingHomes = async () => {
         errorMessage.value.chat = error.message || '채팅 중인 매물을 불러오는데 실패했습니다.'
       }
     }
-    
+
     // 에러 시 빈 배열로 설정
     properties.value.chat = []
   }
@@ -236,10 +240,10 @@ const fetchChattingHomes = async () => {
 onMounted(async () => {
   selectedPropertyId.value = null
   emit('select-property', null)
-  
+
   // 찜한 매물 목록 조회
   await fetchLikedHomes()
-  
+
   setTimeout(() => {
     isLoading.value = false
     nextTick(() => {
@@ -373,15 +377,27 @@ const closeLoginModal = () => {
           </div>
           <!-- 백엔드 연결 실패 시 에러 메시지 -->
           <div v-else-if="hasError[selectedTab]" :key="`error-${selectedTab}`" class="px-1 pt-3">
-            <ErrorState 
+            <ErrorState
               @retry="selectedTab === 'favorite' ? fetchLikedHomes() : fetchChattingHomes()"
             />
           </div>
           <!-- 매물이 없는 경우 안내 메시지 -->
-          <div v-else-if="sortedProperties.length === 0" :key="`empty-${selectedTab}`" class="px-1 pt-3">
+          <div
+            v-else-if="sortedProperties.length === 0"
+            :key="`empty-${selectedTab}`"
+            class="px-1 pt-3"
+          >
             <EmptyState
-              :title="selectedTab === 'favorite' ? '아직 찜한 매물이 없습니다.' : '채팅 중인 매물이 없습니다.'"
-              :message="selectedTab === 'favorite' ? '마음에 드는 매물을 찜해보세요!' : '관심있는 매물의 판매자와 채팅을 시작해보세요!'"
+              :title="
+                selectedTab === 'favorite'
+                  ? '아직 찜한 매물이 없습니다.'
+                  : '채팅 중인 매물이 없습니다.'
+              "
+              :message="
+                selectedTab === 'favorite'
+                  ? '마음에 드는 매물을 찜해보세요!'
+                  : '관심있는 매물의 판매자와 채팅을 시작해보세요!'
+              "
             />
           </div>
           <!-- 매물 목록 -->
@@ -418,7 +434,7 @@ const closeLoginModal = () => {
                     detailAddress: property.detailAddress,
                     type: property.name,
                     imageUrl: property.image,
-                    price: property.price
+                    price: property.price,
                   }"
                   :selected="selectedPropertyId === property.id"
                   @click="selectProperty(property)"

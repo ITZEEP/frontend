@@ -48,6 +48,9 @@
           <div class="text-black font-bold text-base">
             {{ translateValue(dangerAnalysis?.riskType, enums.riskType) }}
           </div>
+          <div class="text-black font-bold text-base">
+            {{ translateValue(dangerAnalysis?.riskType, enums.riskType) }}
+          </div>
           <div class="text-black text-sm">{{ dangerAnalysis?.riskCheckedAt }} 분석</div>
         </div>
       </div>
@@ -65,8 +68,16 @@
           <span class="font-medium">{{
             translateValue(contractInfo?.contractDuration, enums.contractDuration)
           }}</span>
+          계약 기간:
+          <span class="font-medium">{{
+            translateValue(contractInfo?.contractDuration, enums.contractDuration)
+          }}</span>
         </div>
         <div>
+          재계약 갱신 의사:
+          <span class="font-medium">{{
+            translateValue(contractInfo?.renewalIntent, enums.renewalIntent)
+          }}</span>
           재계약 갱신 의사:
           <span class="font-medium">{{
             translateValue(contractInfo?.renewalIntent, enums.renewalIntent)
@@ -82,8 +93,13 @@
         <div>
           {{ jeonseInfo?.rentType }} 대출 계획:
           <span class="font-medium">{{ translateValue(jeonseInfo?.loanPlan, enums.plan) }}</span>
+          <span class="font-medium">{{ translateValue(jeonseInfo?.loanPlan, enums.plan) }}</span>
         </div>
         <div class="pl-8">
+          보증 보험 가입:
+          <span class="font-medium">{{
+            translateValue(jeonseInfo?.insurancePlan, enums.plan)
+          }}</span>
           보증 보험 가입:
           <span class="font-medium">{{
             translateValue(jeonseInfo?.insurancePlan, enums.plan)
@@ -101,8 +117,16 @@
           <span class="font-medium">{{
             translateValue(lifeInfo?.facilityRepairNeeded, enums.needed)
           }}</span>
+          주요 설비 보수:
+          <span class="font-medium">{{
+            translateValue(lifeInfo?.facilityRepairNeeded, enums.needed)
+          }}</span>
         </div>
         <div>
+          입주 전 청소:
+          <span class="font-medium">{{
+            translateValue(lifeInfo?.interiorCleaningNeeded, enums.needed)
+          }}</span>
           입주 전 청소:
           <span class="font-medium">{{
             translateValue(lifeInfo?.interiorCleaningNeeded, enums.needed)
@@ -110,6 +134,9 @@
         </div>
         <div>
           벽걸이/TV/에어컨 설치:
+          <span class="font-medium">{{
+            translateValue(lifeInfo?.applianceInstallationPlan, enums.plan)
+          }}</span>
           <span class="font-medium">{{
             translateValue(lifeInfo?.applianceInstallationPlan, enums.plan)
           }}</span>
@@ -143,49 +170,108 @@
           <span class="font-medium">
             {{ lifeInfo?.petInfo || '-' }}
           </span>
-        </div>
-        <div>
-          반려동물 수:
-          <span class="font-medium">
-            {{ lifeInfo?.petCount !== null ? lifeInfo?.petCount : '-' }}
-          </span>
-        </div>
 
-        <div>
-          실내 흡연 계획:
-          <span class="font-medium">{{
-            translateValue(lifeInfo?.indoorSmokingPlan, enums.plan)
-          }}</span>
-        </div>
-        <div>
-          중도 퇴거 가능성:
-          <span class="font-medium">{{
-            translateValue(lifeInfo?.earlyTerminationRisk, enums.plan)
-          }}</span>
-        </div>
-        <div>
-          거주 외 목적 사용:
-          <span class="font-medium">{{ lifeInfo?.nonresidentialUsePlan }}</span>
-        </div>
-        <div>
-          요청 사항:
-          <span class="font-medium">{{ lifeInfo?.requestToOwner || '-' }}</span>
-        </div>
-        <div>
-          거주 인원:
-          <span class="font-medium">{{ lifeInfo?.residentCount }}</span>
-        </div>
-        <div>
-          직업:
-          <span class="font-medium">{{ lifeInfo?.occupation }}</span>
-        </div>
-        <div class="col-span-2">
-          비상 연락처:
-          <span class="font-medium">{{ lifeInfo?.emergencyContact }}</span>
-        </div>
-        <div>
-          관계:
-          <span class="font-medium">{{ lifeInfo?.relation }}</span>
+          <!-- ✅ 주차 -->
+          <div>
+            주차:
+            <span class="font-medium">
+              {{
+                lifeInfo?.hasParking !== null
+                  ? translateValue(lifeInfo?.hasParking, enums.plan)
+                  : '-'
+              }}
+            </span>
+          </div>
+          <div>
+            주차 대수:
+            <span class="font-medium">
+              {{ lifeInfo?.parkingCount !== null ? lifeInfo?.parkingCount : '-' }}
+            </span>
+          </div>
+
+          <!-- ✅ 반려동물 -->
+          <div>
+            반려동물:
+            <span class="font-medium">
+              {{ lifeInfo?.hasPet !== null ? translateValue(lifeInfo?.hasPet, enums.plan) : '-' }}
+            </span>
+          </div>
+          <div>
+            반려동물 종:
+            <span class="font-medium">
+              {{ lifeInfo?.petInfo || '-' }}
+            </span>
+          </div>
+          <div>
+            반려동물 수:
+            <span class="font-medium">
+              {{ lifeInfo?.petCount !== null ? lifeInfo?.petCount : '-' }}
+            </span>
+          </div>
+
+          <div>
+            실내 흡연 계획:
+            <span class="font-medium">{{
+              translateValue(lifeInfo?.indoorSmokingPlan, enums.plan)
+            }}</span>
+            반려동물 수:
+            <span class="font-medium">
+              {{ lifeInfo?.petCount !== null ? lifeInfo?.petCount : '-' }}
+            </span>
+          </div>
+
+          <div>
+            실내 흡연 계획:
+            <span class="font-medium">{{
+              translateValue(lifeInfo?.indoorSmokingPlan, enums.plan)
+            }}</span>
+          </div>
+          <div>
+            중도 퇴거 가능성:
+            <span class="font-medium">{{
+              translateValue(lifeInfo?.earlyTerminationRisk, enums.plan)
+            }}</span>
+            중도 퇴거 가능성:
+            <span class="font-medium">{{
+              translateValue(lifeInfo?.earlyTerminationRisk, enums.plan)
+            }}</span>
+          </div>
+          <div>
+            거주 외 목적 사용:
+            <span class="font-medium">{{ lifeInfo?.nonresidentialUsePlan }}</span>
+            거주 외 목적 사용:
+            <span class="font-medium">{{ lifeInfo?.nonresidentialUsePlan }}</span>
+          </div>
+          <div>
+            요청 사항:
+            <span class="font-medium">{{ lifeInfo?.requestToOwner || '-' }}</span>
+            요청 사항:
+            <span class="font-medium">{{ lifeInfo?.requestToOwner || '-' }}</span>
+          </div>
+          <div>
+            거주 인원:
+            <span class="font-medium">{{ lifeInfo?.residentCount }}</span>
+            거주 인원:
+            <span class="font-medium">{{ lifeInfo?.residentCount }}</span>
+          </div>
+          <div>
+            직업:
+            <span class="font-medium">{{ lifeInfo?.occupation }}</span>
+            직업:
+            <span class="font-medium">{{ lifeInfo?.occupation }}</span>
+          </div>
+          <div class="col-span-2">
+            비상 연락처:
+            <span class="font-medium">{{ lifeInfo?.emergencyContact }}</span>
+            비상 연락처:
+            <span class="font-medium">{{ lifeInfo?.emergencyContact }}</span>
+          </div>
+          <div>
+            관계:
+            <span class="font-medium">{{ lifeInfo?.relation }}</span>
+            관계:
+            <span class="font-medium">{{ lifeInfo?.relation }}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -202,7 +288,6 @@ const store = usePreContractStore()
 const route = useRoute()
 const contractChatId = route.params.id
 
-// 몽고 DB로 보내기
 // const saveMongoDB = async () => {
 //   try {
 //     await buyerApi.saveMongoDB(contractChatId)
@@ -302,6 +387,7 @@ onMounted(async () => {
     }
   } catch (err) {
     console.error('전체 정보 조회 실패 ❌', err)
+    console.error('전체 정보 조회 실패 ❌', err)
   }
 })
 
@@ -358,15 +444,19 @@ const lifeInfo = ref({
 })
 
 const saveMongoDB = async () => {
+  console.log('[saveMongoDB 실행됨] 🔥')
   try {
     const response = await buyerApi.saveMongoDB(contractChatId)
     console.log('성공 ✅', response.data)
+    console.log('[Mongo 저장 성공 ✅]', response.data)
   } catch (error) {
     console.error('실패 ❌', error)
+    console.error('[Mongo 저장 실패 ❌]', error)
   }
 }
 
 watchEffect(() => {
+  console.log('[triggerSubmit 등록] 6번 등록됨')
   store.setTriggerSubmit(6, saveMongoDB)
 })
 </script>

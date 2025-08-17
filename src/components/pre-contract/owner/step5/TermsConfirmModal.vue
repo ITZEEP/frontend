@@ -1,6 +1,6 @@
 <template>
   <BaseModal>
-    <div class="flex flex-col gap-4">
+    <div class="h-[670px] flex flex-col gap-4 overflow-y-auto">
       <div>
         <h1 class="text-lg font-bold text-gray-700">특약 검토</h1>
         <p class="text-sm text-gray-500">추출된 특약을 확인하고 수정할 수 있습니다.</p>
@@ -14,6 +14,8 @@
           :label="`특약 ${index + 1}`"
           :id="`term-${index}`"
           placeholder="특약 내용을 입력하세요"
+          type="textarea"
+          rows="3"
         />
       </div>
 
