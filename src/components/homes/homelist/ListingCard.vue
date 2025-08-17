@@ -22,15 +22,13 @@
           </div>
           <div class="text-lg font-bold">
             <template v-if="listing.leaseType === '전세'">
-              {{ formatNumber(listing.depositPrice) }}
+              {{ formatNumber(listing.depositPrice) }}원
             </template>
             <template v-else-if="listing.leaseType === '월세'">
-              {{ formatNumber(listing.depositPrice) }} /
-              {{ formatNumber(listing.monthlyRent) }}
+              {{ formatNumber(listing.depositPrice) }}원 / {{ formatNumber(listing.monthlyRent) }}원
             </template>
             <template v-else>
-              {{ formatNumber(listing.depositPrice) }} /
-              {{ formatNumber(listing.monthlyRent) }}
+              {{ formatNumber(listing.depositPrice) }}원 / {{ formatNumber(listing.monthlyRent) }}원
             </template>
           </div>
         </div>

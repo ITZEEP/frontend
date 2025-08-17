@@ -1,11 +1,6 @@
 <template>
-  <div class="w-full flex items-center gap-10 text-sm text-gray-500">
-    <div
-      v-for="(step, index) in steps"
-      :key="index"
-      class="w-fit flex items-center gap-2 basis-0 flex-1"
-    >
-      <!-- 번호 아이콘 -->
+  <div class="w-full flex items-center gap-4 md:gap-10 text-sm text-gray-500">
+    <div v-for="(step, index) in steps" :key="index" class="w-full flex items-center gap-2">
       <div
         class="w-6 h-6 flex items-center justify-center rounded-full border shrink-0"
         :class="{
@@ -16,13 +11,11 @@
         {{ index + 1 }}
       </div>
 
-      <!-- 단계 텍스트 -->
-      <div :class="{ 'w-fit text-black font-medium': index + 1 === currentStep }">
+      <div :class="{ 'text-black font-medium': index + 1 === currentStep }">
         {{ step }}
       </div>
 
-      <!-- 선 -->
-      <div v-if="index < steps.length - 1" class="flex-1 h-px bg-gray-300 ml-2"></div>
+      <div v-if="index < steps.length" class="flex-1 h-px bg-gray-300 ml-2"></div>
     </div>
   </div>
 </template>

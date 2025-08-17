@@ -1,27 +1,129 @@
 <template>
-  <div class="bg-gray-50 p-6 rounded-lg">
-    <h2 class="text-lg font-semibold mb-4">기본 정보 (수정 불가)</h2>
-    <div class="grid grid-cols-2 gap-4">
-      <BaseInput label="건물 종류" :modelValue="basicInfo?.buildingType || ''" disabled />
-      <BaseInput label="등록일" :modelValue="basicInfo?.registrationDate || ''" disabled />
-      <BaseInput label="전체 주소" :modelValue="basicInfo?.fullAddress || ''" disabled />
-      <BaseInput label="전용면적(㎡)" :modelValue="basicInfo?.exclusiveArea || ''" disabled />
-      <BaseInput label="공급면적(㎡)" :modelValue="basicInfo?.supplyArea || ''" disabled />
-      <BaseInput label="현재층/전체층수" :modelValue="basicInfo?.floorInfo || ''" disabled />
-      <BaseInput label="사용승인일" :modelValue="basicInfo?.approvalDate || ''" disabled />
-      <BaseInput label="건축물용도" :modelValue="basicInfo?.buildingUsage || ''" disabled />
-      <BaseInput label="건물형태" :modelValue="basicInfo?.buildingStructure || ''" disabled />
+  <div class="space-y-6">
+    <h2 class="text-lg font-semibold">기본 정보</h2>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">
+        매물 종류 <span class="text-red-500">*</span>
+      </label>
+      <div class="grid grid-cols-3 gap-2">
+        <button
+          v-for="option in residenceTypeOptions"
+          :key="option.value"
+          :class="[
+            'py-2 px-4 border rounded-md text-sm font-medium transition',
+            props.form.residenceType === option.value
+              ? 'bg-yellow-primary text-white border-yellow-primary'
+              : 'bg-white text-gray-700 hover:bg-gray-50',
+          ]"
+          @click="updateForm('residenceType', option.value)"
+          type="button"
+        >
+          {{ option.label }}
+        </button>
+      </div>
     </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">
+        거래 유형 <span class="text-red-500">*</span>
+      </label>
+      <div class="flex gap-6">
+        <BaseRadio
+          v-for="option in leaseTypeOptions"
+          :key="option.value"
+          :value="option.value"
+          :label="option.label"
+          :modelValue="form.leaseType"
+          name="leaseType"
+          @update:modelValue="updateForm('leaseType', $event)"
+        />
+      </div>
+    </div>
+
+    <div>
+      <label class="block mb-1 text-sm font-medium text-gray-600">
+        주소<span class="text-red-500">*</span>
+      </label>
+      <div class="flex gap-2">
+        <input
+          class="w-full rounded-md border border-gray-300 px-4 py-2 text-sm"
+          type="text"
+          :value="props.form.addr1"
+          placeholder="주소 검색"
+          disabled
+        />
+        <BaseButton
+          class="w-36 flex justify-center items-center"
+          variant="primary"
+          type="button"
+          @click="modalStore.open()"
+        >
+          주소 검색
+        </BaseButton>
+      </div>
+    </div>
+
+    <div>
+      <label class="block mb-1 text-sm font-medium text-gray-600">상세 주소</label>
+      <input
+        :value="props.form.addr2"
+        @input="updateForm('addr2', $event.target.value)"
+        class="w-full rounded-md border border-gray-300 px-4 py-2 text-sm"
+        type="text"
+        placeholder="상세 주소를 입력하세요"
+      />
+    </div>
+
+    <BaseModal :closable="true" :maskCloseable="true">
+      <SearchAddress @select="onAddressSelect" />
+    </BaseModal>
   </div>
 </template>
 
 <script setup>
-import BaseInput from '@/components/common/BaseInput.vue'
+import { useModalStore } from '@/stores/modal'
+import BaseButton from '@/components/common/BaseButton.vue'
+import BaseRadio from '@/components/common/BaseRadio.vue'
+import BaseModal from '@/components/common/BaseModal.vue'
+import SearchAddress from '@/components/common/SearchAddress.vue'
 
-defineProps({
-  basicInfo: {
+const props = defineProps({
+  form: {
     type: Object,
-    default: () => ({}),
+    required: true,
   },
 })
+
+const emit = defineEmits(['update:form'])
+const modalStore = useModalStore()
+
+const updateForm = (field, value) => {
+  emit('update:form', {
+    ...props.form,
+    [field]: value,
+  })
+}
+
+const onAddressSelect = (selectedAddress) => {
+  if (selectedAddress) {
+    updateForm('addr1', selectedAddress)
+  }
+  modalStore.close()
+}
+
+const residenceTypeOptions = [
+  { label: '오픈형 원룸', value: 'OPEN_ONE_ROOM' },
+  { label: '분리형 원룸', value: 'SEPARATED_ONE_ROOM' },
+  { label: '투룸', value: 'TWO_ROOM' },
+  { label: '오피스텔', value: 'OFFICETEL' },
+  { label: '아파트', value: 'APARTMENT' },
+  { label: '단독주택', value: 'HOUSE' },
+  { label: '빌라', value: 'VILLA' },
+]
+
+const leaseTypeOptions = [
+  { label: '월세', value: 'WOLSE' },
+  { label: '전세', value: 'JEONSE' },
+]
 </script>

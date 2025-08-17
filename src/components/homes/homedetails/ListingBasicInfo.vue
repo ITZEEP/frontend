@@ -5,8 +5,13 @@
     <div class="text-2xl font-bold">
       {{
         listing.leaseType === '전세'
-          ? '전세 ' + formatNumber(listing.depositPrice)
-          : '월세 ' + formatNumber(listing.depositPrice) + ' / ' + formatNumber(listing.monthlyRent)
+          ? '전세 ' + formatNumber(listing.depositPrice) + '원'
+          : '월세 ' +
+            formatNumber(listing.depositPrice) +
+            '원' +
+            ' / ' +
+            formatNumber(listing.monthlyRent) +
+            '원'
       }}
     </div>
 

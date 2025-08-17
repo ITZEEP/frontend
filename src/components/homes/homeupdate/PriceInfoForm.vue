@@ -1,92 +1,194 @@
 <template>
-  <div class="bg-white p-6 rounded-lg">
-    <h2 class="text-lg font-semibold mb-4">거래 정보</h2>
+  <div class="bg-white p-6 rounded-lg space-y-6">
+    <h2 class="text-lg font-semibold">가격 정보</h2>
 
-    <!-- 거래 유형 -->
-    <div class="mb-4">
-      <label class="block text-sm font-medium text-gray-700 mb-1">거래 유형</label>
-      <div class="flex gap-2">
-        <button
-          v-for="type in ['월세', '전세']"
-          :key="type"
-          :class="[
-            'px-4 py-2 rounded',
-            거래유형 === type ? 'bg-yellow-primary text-white' : 'bg-gray-200',
-          ]"
-          @click="거래유형 = type"
-          type="button"
+    <div v-if="form.leaseType === 'JEONSE'" class="space-y-4">
+      <div>
+        <label class="block mb-1 text-sm font-medium"
+          >전세금 <span class="text-red-500">*</span></label
         >
-          {{ type }}
-        </button>
+        <div class="relative w-full">
+          <input
+            type="text"
+            :value="displayValue('depositPrice')"
+            @input="handleInput('depositPrice', $event)"
+            class="w-full border rounded px-3 py-2 pr-16 text-right"
+            placeholder="0"
+            required
+          />
+          <span class="absolute right-4 top-1/2 transform -translate-y-1/2 text-sm text-gray-500"
+            >원</span
+          >
+        </div>
+      </div>
+      <div>
+        <label class="block mb-1 text-sm font-medium"
+          >관리비<span class="text-red-500">*</span></label
+        >
+        <div class="relative w-full">
+          <input
+            type="text"
+            :value="displayValue('maintenaceFee')"
+            @input="handleInput('maintenaceFee', $event)"
+            class="w-full border rounded px-3 py-2 pr-16 text-right"
+            placeholder="0"
+          />
+          <span class="absolute right-4 top-1/2 transform -translate-y-1/2 text-sm text-gray-500"
+            >원</span
+          >
+        </div>
+      </div>
+      <div>
+        <h4 class="font-semibold mt-4 mb-2">관리비 포함 항목</h4>
+        <div class="grid grid-cols-2 gap-2">
+          <BaseCheckBox
+            v-for="item in maintenanceItems"
+            :key="item.maintenanceId"
+            :label="item.maintenanceName"
+            :modelValue="isChecked(item.maintenanceId)"
+            @update:modelValue="
+              (checked) => toggleMaintenanceItem(item.maintenanceId, item.fee, checked)
+            "
+          />
+        </div>
       </div>
     </div>
 
-    <!-- 보증금 및 월세/관리비 -->
-    <div class="grid grid-cols-2 gap-4 mb-4">
-      <BaseInput v-model="보증금" label="보증금" placeholder="예: 1000" type="number" min="0" />
-
-      <!-- 월세는 거래 유형이 '월세'일 때만 표시 -->
-      <BaseInput
-        v-if="거래유형 === '월세'"
-        v-model="월세"
-        label="월세"
-        placeholder="예: 100"
-        type="number"
-        min="0"
-      />
-
-      <BaseInput v-model="관리비" label="관리비" placeholder="예: 10" type="number" min="0" />
-    </div>
-
-    <!-- 관리비 포함 항목 -->
-    <div class="mb-4">
-      <label class="block text-sm font-medium text-gray-700 mb-1">관리비 포함 항목</label>
-      <div class="grid grid-cols-4 gap-2">
-        <BaseCheckbox
-          v-for="item in 관리비포함항목목록"
-          :key="item"
-          :label="item"
-          :modelValue="관리비포함항목.includes(item)"
-          @update:modelValue="(checked) => updateArray(관리비포함항목, item, checked)"
-        />
+    <div v-else-if="form.leaseType === 'WOLSE'" class="space-y-4">
+      <div>
+        <label class="block mb-1 text-sm font-medium"
+          >보증금 <span class="text-red-500">*</span></label
+        >
+        <div class="relative w-full">
+          <input
+            type="text"
+            :value="displayValue('depositPrice')"
+            @input="handleInput('depositPrice', $event)"
+            class="w-full border rounded px-3 py-2 pr-16 text-right"
+            placeholder="0"
+            required
+          />
+          <span class="absolute right-4 top-1/2 transform -translate-y-1/2 text-sm text-gray-500"
+            >원</span
+          >
+        </div>
       </div>
-    </div>
-
-    <!-- 입주 가능일 -->
-    <div>
-      <label for="move-in-date" class="block text-sm font-medium text-gray-700 mb-1">
-        입주 가능일
-      </label>
-      <input
-        type="date"
-        id="move-in-date"
-        v-model="입주가능일"
-        class="border rounded px-3 py-2 w-full"
-      />
+      <div>
+        <label class="block mb-1 text-sm font-medium"
+          >월세 <span class="text-red-500">*</span></label
+        >
+        <div class="relative w-full">
+          <input
+            type="text"
+            :value="displayValue('monthlyRent')"
+            @input="handleInput('monthlyRent', $event)"
+            class="w-full border rounded px-3 py-2 pr-16 text-right"
+            placeholder="0"
+          />
+          <span class="absolute right-4 top-1/2 transform -translate-y-1/2 text-sm text-gray-500"
+            >원</span
+          >
+        </div>
+      </div>
+      <div>
+        <label class="block mb-1 text-sm font-medium"
+          >관리비 <span class="text-red-500">*</span></label
+        >
+        <div class="relative w-full">
+          <input
+            type="text"
+            :value="displayValue('maintenaceFee')"
+            @input="handleInput('maintenaceFee', $event)"
+            class="w-full border rounded px-3 py-2 pr-16 text-right"
+            placeholder="0"
+          />
+          <span class="absolute right-4 top-1/2 transform -translate-y-1/2 text-sm text-gray-500"
+            >원</span
+          >
+        </div>
+      </div>
+      <div>
+        <h4 class="font-semibold mt-4 mb-2">관리비 포함 항목</h4>
+        <div class="grid grid-cols-2 gap-2">
+          <BaseCheckBox
+            v-for="item in maintenanceItems"
+            :key="item.maintenanceId"
+            :label="item.maintenanceName"
+            :modelValue="isChecked(item.maintenanceId)"
+            @update:modelValue="
+              (checked) => toggleMaintenanceItem(item.maintenanceId, item.fee, checked)
+            "
+          />
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import BaseCheckbox from '@/components/common/BaseCheckbox.vue'
-import BaseInput from '@/components/common/BaseInput.vue'
+import { toRaw, toRefs } from 'vue'
+import BaseCheckBox from '@/components/common/BaseCheckbox.vue'
 
-const 거래유형 = ref('월세')
-const 보증금 = ref(null)
-const 월세 = ref(null)
-const 관리비 = ref(null)
-const 관리비포함항목 = ref([])
-const 입주가능일 = ref('')
+const emit = defineEmits(['update:form'])
+const props = defineProps({ form: Object })
+const { form } = toRefs(props)
 
-const 관리비포함항목목록 = ['전기료', '수도료', '인터넷', '케이블 TV', '가스료', '난방비']
+function formatCurrency(value) {
+  const number = value.replace(/[^\d]/g, '')
+  return number.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+}
 
-function updateArray(arr, item, checked) {
-  if (checked && !arr.includes(item)) {
-    arr.push(item)
-  } else if (!checked && arr.includes(item)) {
-    const idx = arr.indexOf(item)
-    if (idx > -1) arr.splice(idx, 1)
+function handleInput(field, event) {
+  const raw = event.target.value.replace(/[^\d]/g, '')
+  let parsed = raw ? parseInt(raw, 10) : 0
+
+  if (isNaN(parsed)) {
+    parsed = 0
   }
+
+  if (field === 'depositPrice' || field === 'monthlyRent' || field === 'maintenaceFee') {
+    parsed = parsed === null ? 0 : parsed
+  }
+
+  emit('update:form', { ...props.form, [field]: parsed })
+  const formatted = formatCurrency(raw || '0')
+  event.target.value = formatted
+  requestAnimationFrame(() => {
+    const len = formatted.length
+    event.target.setSelectionRange(len, len)
+  })
+}
+
+function displayValue(field) {
+  const value = props.form[field]
+  return value || value === 0 ? formatCurrency(String(value)) : '0'
+}
+
+const maintenanceItems = [
+  { maintenanceId: 3, maintenanceName: '가스료', fee: 0 },
+  { maintenanceId: 2, maintenanceName: '수도료', fee: 0 },
+  { maintenanceId: 4, maintenanceName: '인터넷', fee: 0 },
+  { maintenanceId: 1, maintenanceName: '전기료', fee: 0 },
+  { maintenanceId: 5, maintenanceName: '청소비', fee: 0 },
+]
+
+function toggleMaintenanceItem(id, fee, checked) {
+  let newItems = [...(props.form.maintenanceFees || [])]
+
+  if (checked) {
+    if (!newItems.some((item) => toRaw(item).maintenanceId === id)) {
+      newItems.push({ maintenanceId: id, fee: fee })
+    }
+  } else {
+    newItems = newItems.filter((item) => toRaw(item).maintenanceId !== id)
+  }
+  emit('update:form', {
+    ...props.form,
+    maintenanceFees: toRaw(newItems),
+  })
+}
+
+function isChecked(id) {
+  return (props.form.maintenanceFees || []).some((item) => toRaw(item).maintenanceId === id)
 }
 </script>

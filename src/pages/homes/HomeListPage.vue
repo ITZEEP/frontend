@@ -1,10 +1,26 @@
 <template>
-  <div class="flex">
-    <FilterSidebar @filter-change="onFilterChange" />
+  <div class="flex flex-col md:flex-row">
+    <FilterSidebar class="hidden md:block" @filter-change="onFilterChange" />
 
-    <main class="flex-1 p-6 relative">
+    <main class="flex-1 p-4 md:p-6 relative">
+      <div class="flex justify-between items-center mb-4 md:hidden">
+        <button
+          @click="toggleFilter"
+          class="bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-md"
+        >
+          필터
+        </button>
+        <button
+          class="bg-yellow-primary hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded"
+          type="button"
+          @click="goCreatePage"
+        >
+          매물 등록
+        </button>
+      </div>
+
       <button
-        class="absolute top-4 right-4 bg-yellow-primary hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded z-10"
+        class="hidden md:block absolute top-4 right-4 bg-yellow-primary hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded z-10"
         type="button"
         @click="goCreatePage"
       >
@@ -62,6 +78,29 @@
         </button>
       </div>
     </main>
+
+    <div v-if="showFilter" class="fixed inset-0 bg-white z-50 overflow-y-auto">
+      <div class="p-4 flex justify-between items-center border-b">
+        <h2 class="text-xl font-bold">필터</h2>
+        <button @click="toggleFilter" class="text-gray-500">
+          <svg
+            class="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            ></path>
+          </svg>
+        </button>
+      </div>
+      <FilterSidebar @filter-change="handleFilterChangeAndClose" @close="showFilter = false" />
+    </div>
   </div>
 </template>
 
@@ -90,9 +129,21 @@ const filters = ref({
 })
 
 const page = ref(1)
-const size = ref(21) // 초기 로딩 시 모든 매물을 가져오기 위해 충분히 큰 값으로 설정
+const size = ref(21)
 const totalItems = ref(0)
 const totalPages = computed(() => Math.ceil(totalItems.value / size.value))
+
+// 모바일 필터 관련 상태
+const showFilter = ref(false)
+
+function toggleFilter() {
+  showFilter.value = !showFilter.value
+}
+
+function handleFilterChangeAndClose(newFilters) {
+  onFilterChange(newFilters)
+  showFilter.value = false
+}
 
 const selectedGu = computed(() => {
   return filters.value.district !== '전체' && filters.value.district !== undefined
@@ -146,14 +197,15 @@ async function loadListings() {
           : undefined,
     }
 
-    if (filters.value.dealType === '월세' && filters.value.depositRange > 0) {
+    if (filters.value.dealType === 'WOLSE' && filters.value.depositRange > 0) {
       params.maxDepositPrice = filters.value.depositRange * 10000
     }
-    if (filters.value.dealType === '월세' && filters.value.monthlyRange > 0) {
+    if (filters.value.dealType === 'WOLSE' && filters.value.monthlyRange > 0) {
       params.maxMonthlyRent = filters.value.monthlyRange * 10000
     }
-    if (filters.value.dealType === '전세' && filters.value.leaseRange > 0) {
+    if (filters.value.dealType === 'JEONSE' && filters.value.leaseRange > 0) {
       params.maxDepositPrice = filters.value.leaseRange * 10000
+      delete params.maxMonthlyRent
     }
 
     if (filters.value.direction) {
@@ -179,11 +231,13 @@ async function loadListings() {
       }
     }
 
-    if (filters.value.conditions.includes('반려동물 가능')) {
-      params.isPet = true
-    }
-    if (filters.value.conditions.includes('주차 가능')) {
-      params.isParking = true
+    if (Array.isArray(filters.value.conditions)) {
+      if (filters.value.conditions.includes('반려동물 가능')) {
+        params.isPet = true
+      }
+      if (filters.value.conditions.includes('주차 가능')) {
+        params.isParking = true
+      }
     }
 
     const response = await fetchListings(params)
