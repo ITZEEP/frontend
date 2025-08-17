@@ -1,6 +1,5 @@
 <template>
   <div class="max-w-3xl mx-auto p-6 space-y-6">
-    <!-- 설명 -->
     <div>
       <label for="description" class="block font-semibold mb-1">
         사진 및 설명 <span class="text-red-600">*</span>
@@ -9,7 +8,6 @@
         최소 1장 이상, 최대 5장까지 업로드 가능합니다. (1장당 최대 10MB)
       </p>
 
-      <!-- 파일 업로드 -->
       <label
         for="fileInput"
         class="relative cursor-pointer block w-full border-2 border-dashed border-gray-300 rounded-md p-10 text-center hover:border-gray-400 transition-colors"
@@ -45,14 +43,17 @@
         />
       </label>
 
-      <!-- 썸네일 미리보기 -->
       <div class="flex flex-wrap gap-3 mt-4">
         <div
-          v-for="(file, index) in files"
-          :key="file.id"
+          v-for="(file, index) in form.images"
+          :key="file.name"
           class="relative w-24 h-24 rounded overflow-hidden border border-gray-300 shadow-sm"
         >
-          <img :src="file.url" alt="업로드된 이미지" class="object-cover w-full h-full" />
+          <img
+            :src="getThumbnailUrl(file)"
+            alt="업로드된 이미지"
+            class="object-cover w-full h-full"
+          />
           <button
             @click="removeFile(index)"
             type="button"
@@ -65,33 +66,42 @@
       </div>
     </div>
 
-    <!-- 상세 설명 -->
     <div>
       <label for="description" class="block font-semibold mb-1"> 상세 설명 </label>
       <textarea
         id="description"
-        v-model="description"
+        :value="form.description"
+        @input="handleChange('description', $event.target.value)"
         :maxlength="maxLength"
         placeholder="구조, 특징, 주변 환경 등을 자유롭게 작성해주세요. 1000자 이내 권장"
         class="w-full border rounded p-3 resize-none min-h-[100px] focus:outline-yellow-500"
       ></textarea>
       <div class="text-right text-xs text-gray-500 mt-1">
-        {{ description.length }}/{{ maxLength }}
+        {{ form.description?.length ?? 0 }}/{{ maxLength }}
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+const props = defineProps({
+  form: {
+    type: Object,
+    required: true,
+  },
+})
+const emit = defineEmits(['update:form'])
 
-const files = ref([])
-const description = ref('')
+const maxLength = 1000
 const maxFiles = 5
 const maxSizeMB = 10
-const maxLength = 1000
 
-let idCounter = 0
+const handleChange = (key, value) => {
+  emit('update:form', {
+    ...props.form,
+    [key]: value,
+  })
+}
 
 function onFileChange(event) {
   const selectedFiles = event.target.files
@@ -105,8 +115,9 @@ function handleDrop(event) {
 }
 
 function addFiles(fileList) {
+  const newFiles = []
   for (const file of fileList) {
-    if (files.value.length >= maxFiles) {
+    if (props.form.images.length + newFiles.length >= maxFiles) {
       alert(`최대 ${maxFiles}장까지 업로드 가능합니다.`)
       break
     }
@@ -118,14 +129,24 @@ function addFiles(fileList) {
       alert(`파일 크기는 최대 ${maxSizeMB}MB 입니다.`)
       continue
     }
-
-    const url = URL.createObjectURL(file)
-    files.value.push({ id: idCounter++, file, url })
+    newFiles.push(file)
   }
+  // 기존 파일과 새로운 파일 병합하여 부모 컴포넌트로 전달
+  handleChange('images', [...props.form.images, ...newFiles])
 }
 
 function removeFile(index) {
-  URL.revokeObjectURL(files.value[index].url)
-  files.value.splice(index, 1)
+  const updatedImages = [...props.form.images]
+  updatedImages.splice(index, 1)
+  handleChange('images', updatedImages)
+}
+
+// 이미지 미리보기 URL을 생성하는 헬퍼 함수
+function getThumbnailUrl(file) {
+  return URL.createObjectURL(file)
 }
 </script>
+
+<style scoped>
+/* 기존 스타일 그대로 유지 */
+</style>

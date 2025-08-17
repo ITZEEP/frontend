@@ -1,3 +1,86 @@
+<template>
+  <div class="space-y-6">
+    <h2 class="text-lg font-semibold">기본 정보</h2>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">
+        매물 종류 <span class="text-red-500">*</span>
+      </label>
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+        <button
+          v-for="option in residenceTypeOptions"
+          :key="option.value"
+          :class="[
+            'py-2 px-4 border rounded-md text-sm font-medium transition',
+            props.form.residenceType === option.value
+              ? 'bg-yellow-primary text-white border-yellow-primary'
+              : 'bg-white text-gray-700 hover:bg-gray-50',
+          ]"
+          @click="updateForm('residenceType', option.value)"
+          type="button"
+        >
+          {{ option.label }}
+        </button>
+      </div>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">
+        거래 유형 <span class="text-red-500">*</span>
+      </label>
+      <div class="flex flex-col md:flex-row gap-4">
+        <BaseRadio
+          v-for="option in leaseTypeOptions"
+          :key="option.value"
+          :value="option.value"
+          :label="option.label"
+          :modelValue="form.leaseType"
+          name="leaseType"
+          @update:modelValue="updateForm('leaseType', $event)"
+        />
+      </div>
+    </div>
+
+    <div>
+      <label class="block mb-1 text-sm font-medium text-gray-600">
+        주소<span class="text-red-500">*</span>
+      </label>
+      <div class="flex gap-2">
+        <input
+          class="w-full rounded-md border border-gray-300 px-4 py-2 text-sm"
+          type="text"
+          :value="props.form.addr1"
+          placeholder="주소 검색"
+          disabled
+        />
+        <BaseButton
+          class="w-36 flex justify-center items-center shrink-0"
+          variant="primary"
+          type="button"
+          @click="modalStore.open()"
+        >
+          주소 검색
+        </BaseButton>
+      </div>
+    </div>
+
+    <div>
+      <label class="block mb-1 text-sm font-medium text-gray-600">상세 주소</label>
+      <input
+        :value="props.form.addr2"
+        @input="updateForm('addr2', $event.target.value)"
+        class="w-full rounded-md border border-gray-300 px-4 py-2 text-sm"
+        type="text"
+        placeholder="상세 주소를 입력하세요"
+      />
+    </div>
+
+    <BaseModal :closable="true" :maskCloseable="true">
+      <SearchAddress @select="onAddressSelect" />
+    </BaseModal>
+  </div>
+</template>
+
 <script setup>
 import BaseButton from '@/components/common/BaseButton.vue'
 import BaseModal from '@/components/common/BaseModal.vue'
@@ -33,7 +116,16 @@ const updateForm = (field, value) => {
 }
 
 const onAddressSelect = (selectedAddress) => {
-  updateForm('addr1', selectedAddress)
+  // ✨ 추가된 부분: 디버깅을 위해 선택된 주소값을 콘솔에 출력
+  console.log('✅ onAddressSelect 함수 호출됨. 선택된 주소:', selectedAddress)
+
+  if (selectedAddress) {
+    updateForm('addr1', selectedAddress)
+  }
+
+  // ✨ 추가된 부분: 업데이트된 form.addr1 값 확인
+  console.log('업데이트 후 form 객체:', props.form)
+
   modalStore.close()
 }
 
@@ -54,91 +146,3 @@ const leaseTypeOptions = [
   { label: '전세', value: 'JEONSE' },
 ]
 </script>
-
-<template>
-  <div class="space-y-6">
-    <h2 class="text-lg font-semibold">기본 정보</h2>
-
-    <!-- 매물 종류 -->
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">
-        매물 종류 <span class="text-red-500">*</span>
-      </label>
-      <div class="grid grid-cols-3 gap-2">
-        <button
-          v-for="option in residenceTypeOptions"
-          :key="option.value"
-          :class="[
-            'py-2 px-4 border rounded-md text-sm font-medium transition',
-            props.form.residenceType === option.value
-              ? 'bg-yellow-primary text-white border-yellow-primary'
-              : 'bg-white text-gray-700 hover:bg-gray-50',
-          ]"
-          @click="updateForm('residenceType', option.value)"
-          type="button"
-        >
-          {{ option.label }}
-        </button>
-      </div>
-    </div>
-
-    <!-- 거래 유형 -->
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">
-        거래 유형 <span class="text-red-500">*</span>
-      </label>
-      <div class="flex gap-6">
-        <BaseRadio
-          v-for="option in leaseTypeOptions"
-          :key="option.value"
-          :value="option.value"
-          :label="option.label"
-          :modelValue="form.leaseType"
-          name="leaseType"
-          @update:modelValue="updateForm('leaseType', $event)"
-        />
-      </div>
-    </div>
-
-    <!-- 주소 -->
-    <div>
-      <label class="block mb-1 text-sm font-medium text-gray-600">
-        주소<span class="text-red-500">*</span>
-      </label>
-      <div class="flex gap-2">
-        <input
-          class="w-full rounded-md border border-gray-300 px-4 py-2 text-sm"
-          type="text"
-          :value="props.form.addr1"
-          placeholder="주소 검색"
-          disabled
-        />
-        <BaseButton
-          class="w-36 flex justify-center items-center"
-          variant="primary"
-          type="button"
-          @click="modalStore.open()"
-        >
-          주소 검색
-        </BaseButton>
-      </div>
-    </div>
-
-    <!-- 상세 주소 -->
-    <div>
-      <label class="block mb-1 text-sm font-medium text-gray-600">상세 주소</label>
-      <input
-        :value="props.form.addr2"
-        @input="updateForm('addr2', $event.target.value)"
-        class="w-full rounded-md border border-gray-300 px-4 py-2 text-sm"
-        type="text"
-        placeholder="상세 주소를 입력하세요"
-      />
-    </div>
-
-    <!-- 주소 검색 모달 -->
-    <BaseModal :closable="true" :maskCloseable="true">
-      <SearchAddress @select="onAddressSelect" />
-    </BaseModal>
-  </div>
-</template>
