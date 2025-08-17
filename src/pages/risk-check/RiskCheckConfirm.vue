@@ -10,6 +10,7 @@ import IconCheck from '@/components/icons/IconCheck.vue'
 import PropertyRegistrationForm from '@/components/risk-check/confirm/PropertyRegistrationForm.vue'
 import BuildingRegistryForm from '@/components/risk-check/confirm/BuildingRegistryForm.vue'
 import ErrorModal from '@/components/common/ErrorModal.vue'
+import WarningModal from '@/components/common/WarningModal.vue'
 
 // Stores & APIs
 import { fraudApi } from '@/apis/fraud'
@@ -43,6 +44,11 @@ const showErrorModal = ref(false)
 const errorTitle = ref('오류 발생')
 const errorMessage = ref('')
 const errorType = ref('unknown_error')
+
+// Warning modal state
+const showWarningModal = ref(false)
+const warningTitle = ref('')
+const warningMessage = ref('')
 
 // Validation rules
 const OCR_VALIDATION_RULES = {
@@ -119,8 +125,11 @@ const ocrData = reactive({
   등기부등본: {
     지역관련주소: analysisData?.registryDocument?.regionAddress || '',
     도로명주소: analysisData?.registryDocument?.roadAddress || '',
+    건물번호: analysisData?.registryDocument?.buildingNumber || '',
+    건물상세: analysisData?.registryDocument?.buildingDetail || '',
     소유자이름: analysisData?.registryDocument?.ownerName || '',
     소유자생년월일: analysisData?.registryDocument?.ownerBirthDate || '1980-01-01',
+    채무자: analysisData?.registryDocument?.debtor || '',
     근저당권목록:
       analysisData?.registryDocument?.mortgageeList?.map((item) => ({
         순위: item.priorityNumber,
@@ -134,17 +143,20 @@ const ocrData = reactive({
       소송: analysisData?.registryDocument?.hasLitigation || false,
       압류: analysisData?.registryDocument?.hasAttachment || false,
     },
+    발급일: analysisData?.registryDocument?.issueDate || '',
   },
   건축물대장: {
     대지위치: analysisData?.buildingDocument?.siteLocation || '',
     도로명주소: analysisData?.buildingDocument?.roadAddress || '',
+    대지면적: analysisData?.buildingDocument?.landArea || '',
     연면적: analysisData?.buildingDocument?.totalFloorArea || '',
     용도: analysisData?.buildingDocument?.purpose || '',
     층수: analysisData?.buildingDocument?.floorNumber || '1',
     사용승인일: analysisData?.buildingDocument?.approvalDate || '2020-01-01',
     위반건축물여부: analysisData?.buildingDocument?.isViolationBuilding || false,
+    발급일: analysisData?.buildingDocument?.issueDate || '',
   },
-  homeId: analysisData?.homeId || 1,
+  homeId: analysisData?.homeId || null,
   registryFileUrl: analysisData?.registryFileUrl || '',
   buildingFileUrl: analysisData?.buildingFileUrl || '',
 })
@@ -237,8 +249,11 @@ const buildExternalAnalysisData = () => ({
   registryDocument: {
     regionAddress: ocrData.등기부등본.지역관련주소,
     roadAddress: ocrData.등기부등본.도로명주소,
+    buildingNumber: ocrData.등기부등본.건물번호,
+    buildingDetail: ocrData.등기부등본.건물상세,
     ownerName: ocrData.등기부등본.소유자이름,
     ownerBirthDate: ocrData.등기부등본.소유자생년월일,
+    debtor: ocrData.등기부등본.채무자 || ocrData.등기부등본.소유자이름,
     mortgageeList: ocrData.등기부등본.근저당권목록.map((item) => ({
       priorityNumber: item.순위,
       maxClaimAmount: item.채권최고액,
@@ -249,18 +264,22 @@ const buildExternalAnalysisData = () => ({
     hasAuction: ocrData.등기부등본.법적제한사항.경매,
     hasLitigation: ocrData.등기부등본.법적제한사항.소송,
     hasAttachment: ocrData.등기부등본.법적제한사항.압류,
-    debtor: ocrData.등기부등본.소유자이름,
+    issueDate: ocrData.등기부등본.발급일,
   },
   buildingDocument: {
     siteLocation: ocrData.건축물대장.대지위치,
     roadAddress: ocrData.건축물대장.도로명주소,
+    landArea: parseFloat(ocrData.건축물대장.대지면적) || 0,
     totalFloorArea: parseFloat(ocrData.건축물대장.연면적) || 0,
     purpose: ocrData.건축물대장.용도,
     floorNumber: parseInt(ocrData.건축물대장.층수) || 1,
     approvalDate: ocrData.건축물대장.사용승인일,
     isViolationBuilding: ocrData.건축물대장.위반건축물여부,
+    issueDate: ocrData.건축물대장.발급일,
   },
   buildingFileUrl: ocrData.buildingFileUrl,
+  registryFileUrl: ocrData.registryFileUrl,
+  homeId: ocrData.homeId,
 })
 
 const buildInternalAnalysisData = () => ({
@@ -268,8 +287,11 @@ const buildInternalAnalysisData = () => ({
   registryDocument: {
     regionAddress: ocrData.등기부등본.지역관련주소,
     roadAddress: ocrData.등기부등본.도로명주소,
+    buildingNumber: ocrData.등기부등본.건물번호,
+    buildingDetail: ocrData.등기부등본.건물상세,
     ownerName: ocrData.등기부등본.소유자이름,
     ownerBirthDate: ocrData.등기부등본.소유자생년월일,
+    debtor: ocrData.등기부등본.채무자 || ocrData.등기부등본.소유자이름,
     mortgageeList: ocrData.등기부등본.근저당권목록.map((item) => ({
       priorityNumber: item.순위,
       maxClaimAmount: item.채권최고액,
@@ -280,28 +302,38 @@ const buildInternalAnalysisData = () => ({
     hasAuction: ocrData.등기부등본.법적제한사항.경매,
     hasLitigation: ocrData.등기부등본.법적제한사항.소송,
     hasAttachment: ocrData.등기부등본.법적제한사항.압류,
+    issueDate: ocrData.등기부등본.발급일,
   },
   buildingDocument: {
     siteLocation: ocrData.건축물대장.대지위치,
     roadAddress: ocrData.건축물대장.도로명주소,
+    landArea: parseFloat(ocrData.건축물대장.대지면적) || 0,
     totalFloorArea: parseFloat(ocrData.건축물대장.연면적) || 0,
     purpose: ocrData.건축물대장.용도,
     floorNumber: parseInt(ocrData.건축물대장.층수) || 1,
     approvalDate: ocrData.건축물대장.사용승인일,
     isViolationBuilding: ocrData.건축물대장.위반건축물여부,
+    issueDate: ocrData.건축물대장.발급일,
   },
   registryFileUrl: ocrData.registryFileUrl,
   buildingFileUrl: ocrData.buildingFileUrl,
 })
 
-// Main analysis function
-const proceedAnalysis = async () => {
-  if (!validate(ocrData)) {
-    triggerShake()
-    focusFirstError()
-    return
+// Check if issue dates are today
+const checkIssueDates = () => {
+  const today = new Date().toISOString().split('T')[0]
+  const registryIssueDate = ocrData.등기부등본.발급일
+  const buildingIssueDate = ocrData.건축물대장.발급일
+  
+  // 둘 다 오늘 날짜가 아닌 경우
+  if (registryIssueDate !== today && buildingIssueDate !== today) {
+    return false
   }
+  return true
+}
 
+// Execute analysis
+const executeAnalysis = async () => {
   isAnalyzing.value = true
 
   try {
@@ -348,6 +380,33 @@ const proceedAnalysis = async () => {
   }
 }
 
+// Main analysis function
+const proceedAnalysis = async () => {
+  if (!validate(ocrData)) {
+    triggerShake()
+    focusFirstError()
+    return
+  }
+
+  // 발급일 확인
+  if (!checkIssueDates()) {
+    const today = new Date()
+    const year = today.getFullYear()
+    const month = String(today.getMonth() + 1).padStart(2, '0')
+    const day = String(today.getDate()).padStart(2, '0')
+    const todayStr = `${year}년 ${month}월 ${day}일`
+    
+    warningTitle.value = '발급일 확인 필요'
+    warningMessage.value = `등기부등본 또는 건축물대장의 발급일이 오늘(${todayStr})이 아닙니다.\n오래된 서류로는 정확한 계약서 작성이 불가능할 수 있습니다.\n계속 진행하시겠습니까?`
+    showWarningModal.value = true
+    modalStore.open()
+    return
+  }
+
+  // 발급일이 오늘인 경우 바로 실행
+  await executeAnalysis()
+}
+
 // Navigation
 const goBack = () => {
   router.back()
@@ -356,6 +415,18 @@ const goBack = () => {
 // Error modal handler
 const closeErrorModal = () => {
   showErrorModal.value = false
+  modalStore.close()
+}
+
+// Warning modal handlers
+const handleWarningConfirm = async () => {
+  showWarningModal.value = false
+  modalStore.close()
+  await executeAnalysis()
+}
+
+const handleWarningCancel = () => {
+  showWarningModal.value = false
   modalStore.close()
 }
 </script>
@@ -444,5 +515,15 @@ const closeErrorModal = () => {
     :message="errorMessage"
     :error-type="errorType"
     @close="closeErrorModal"
+  />
+
+  <!-- Warning Modal -->
+  <WarningModal
+    :is-open="showWarningModal"
+    :title="warningTitle"
+    :message="warningMessage"
+    @confirm="handleWarningConfirm"
+    @cancel="handleWarningCancel"
+    @close="handleWarningCancel"
   />
 </template>
