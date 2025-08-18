@@ -27,7 +27,7 @@
           <AiChatMessage
             v-if="isAi(m)"
             :message="m.content"
-            :buttons="aiButtons(m)"
+            :buttons="visibleButtons(m)"
             :sentAt="m.sendTime"
             @action="handleAiAction"
           />
@@ -59,6 +59,7 @@
       :receiverId="contractReceiverId"
       :isOwner="isOwner"
       :canSendMessage="canSendMessage"
+      :rentContext="rentContext"
       @sendMessage="sendMessageUi"
       @typing="() => {}"
       @setStartPoint="handleSetStartPoint"
@@ -237,6 +238,76 @@ const respondGoToStep2 = async (accepted) => {
   }
 }
 
+// 2단계 정보 확인
+const STEP2_TRIGGER = `다음은 2단계 '금액 조율' 단계입니다.`
+
+const priceFetched = ref(false)
+const needGetPrice = ref(false)
+
+const triggerGetPrice = async () => {
+  if (!amOwner.value) {
+    console.log('[step2] 임대인이 아님 → postGetPrice 스킵(나중에 재시도 가능)')
+    return
+  }
+
+  const id = String(actualContractChatId.value || '')
+  if (!id || priceFetched.value) return
+  priceFetched.value = true
+  try {
+    await contractApi.postGetPrice(id)
+    console.log('[step2] postGetPrice 호출 완료')
+  } catch (e) {
+    console.error('postGetPrice 실패:', e)
+    priceFetched.value = false
+  }
+}
+
+function parseKoreanAmount(raw = '') {
+  const s = String(raw).replace(/\s+/g, '').replace(/,/g, '')
+  if (!s) return null
+  const UNIT = { 억: 100_000_000, 만: 10_000, 천: 1_000, 백: 100, 십: 10 }
+  const t = s.replace(/원$/, '')
+  if (/^\d+$/.test(t)) return Number(t)
+  let total = 0
+  let rest = t
+  for (const big of ['억', '만']) {
+    const m = rest.match(new RegExp(`(\\d+)?${big}`))
+    if (m) {
+      total += (m[1] ? Number(m[1]) : 1) * UNIT[big]
+      rest = rest.replace(m[0], '')
+    }
+  }
+  for (const small of ['천', '백', '십']) {
+    const m = rest.match(new RegExp(`(\\d+)?${small}`))
+    if (m) {
+      total += (m[1] ? Number(m[1]) : 1) * UNIT[small]
+      rest = rest.replace(m[0], '')
+    }
+  }
+  if (/^\d+$/.test(rest)) total += Number(rest)
+  return Number.isFinite(total) ? total : null
+}
+
+const rentContext = computed(() => {
+  const msgs = mergedMessages.value || []
+  if (!msgs.length) return { type: null, deposit: null, monthly: null }
+  const cand = msgs.at(-2) || msgs.at(-1)
+  const content = String(cand?.content || '')
+
+  let type = null
+  if (/전세\s*계약/.test(content)) type = 'JEONSE'
+  else if (/월세\s*계약/.test(content)) type = 'WOLSE'
+
+  const depositMatch = content.match(/보증금[은는]?\s*([^\n,]+?원)/)
+  const deposit = depositMatch ? parseKoreanAmount(depositMatch[1]) : null
+
+  const monthlyMatch =
+    content.match(/월세[는\s:]*([^\n,]+?원)/) || content.match(/임대료[는\s:]*([^\n,]+?원)/)
+  const monthly = monthlyMatch ? parseKoreanAmount(monthlyMatch[1]) : null
+
+  return { type, deposit, monthly }
+})
+
 // 3단계 모달/액션
 const openTermsReview = () =>
   modalStore.open(TermsReviewModal, { onClose: () => modalStore.close() })
@@ -257,6 +328,25 @@ const responseFinalConfirm = async (accepted) => {
   if (res?.success) store.bumpFinalContractVersion()
 }
 
+// 4단계 적법성 검토
+const responseFinal = async (accepted) => {
+  const id = String(actualContractChatId.value)
+  if (!id) return
+
+  try {
+    const res = await contractApi.postResponseFinalAccept(id, { accepted })
+    if (res?.success) {
+      store.bumpFinalContractVersion()
+      alert(accepted ? '최종 확정을 수락했습니다.' : '최종 확정을 거절했습니다.')
+    } else {
+      alert(res?.message || '최종 확정 응답 실패')
+    }
+  } catch (e) {
+    console.error('[ContractChat] 최종 확정 응답 실패:', e)
+    alert('최종 확정 응답 중 오류가 발생했습니다.')
+  }
+}
+
 const dispatchAction = createActionDispatchers({
   modalStore,
   step1: {
@@ -271,6 +361,11 @@ const dispatchAction = createActionDispatchers({
     respondModification,
     responseDeletion,
     responseFinalConfirm,
+  },
+  step4: {
+    respondModification,
+    responseDeletion,
+    responseFinal,
   },
 })
 const handleAiAction = (payload) => {
@@ -442,6 +537,34 @@ const normalizeText = (s) =>
     .replace(/\s+/g, ' ')
     .trim()
 
+const TENANT_ONLY_ACTIONS = new Set([
+  // step3
+  'step3.modification.reject',
+  'step3.modification.accept',
+  'step3.deletion.reject',
+  'step3.deletion.accept',
+  'step3.finalConfirm.reject',
+  'step3.finalConfirm.accept',
+
+  // step4
+  'step4.modification.reject',
+  'step4.modification.accept',
+  'step4.deletion.reject',
+  'step4.deletion.accept',
+  'step4.final.reject',
+  'step4.final.accept',
+])
+
+const visibleButtons = (message) => {
+  const btns = aiButtons(message) || []
+  // amOwner = true → 임대인
+  if (amOwner.value) {
+    return btns.filter((b) => !TENANT_ONLY_ACTIONS.has(b.action))
+  }
+  // 임차인 → 그대로 노출
+  return btns
+}
+
 watch(
   latestMsg,
   (m) => {
@@ -462,6 +585,11 @@ watch(
     // --- 2단계 감지 ---
     if (t.includes(`2단계 '금액 조율' 단계입니다.`) || /2단계.*금액\s*조율/.test(t)) {
       safeReplaceQuery({ step: '2' })
+
+      if (t === STEP2_TRIGGER) {
+        needGetPrice.value = true
+        triggerGetPrice()
+      }
       return
     }
 
@@ -474,6 +602,16 @@ watch(
       const round = String(store.currentRound ?? 0)
       safeReplaceQuery({ step: '3', round })
       return
+    }
+
+    // --- 특약 수정 요청 허용 트리거 감지 ---
+    if (t.includes('위 문제점들을 검토하시고 필요시 임대인께서 수정 요청을 해주세요')) {
+      try {
+        localStorage.setItem('specialContract_allowOwnerOngoingEdit', 'true')
+      } catch (e) {}
+      if (store && 'allowOwnerOngoingEdit' in store) {
+        store.allowOwnerOngoingEdit = true
+      }
     }
   },
   { immediate: true },
@@ -545,6 +683,17 @@ watch(
   (len, old) => {
     if (len > (old || 0)) nextTick(forceScrollToBottom)
   },
+)
+
+watch(
+  [amOwner, actualContractChatId],
+  () => {
+    if (needGetPrice.value && !priceFetched.value && amOwner.value && actualContractChatId.value) {
+      console.log('[step2] 지연 로딩 후 postGetPrice 재시도')
+      triggerGetPrice()
+    }
+  },
+  { immediate: false },
 )
 </script>
 
