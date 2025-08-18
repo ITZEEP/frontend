@@ -15,6 +15,22 @@ export default [
     component: () => import('../pages/contract/ContractCompletePage.vue'),
   },
   {
+    path: '/contract/test',
+    name: 'ContractTest',
+    component: () => import('../pages/contract/TestContractExport.vue'),
+  },
+  {
+    path: '/contract/complete/:contractChatId',
+    name: 'ContractCompleteById',
+    component: () => import('../pages/contract/ContractCompletePage.vue'),
+  },
+  {
+    path: '/contract/export/:contractChatId',
+    name: 'ContractExportTest',
+    component: () => import('../pages/contract/ContractCompletePage.vue'),
+    meta: { requiresAuth: true, allowedRoles: ['owner', 'tenant', 'buyer'] }
+  },
+  {
     path: '/pre-contract/:id/:role',
     name: 'PreContract',
     component: () => import('../pages/pre-contract/PreContractPage.vue'),

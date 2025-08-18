@@ -421,3 +421,151 @@ export const postFinalConfirmResponse = async (contractChatId, data) => {
     console.error('최종 특약 확정 요청 응답 (임차인) 실패: ', error)
   }
 }
+
+// 계약서 내보내기 시작 - 초기 PDF 생성
+// 사용자 역할 확인
+export const getUserRole = async (contractChatId) => {
+  try {
+    const response = await api.get(`/api/contract/${contractChatId}/export/role`)
+    return response.data.data // 'owner' or 'buyer'
+  } catch (error) {
+    console.error('Failed to get user role:', error)
+    return 'owner' // 기본값
+  }
+}
+
+// HTTP를 통한 서명 상태 업데이트 (WebSocket 대안)
+export const updateSignatureStatus = async (contractChatId, signatureData) => {
+  try {
+    const response = await api.post(`/api/contract/${contractChatId}/export/signature-status`, signatureData)
+    return response.data
+  } catch (error) {
+    console.error('서명 상태 업데이트 실패:', error)
+    throw error
+  }
+}
+
+// 계약서 내보내기 상태 조회
+export const getExportStatus = async (contractChatId) => {
+  try {
+    const response = await api.get(`/api/contract/${contractChatId}/export/status`)
+    return response.data.data
+  } catch (error) {
+    console.error('내보내기 상태 조회 실패:', error)
+    throw error
+  }
+}
+
+export const startContractExport = async (contractChatId) => {
+  try {
+    const response = await api.post(`/api/contract/${contractChatId}/start-export`, null, {
+      responseType: 'arraybuffer',
+      headers: {
+        'Accept': 'application/pdf',
+        'Content-Type': 'application/json'
+      }
+    })
+    
+    // ArrayBuffer가 비어있지 않은지 확인
+    if (!response.data || response.data.byteLength === 0) {
+      console.error('빈 PDF 데이터를 받았습니다')
+      return null
+    }
+    
+    console.log('PDF 데이터 수신 성공, 크기:', response.data.byteLength, 'bytes')
+    return response.data
+  } catch (error) {
+    console.error('계약서 내보내기 시작 실패: ', error)
+    if (error.response) {
+      console.error('에러 상태:', error.response.status)
+      console.error('에러 헤더:', error.response.headers)
+    }
+    return null
+  }
+}
+
+// 서명 저장
+export const saveSignature = async (contractChatId, signatureData) => {
+  try {
+    const formData = new FormData()
+    formData.append('dto', JSON.stringify(signatureData.dto))
+    if (signatureData.imgFiles) {
+      formData.append('imgFiles', signatureData.imgFiles)
+    }
+    
+    const response = await api.post(`/api/contract/${contractChatId}/signature/tax`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+    return response.data
+  } catch (error) {
+    console.error('서명 저장 실패: ', error)
+    return null
+  }
+}
+
+// 최종 계약서 저장 (암호화)
+export const saveFinalContract = async (contractChatId, data) => {
+  try {
+    const response = await api.post(`/api/contract/${contractChatId}/finalContract/p`, data)
+    return response.data
+  } catch (error) {
+    console.error('최종 계약서 저장 실패: ', error)
+    return null
+  }
+}
+
+// 계약서 PDF 다운로드
+export const downloadContractPDF = async (contractChatId, data) => {
+  try {
+    const response = await api.post(`/api/contract/${contractChatId}/pdf`, data, {
+      responseType: 'blob'
+    })
+    return response.data
+  } catch (error) {
+    console.error('계약서 PDF 다운로드 실패: ', error)
+    return null
+  }
+}
+
+// 계약서 이메일 전송
+export const sendContractEmail = async (contractChatId, data) => {
+  try {
+    const response = await api.post(`/api/contract/${contractChatId}/email`, data)
+    return response.data
+  } catch (error) {
+    console.error('계약서 이메일 전송 실패: ', error)
+    return null
+  }
+}
+
+// 임시 PDF URL 생성 (임차인/임대인만 접근 가능)
+export const createTempPdfUrl = async (contractChatId) => {
+  try {
+    const response = await api.get(`/api/contract/${contractChatId}/preview`)
+    return response.data
+  } catch (error) {
+    console.error('임시 PDF URL 생성 실패: ', error)
+    if (error.response?.status === 403) {
+      throw new Error('해당 계약서에 접근할 권한이 없습니다')
+    }
+    throw error
+  }
+}
+
+// 임시 PDF 파일 접근 (권한 확인 후 리다이렉트)
+export const getTempPdf = async (fileName) => {
+  try {
+    const response = await api.get(`/api/contract/temp-pdf/${fileName}`)
+    return response.data
+  } catch (error) {
+    console.error('임시 PDF 접근 실패: ', error)
+    if (error.response?.status === 403) {
+      throw new Error('해당 파일에 접근할 권한이 없습니다')
+    } else if (error.response?.status === 404) {
+      throw new Error('파일을 찾을 수 없거나 만료되었습니다')
+    }
+    throw error
+  }
+}

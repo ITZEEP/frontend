@@ -79,13 +79,13 @@
         </div>
       </div>
 
-      <button
+      <!-- <button
         class="w-full mt-2 rounded-xl bg-yellow-50 hover:bg-yellow-100 text-yellow-primary font-semibold py-3 transition"
         @click="$emit('open-guide')"
       >
         <i class="fa-solid fa-book-open mr-2"></i>
         상세 가이드 보기
-      </button>
+      </button> -->
     </div>
   </div>
 </template>
