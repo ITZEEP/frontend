@@ -1,7 +1,7 @@
 <template>
   <div class="h-full flex flex-col">
     <!-- 헤더 -->
-    <div class="px-4 py-3 border-b-2 bg-white">
+    <div class="px-4 py-3 border-b-2 bg-white shrink-0">
       <p class="font-bold text-lg">실시간 협의</p>
       <div class="text-sm text-gray-600">
         계약 채팅방 ID: {{ actualContractChatId || 'Loading...' }}
@@ -10,7 +10,7 @@
     </div>
 
     <!-- 메시지 영역 -->
-    <div class="w-full flex-1 p-4 bg-gray-50 max-h-[420px] overflow-y-auto" ref="messagesContainer">
+    <div class="w-full flex-1 min-h-0 p-4 bg-gray-50 overflow-y-auto" ref="messagesContainer">
       <div v-if="loadingMessages && !hasLoadedOnce" class="text-center text-gray-500">
         메시지 로딩 중...
       </div>
@@ -50,7 +50,7 @@
     </div>
 
     <!-- 스텝 별 시나리오 메시지 -->
-    <StepContainer />
+    <StepContainer class="shrink-0" />
 
     <!-- 입력 -->
     <ContractChatInput
@@ -64,6 +64,7 @@
       @typing="() => {}"
       @setStartPoint="handleSetStartPoint"
       @exportMessages="handleExportMessages"
+      class="shrink-0"
     />
 
     <div v-else class="border-t bg-gray-50 p-4 text-center text-gray-500">
