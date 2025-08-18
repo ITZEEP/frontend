@@ -266,6 +266,7 @@ const handleVerify = async () => {
         body,
       )
       store.setCanProceed(true)
+      alert('✅ 본인 인증에 성공했습니다!')
       emit('verified', { mode: props.mode, res })
       return
     }
@@ -291,6 +292,7 @@ const handleVerify = async () => {
     }
 
     store.setCanProceed(true)
+    alert('✅ 본인 인증에 성공했습니다!')
     emit('verified', { mode: props.mode, res })
   } catch (error) {
     console.error('본인 인증 실패:', error)
