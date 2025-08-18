@@ -82,7 +82,7 @@ class WebSocketService {
     })
   }
 
-  async sendMessage(destination, message, retryCount = 10) {
+  async sendMessage(destination, message, retryCount = 30) {
     console.log('sendMessage 호출:', { destination, message })
     console.log('STOMP 클라이언트 상태:', {
       hasClient: !!this.stompClient,
