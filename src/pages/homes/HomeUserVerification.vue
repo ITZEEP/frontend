@@ -1,7 +1,10 @@
+<!-- HomeUserVerifcation -->
 <template>
   <!-- 본인 인증 -->
-  <div class="py-20">
-    <UserVerification @verified="handleVerified" mode="home" :home-id="homeId" />
+  <div class="py-10 px-4">
+    <div class="w-full mx-auto max-w-[420px] sm:max-w-[560px] md:max-w-[720px] lg:max-w-[820px]">
+      <UserVerification @verified="handleVerified" mode="home" :home-id="homeId" />
+    </div>
   </div>
 </template>
 
