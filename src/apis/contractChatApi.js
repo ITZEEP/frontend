@@ -297,7 +297,7 @@ export const postSpecialContractSelection = async (contractChatId, data) => {
 // 미완료 특약 문서 목록 조회
 export const getIncompleteSpecialContracts = async (contractChatId) => {
   try {
-    const result = await apiRequest(`/special-contract/${contractChatId}/incomplete`)
+    const result = await apiRequest(`/special-contract/${contractChatId}/incomplete/now`)
     return result.data
   } catch (error) {
     console.error('미완료 특약 문서 목록 조회 실패: ', error)

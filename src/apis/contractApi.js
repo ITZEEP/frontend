@@ -51,7 +51,7 @@ export const contractApi = {
   // 금액 확정 요청
   postRequestPrice: async (contractChatId, data) => {
     try {
-      const response = await api.post(`${CONTRACT_BASE_URL}/${contractChatId}/price`, data)
+      const response = await api.post(`${CONTRACT_BASE_URL}/${contractChatId}/price/request`, data)
       return response.data
     } catch (error) {
       console.error('금액 확정 요청 실패: ', error)
@@ -61,7 +61,7 @@ export const contractApi = {
   // 금액 확정 거절
   postRejectPrice: async (contractChatId) => {
     try {
-      const response = await api.delete(`${CONTRACT_BASE_URL}/${contractChatId}/price`)
+      const response = await api.post(`${CONTRACT_BASE_URL}/${contractChatId}/price/reject`)
       return response.data
     } catch (error) {
       console.error('금액 확정 거절 실패: ', error)
@@ -71,10 +71,36 @@ export const contractApi = {
   // 금액 확정 수락
   postAcceptPrice: async (contractChatId) => {
     try {
-      const response = await api.patch(`${CONTRACT_BASE_URL}/${contractChatId}/price`)
+      const response = await api.patch(`${CONTRACT_BASE_URL}/${contractChatId}/price/accept`)
       return response.data
     } catch (error) {
       console.error('금액 확정 수락 실패: ', error)
+    }
+  },
+
+  // ======= 계약서 최종 확정 =========
+  // 요청
+  postRequestFinalAccept: async (contractChatId) => {
+    try {
+      const response = await api.post(
+        `${CONTRACT_BASE_URL}/${contractChatId}/specialContract/final-request`,
+      )
+      return response.data
+    } catch (error) {
+      console.error('계약서 최종 확정 요청 실패: ', error)
+    }
+  },
+
+  // 응답
+  postResponseFinalAccept: async (contractChatId, data) => {
+    try {
+      const response = await api.post(
+        `${CONTRACT_BASE_URL}/${contractChatId}/specialContract/final-accept`,
+        data,
+      )
+      return response.data
+    } catch (error) {
+      console.error('계약서 최종 확정 응답 실패: ', error)
     }
   },
 }
