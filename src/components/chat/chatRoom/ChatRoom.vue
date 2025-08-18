@@ -43,7 +43,11 @@
             </div>
 
             <div v-else-if="message.type === 'URLLINK'">
-              <BaseButton @click="handleUrlLinkClick(message)">
+              <BaseButton
+                :disabled="isMyMessage(message)"
+                @click="!isMyMessage(message) && handleUrlLinkClick(message)"
+                class="disabled:opacity-50 disabled:cursor-not-allowed"
+              >
                 {{ preContractButtonLabel(message) }}
               </BaseButton>
             </div>
@@ -125,7 +129,11 @@
             </div>
 
             <div v-else-if="message.type === 'URLLINK'">
-              <BaseButton @click="handleUrlLinkClick(message)">
+              <BaseButton
+                :disabled="isMyMessage(message)"
+                @click="!isMyMessage(message) && handleUrlLinkClick(message)"
+                class="disabled:opacity-50 disabled:cursor-not-allowed"
+              >
                 {{ preContractButtonLabel(message) }}
               </BaseButton>
             </div>
