@@ -15,7 +15,7 @@
         class="signature-canvas"
       />
       
-      <div v-if="isEmpty" class="signature-placeholder">
+      <div v-if="isEmpty" class="signature-placeholder" style="pointer-events: none;">
         <span class="text-gray-400 text-sm">{{ placeholder }}</span>
       </div>
     </div>
@@ -40,6 +40,8 @@ const props = defineProps({
   placeholder: { type: String, default: '여기에 서명해주세요' },
   showControls: { type: Boolean, default: true }
 })
+
+const emit = defineEmits(['signature-saved', 'signature-cleared'])
 
 const canvas = ref(null)
 const context = ref(null)
@@ -93,6 +95,11 @@ const draw = (e) => {
 const stopDrawing = () => {
   if (isDrawing.value && currentStroke.value.length > 0) {
     strokeHistory.value.push([...currentStroke.value])
+    // 서명이 완료되면 이벤트 발생
+    const signatureData = getData()
+    if (signatureData) {
+      emit('signature-saved', signatureData)
+    }
   }
   isDrawing.value = false
 }
@@ -124,12 +131,22 @@ const clear = () => {
   initCanvas()
   strokeHistory.value = []
   currentStroke.value = []
+  // 서명이 지워지면 이벤트 발생
+  emit('signature-cleared')
 }
 
 const undo = () => {
   if (strokeHistory.value.length === 0) return
   strokeHistory.value.pop()
   redrawCanvas()
+  
+  // 되돌리기 후 서명 상태 업데이트
+  const signatureData = getData()
+  if (signatureData) {
+    emit('signature-saved', signatureData)
+  } else {
+    emit('signature-cleared')
+  }
 }
 
 const redrawCanvas = () => {
@@ -230,12 +247,16 @@ defineExpose({ getData, clear, undo, isEmpty })
 }
 
 .signature-canvas {
-  @apply block cursor-crosshair bg-white;
+  @apply block cursor-crosshair bg-white relative;
   touch-action: none;
+  z-index: 2;
 }
 
 .signature-placeholder {
-  @apply absolute inset-0 flex items-center justify-center pointer-events-none;
+  @apply absolute inset-0 flex items-center justify-center;
+  pointer-events: none !important;
+  z-index: 1;
+  user-select: none;
 }
 
 .controls-wrapper {
