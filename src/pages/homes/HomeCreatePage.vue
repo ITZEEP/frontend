@@ -2,7 +2,8 @@
   <div class="max-w-4xl mx-auto p-6 space-y-6">
     <StepProgressIndicator :currentStep="currentStep" />
     <component :is="stepComponent" :form="form" @update:form="updateForm" />
-    <div class="flex justify-between mt-10">
+
+    <div class="flex justify-between mt-8">
       <BaseButton v-if="currentStep > 1" @click="goToStep(currentStep - 1)">이전</BaseButton>
       <div class="ml-auto">
         <BaseButton v-if="currentStep < stepComponents.length" @click="goToStep(currentStep + 1)">
@@ -134,6 +135,7 @@ const handleSubmit = async () => {
       landCategory: rawForm.landCategory,
       facilityItemIds: rawForm.facilityItemIds,
       maintenanceFees: rawForm.maintenanceFees,
+      description: rawForm.description,
     }
 
     console.log('📦 최종 제출 데이터 (payload):', payload)

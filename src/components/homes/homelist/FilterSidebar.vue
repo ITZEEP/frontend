@@ -1,5 +1,25 @@
 <template>
   <aside class="w-full md:w-64 bg-white px-4 py-6 border-r border-gray-200 space-y-6">
+    <button
+      @click="$emit('close')"
+      class="absolute top-4 right-4 md:hidden text-gray-500 hover:text-gray-800"
+    >
+      <svg
+        class="w-6 h-6"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M6 18L18 6M6 6l12 12"
+        ></path>
+      </svg>
+    </button>
+
     <div>
       <h3 class="font-bold text-gray-800 mb-2">지역선택</h3>
       <select
@@ -25,16 +45,18 @@
       <h3 class="font-bold text-gray-800 mb-2">매물종류</h3>
       <div class="flex flex-wrap gap-2">
         <button
-          v-for="type in ['전체', '원룸', '투룸', '빌라', '오피스텔']"
-          :key="type"
+          v-for="type in houseTypes"
+          :key="type.value"
           :class="[
             'px-3 py-1 border rounded-full text-sm',
-            filters.houseType === type ? 'bg-yellow-primary text-white' : 'bg-white text-gray-700',
+            filters.houseType === type.value
+              ? 'bg-yellow-primary text-white'
+              : 'bg-white text-gray-700',
           ]"
-          @click="sethouseType(type)"
+          @click="setHouseType(type.value)"
           type="button"
         >
-          {{ type }}
+          {{ type.label }}
         </button>
       </div>
     </div>
@@ -64,9 +86,10 @@
           type="range"
           v-model="filters.depositRange"
           min="0"
-          max="200000"
-          step="100"
-          class="w-full custom-range"
+          max="30000"
+          step="10"
+          class="w-full custom-range-deposit"
+          ref="depositRangeInput"
         />
         <div class="text-xs text-gray-500">최대: {{ filters.depositRange }}만원</div>
 
@@ -75,9 +98,10 @@
           type="range"
           v-model="filters.monthlyRange"
           min="0"
-          max="5000"
-          step="10"
-          class="w-full custom-range"
+          max="500"
+          step="5"
+          class="w-full custom-range-monthly"
+          ref="monthlyRangeInput"
         />
         <div class="text-xs text-gray-500">최대: {{ filters.monthlyRange }}만원</div>
       </div>
@@ -88,9 +112,10 @@
           type="range"
           v-model="filters.leaseRange"
           min="0"
-          max="200000"
-          step="100"
-          class="w-full custom-range"
+          max="80000"
+          step="10"
+          class="w-full custom-range-lease"
+          ref="leaseRangeInput"
         />
         <div class="text-xs text-gray-500">최대: {{ filters.leaseRange }}만원</div>
       </div>
@@ -104,7 +129,8 @@
         min="0"
         max="70"
         step="1"
-        class="w-full custom-range"
+        class="w-full custom-range-area"
+        ref="areaRangeInput"
       />
       <div class="text-xs text-gray-500">최대: {{ filters.area }}평</div>
     </div>
@@ -130,10 +156,13 @@
     <div>
       <h3 class="font-bold text-gray-800 mb-2">매물조건</h3>
       <div class="flex flex-col gap-1">
-        <label v-for="opt in conditions" :key="opt" class="flex items-center gap-2 text-sm">
-          <input type="checkbox" :value="opt" v-model="filters.conditions" />
-          {{ opt }}
-        </label>
+        <BaseCheckbox
+          v-for="opt in conditions"
+          :key="opt"
+          :label="opt"
+          :modelValue="filters.conditions.includes(opt)"
+          @update:modelValue="toggleCondition(opt)"
+        />
       </div>
     </div>
 
@@ -157,10 +186,11 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { guToDong } from './gu-to-dong'
+import BaseCheckbox from '@/components/common/BaseCheckbox.vue'
 
-const emit = defineEmits(['filter-change'])
+const emit = defineEmits(['filter-change', 'close'])
 
 const filters = ref({
   city: '전체',
@@ -173,11 +203,25 @@ const filters = ref({
   area: 0,
   direction: null,
   floor: null,
-  conditions: [],
+  conditions: [], // 초기값은 빈 배열이어야 합니다.
 })
+
+const depositRangeInput = ref(null)
+const monthlyRangeInput = ref(null)
+const leaseRangeInput = ref(null)
+const areaRangeInput = ref(null)
 
 const guList = Object.keys(guToDong)
 const districtList = ref([])
+
+const houseTypes = [
+  { label: '전체', value: '전체' },
+  { label: '오픈형 원룸', value: 'OPEN_ONE_ROOM' },
+  { label: '분리형 원룸', value: 'SEPARATED_ONE_ROOM' },
+  { label: '투룸', value: 'TWO_ROOM' },
+  { label: '빌라', value: 'VILLA' },
+  { label: '오피스텔', value: 'OFFICETEL' },
+]
 
 function onCityChange() {
   if (filters.value.city === '전체') {
@@ -189,19 +233,8 @@ function onCityChange() {
   }
 }
 
-function sethouseType(type) {
-  // '원룸', '투룸'과 '빌라'를 분리하여 필터링
-  if (type === '원룸') {
-    filters.value.houseType = ['OPEN_ONE_ROOM', 'SEPARATED_ONE_ROOM']
-  } else if (type === '투룸') {
-    filters.value.houseType = 'TWO_ROOM'
-  } else if (type === '빌라') {
-    filters.value.houseType = 'VILLA'
-  } else if (type === '오피스텔') {
-    filters.value.houseType = 'OFFICETEL'
-  } else {
-    filters.value.houseType = '전체'
-  }
+function setHouseType(type) {
+  filters.value.houseType = type
 }
 
 function setDealType(deal) {
@@ -237,9 +270,127 @@ function resetFilters() {
 }
 
 function emitFilterChange() {
-  emit('filter-change', filters.value)
+  const payload = {
+    ...filters.value,
+    conditions: filters.value.conditions,
+  }
+  emit('filter-change', payload)
 }
 
-const floors = ['반지하', '1층', '2~5층', '6~9층', '10층 이상']
+const floors = ['1층', '2~5층', '6~9층', '10층 이상']
 const conditions = ['주차 가능', '반려동물 가능', '엘리베이터']
+
+// 새롭게 추가된 로직: 체크박스 상태를 수동으로 토글
+function toggleCondition(condition) {
+  const index = filters.value.conditions.indexOf(condition)
+  if (index > -1) {
+    filters.value.conditions.splice(index, 1)
+  } else {
+    filters.value.conditions.push(condition)
+  }
+}
+
+function updateRangeProgress(inputElement, value, max) {
+  if (inputElement) {
+    const percentage = (value / max) * 100
+    inputElement.style.setProperty('--range-progress', `${percentage}%`)
+  }
+}
+
+watch(
+  () => filters.value.depositRange,
+  (newValue) => {
+    updateRangeProgress(depositRangeInput.value, newValue, 30000)
+  },
+)
+watch(
+  () => filters.value.monthlyRange,
+  (newValue) => {
+    updateRangeProgress(monthlyRangeInput.value, newValue, 500)
+  },
+)
+watch(
+  () => filters.value.leaseRange,
+  (newValue) => {
+    updateRangeProgress(leaseRangeInput.value, newValue, 80000)
+  },
+)
+watch(
+  () => filters.value.area,
+  (newValue) => {
+    updateRangeProgress(areaRangeInput.value, newValue, 70)
+  },
+)
+
+onMounted(() => {
+  updateRangeProgress(depositRangeInput.value, filters.value.depositRange, 30000)
+  updateRangeProgress(monthlyRangeInput.value, filters.value.monthlyRange, 500)
+  updateRangeProgress(leaseRangeInput.value, filters.value.leaseRange, 80000)
+  updateRangeProgress(areaRangeInput.value, filters.value.area, 70)
+})
 </script>
+
+<style scoped>
+/* 커스텀 CSS는 그대로 유지 */
+input[type='range'] {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 8px;
+  background: transparent;
+  border-radius: 4px;
+}
+
+input[type='range']::-webkit-slider-runnable-track {
+  background: #e5e7eb;
+  border-radius: 4px;
+  height: 8px;
+}
+
+input[type='range']::-moz-range-track {
+  background: #e5e7eb;
+  border-radius: 4px;
+  height: 8px;
+}
+
+input[type='range']::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 8px;
+  background-color: #facc15;
+  border-radius: 4px;
+  width: var(--range-progress, 0%);
+}
+
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #facc15;
+  border-radius: 50%;
+  cursor: pointer;
+  margin-top: -4px;
+}
+
+input[type='range']::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: #facc15;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.custom-range-deposit,
+.custom-range-monthly,
+.custom-range-lease,
+.custom-range-area {
+  position: relative;
+  overflow: hidden;
+}
+
+input[type='range']::-ms-fill-lower {
+  background: #facc15;
+  border-radius: 4px;
+}
+</style>

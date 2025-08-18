@@ -102,6 +102,24 @@ const removeMortgagee = (index) => {
     />
 
     <OCRFormField
+      :modelValue="modelValue.건물번호"
+      @update:modelValue="(value) => updateField('건물번호', value)"
+      label="건물 번호"
+      placeholder="예: 제44층 제4409호"
+      :error="errors.건물번호"
+      :shake="shake"
+    />
+
+    <OCRFormField
+      :modelValue="modelValue.건물상세"
+      @update:modelValue="(value) => updateField('건물상세', value)"
+      label="건물 상세"
+      placeholder="예: 철골철근콘크리트구조"
+      :error="errors.건물상세"
+      :shake="shake"
+    />
+
+    <OCRFormField
       :modelValue="modelValue.소유자이름"
       @update:modelValue="(value) => updateField('소유자이름', value)"
       label="소유자 이름"
@@ -117,6 +135,15 @@ const removeMortgagee = (index) => {
       placeholder="예: 1980-01-01"
       :required="true"
       :error="errors.소유자생년월일"
+      :shake="shake"
+    />
+
+    <OCRFormField
+      :modelValue="modelValue.채무자"
+      @update:modelValue="(value) => updateField('채무자', value)"
+      label="채무자"
+      placeholder="예: 홍길동"
+      :error="errors.채무자"
       :shake="shake"
     />
 
@@ -211,5 +238,12 @@ const removeMortgagee = (index) => {
         />
       </div>
     </div>
+
+    <OCRFormField
+      :modelValue="modelValue.발급일"
+      label="발급일"
+      :disabled="true"
+      :shake="false"
+    />
   </OCRFormBox>
 </template>

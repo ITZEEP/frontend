@@ -1,3 +1,4 @@
+tjt
 <template>
   <ChatLayout v-slot="{ selectedRoom }" :initial-room-id="initialRoomId">
     <ChatRoom v-if="selectedRoom" :room="selectedRoom" />
@@ -6,7 +7,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import ChatLayout from '@/components/chat/layout/ChatLayout.vue'
 import ChatRoom from '@/components/chat/chatRoom/ChatRoom.vue'
