@@ -50,7 +50,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/itzeep/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -83,7 +83,7 @@ jobs:
             echo ${{ secrets.GHCR_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
             # Docker 이미지 업데이트
-            docker pull ${{ env.REGISTRY }}/itzeep/${{ env.IMAGE_NAME }}:latest
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
             # 기존 컨테이너 정지 및 제거
             docker stop itzeep-frontend || true
@@ -95,7 +95,7 @@ jobs:
               --restart unless-stopped \
               -p 5173:5173 \
               --network itzeep_itjib-network \
-              ${{ env.REGISTRY }}/itzeep/${{ env.IMAGE_NAME }}:latest
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
             # 이전 이미지 정리
             docker image prune -f
