@@ -15,9 +15,9 @@ export const preContractAPI = {
   },
 
   // 사기 위험도 내역 조회 API
-  getTodayRiskCheckSummary: async (homeId) => {
+  getTodayRiskCheckSummary: async (contractChatId) => {
     try {
-      const response = await api.get(`/api/fraud-risk/today-check/${homeId}`)
+      const response = await api.get(`/api/fraud-risk/today-check/${contractChatId}`)
       return response.data
     } catch (error) {
       console.log('백엔드 사기위험도 정보 조회 실패', error)

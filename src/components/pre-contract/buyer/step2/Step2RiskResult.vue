@@ -71,6 +71,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { usePreContractStore } from '@/stores/preContract'
 import buyerApi from '@/apis/pre-contract-buyer'
+import { useRoute } from 'vue-router'
 
 const building = ref('')
 const ownership = ref('')
@@ -86,6 +87,8 @@ const riskLabel = computed(() => {
 })
 
 const store = usePreContractStore()
+const route = useRoute()
+const contractChatId = route.params.contractChatId || route.params.id || route.query.id || null
 
 onMounted(async () => {
   store.canProceed = true
@@ -94,7 +97,7 @@ onMounted(async () => {
   store.setHomeId(raw)
 
   try {
-    const { data } = await buyerApi.getTodayRiskCheckSummary(store.homeId)
+    const { data } = await buyerApi.getTodayRiskCheckSummary(contractChatId)
     console.log('store.homeId:', store.homeId)
     if (data.hasAnalysis === true) {
       riskType.value = data.summary.riskType
