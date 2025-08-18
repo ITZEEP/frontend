@@ -70,34 +70,46 @@
           <!-- 계약서 서명 (필수) -->
           <div class="border rounded-lg p-4">
             <h3 class="font-semibold mb-3">계약서 서명 (필수)</h3>
-            <SignaturePad
-              ref="signaturePad1"
-              :width="300"
-              :height="120"
-              @signature-saved="handleSignature1"
-            />
+            <div class="w-full">
+              <SignaturePad
+                ref="signaturePad1"
+                :width="800"
+                :height="200"
+                :placeholder="''"
+                @signature-saved="handleSignature1"
+                class="w-full"
+              />
+            </div>
           </div>
 
           <!-- 세금 체납 없음 서명 (조건부) -->
           <div v-if="hasTaxArrears && userRole === 'owner'" class="border rounded-lg p-4">
             <h3 class="font-semibold mb-3">세금 체납 없음 확인 서명</h3>
-            <SignaturePad
-              ref="signaturePad2"
-              :width="300"
-              :height="120"
-              @signature-saved="handleSignature2"
-            />
+            <div class="w-full">
+              <SignaturePad
+                ref="signaturePad2"
+                :width="800"
+                :height="200"
+                :placeholder="''"
+                @signature-saved="handleSignature2"
+                class="w-full"
+              />
+            </div>
           </div>
 
           <!-- 선순위 확정일자 없음 서명 (조건부) -->
           <div v-if="hasPriorFixedDate && userRole === 'owner'" class="border rounded-lg p-4">
             <h3 class="font-semibold mb-3">선순위 확정일자 없음 확인 서명</h3>
-            <SignaturePad
-              ref="signaturePad3"
-              :width="300"
-              :height="120"
-              @signature-saved="handleSignature3"
-            />
+            <div class="w-full">
+              <SignaturePad
+                ref="signaturePad3"
+                :width="800"
+                :height="200"
+                :placeholder="''"
+                @signature-saved="handleSignature3"
+                class="w-full"
+              />
+            </div>
           </div>
         </div>
 
@@ -510,6 +522,9 @@ onMounted(async () => {
   // 계약서 정보 가져와서 생년월일 추출
   await loadContractInfo()
 
+  // finalContract 레코드 초기화 (외래 키 제약조건 해결)
+  await initializeFinalContract()
+
   // WebSocket 연결
   await setupWebSocket()
 
@@ -591,6 +606,31 @@ const loadContractInfo = async () => {
   }
 }
 
+// finalContract 레코드 초기화 (외래 키 제약조건 해결)
+const initializeFinalContract = async () => {
+  try {
+    console.log('finalContract 레코드 초기화 시도...')
+    
+    // final_contract 테이블에 초기 레코드 생성
+    // GET /api/contract/{contractChatId}/final_contract 호출
+    // 이 API가 내부적으로 insertFinalContractInit을 호출하여 레코드 생성
+    const response = await api.get(`/api/contract/${contractId.value}/final_contract`)
+    
+    if (response.data && response.data.success) {
+      console.log('finalContract 레코드 초기화 성공')
+    } else {
+      console.log('finalContract 레코드 초기화 응답:', response.data)
+    }
+  } catch (error) {
+    console.error('finalContract 초기화 중 오류:', error)
+    // 이미 레코드가 있는 경우 오류가 발생할 수 있으므로 무시하고 진행
+    // MySQL의 UNIQUE 제약조건 때문에 중복 삽입 시 오류 발생 가능
+    if (error.response?.data?.message?.includes('Duplicate entry')) {
+      console.log('finalContract 레코드가 이미 존재합니다')
+    }
+  }
+}
+
 // 초기 PDF 로드 (임시 URL 생성)
 const loadInitialPDF = async () => {
   isLoading.value = true
@@ -664,7 +704,7 @@ const proceedToPassword = async () => {
     // 서버에 서명 저장
     await saveSignatureToServer()
 
-    // WebSocket 연결 확인 및 재연결 시도
+    // WebSocket 연결 확인
     if (!websocketService.getConnectionStatus()) {
       console.log('WebSocket 연결이 끊어짐. 재연결 시도...')
       await websocketService.connect()
