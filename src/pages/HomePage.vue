@@ -1,66 +1,88 @@
 <template>
   <div class="min-h-screen bg-gray-50">
-    <!-- Hero Section -->
-    <section class="relative bg-yellow-primary overflow-hidden">
-      <!-- Content -->
-      <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 lg:py-32">
-        <div class="text-center lg:text-left max-w-4xl mx-auto lg:mx-0">
-          <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
-            안전한 부동산 직거래
-            <span class="block text-yellow-50">잇집에서 시작하세요</span>
-          </h1>
+    <!-- Hero -->
+    <section class="relative overflow-hidden h-[70vh] md:h-[80vh]">
+      <!-- 비디오: 왼쪽 붙임 + 가로폭 제한 -->
+      <video
+        class="pointer-events-none absolute left-0 top-0 h-full w-full object-cover xl:w-[60vw] 2xl:w-[60vw]"
+        src="/panda&lion.mp4"
+        autoplay
+        muted
+        loop
+        playsinline
+      ></video>
 
-          <p class="text-lg md:text-xl text-yellow-50 mb-8 max-w-2xl mx-auto lg:mx-0">
-            AI 기술로 사기 위험을 분석하고, 스마트 계약서 작성부터 안전한 거래까지 모든 과정을
-            지원합니다.
-          </p>
+      <div class="absolute inset-0 bg-[#FFF3D4]/30 pointer-events-none"></div>
+      <div
+        class="absolute inset-0 bg-gradient-to-r from-black/30 via-black/10 to-transparent pointer-events-none"
+      ></div>
 
-          <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-            <router-link to="/homes">
-              <BaseButton variant="gray" size="lg" class="w-full sm:w-auto"> 매물 찾기 </BaseButton>
-            </router-link>
-            <router-link to="/risk-check">
-              <BaseButton variant="outline" size="lg" class="w-full sm:w-auto">
-                AI 위험도 분석
-              </BaseButton>
-            </router-link>
+      <!-- 콘텐츠(오른쪽 끝 정렬) -->
+      <div class="relative z-10 h-full">
+        <div class="max-w-7xl h-full mx-auto px-6 sm:px-6 lg:px-8 flex items-center justify-end">
+          <div class="max-w-[560px] text-right text-white">
+            <h1
+              class="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6 drop-shadow flex flex-col gap-3"
+            >
+              안전한 부동산 직거래
+              <span class="block text-yellow-primary">잇집에서 시작하세요</span>
+            </h1>
+
+            <p class="text-lg md:text-xl text-gray-800/90 mb-8 ml-auto drop-shadow">
+              AI 기술로 사기 위험을 분석하고,
+              <br />스마트 계약서 작성부터 안전한 거래까지 모든 과정을 지원합니다.
+            </p>
+
+            <div class="flex flex-col sm:flex-row gap-4 justify-end">
+              <router-link to="/homes">
+                <BaseButton variant="gray" size="lg" class="w-full sm:w-auto">매물 찾기</BaseButton>
+              </router-link>
+              <router-link to="/risk-check">
+                <BaseButton variant="outline" size="lg" class="w-full sm:w-auto"
+                  >AI 위험도 분석</BaseButton
+                >
+              </router-link>
+            </div>
+
+            <!-- Trust Indicators -->
+            <div class="mt-12 flex flex-wrap justify-end gap-8 text-yellow-primary">
+              <div class="flex items-center gap-2">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path
+                    fill-rule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                <span class="text-sm font-medium">AI 사기 위험 분석</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path
+                    fill-rule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                <span class="text-sm font-medium">스마트 계약서 작성</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path
+                    fill-rule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                <span class="text-sm font-medium">안전 거래 보장</span>
+              </div>
+            </div>
           </div>
-
-          <!-- Trust Indicators -->
-          <div class="mt-12 flex flex-wrap justify-center lg:justify-start gap-8 text-yellow-50">
-            <div class="flex items-center gap-2">
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fill-rule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-              <span class="text-sm font-medium">AI 사기 위험 분석</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fill-rule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-              <span class="text-sm font-medium">스마트 계약서 작성</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fill-rule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-              <span class="text-sm font-medium">안전 거래 보장</span>
-            </div>
-          </div>
+          <!-- /text block -->
         </div>
+        <!-- /container -->
       </div>
+      <!-- /relative h-full -->
     </section>
 
     <!-- Feature Section -->
@@ -72,8 +94,8 @@
             <span class="text-yellow-primary">새로운 기준</span>
           </h2>
           <p class="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
-            잇집만의 혁신적인 기술로 부동산 거래의 모든 위험을 사전에 차단하고, 더 안전하고 투명한
-            거래 환경을 제공합니다.
+            잇집만의 기술로 부동산 거래의 위험을 사전에 차단하고, 더 안전하고 투명한 거래 환경을
+            제공합니다.
           </p>
         </div>
 
@@ -121,8 +143,8 @@
             </div>
             <h3 class="text-xl font-semibold text-gray-800 mb-4">스마트 계약서 작성</h3>
             <p class="text-gray-600 leading-relaxed">
-              법무법인과 협력하여 개발한 스마트 계약서 시스템으로 복잡한 계약 조건을 쉽고 정확하게
-              작성할 수 있습니다.
+              AI와 함께 진행되는 스마트 계약서 시스템으로 복잡한 계약 조건을 쉽고 정확하게 작성할 수
+              있습니다.
             </p>
           </div>
 
@@ -177,7 +199,7 @@
       </div>
     </section>
 
-    <!-- How It Works Section -->
+    <!-- How It Works -->
     <section class="bg-gray-100 py-16 md:py-20 lg:py-24">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
@@ -188,7 +210,6 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <!-- Step 1 -->
           <div class="text-center">
             <div
               class="w-16 h-16 bg-yellow-primary text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6"
@@ -200,8 +221,6 @@
               매물 정보를 입력하면 AI가 즉시 사기 위험도를 분석해 안전한 거래 여부를 알려드립니다.
             </p>
           </div>
-
-          <!-- Step 2 -->
           <div class="text-center">
             <div
               class="w-16 h-16 bg-yellow-primary text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6"
@@ -213,8 +232,6 @@
               검증된 템플릿으로 법적 효력이 있는 계약서를 쉽고 빠르게 작성할 수 있습니다.
             </p>
           </div>
-
-          <!-- Step 3 -->
           <div class="text-center">
             <div
               class="w-16 h-16 bg-yellow-primary text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6"
@@ -230,25 +247,25 @@
       </div>
     </section>
 
-    <!-- CTA Section -->
+    <!-- CTA -->
     <section class="bg-yellow-primary py-16">
       <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">
           지금 바로 안전한 부동산 거래를 시작하세요
         </h2>
         <p class="text-xl text-yellow-50 mb-8">
-          AI 기술과 전문가 지원으로 더 이상 부동산 사기를 걱정하지 마세요
+          AI 기술의 지원으로 더 이상 부동산 사기를 걱정하지 마세요
         </p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
           <router-link to="/signup">
-            <BaseButton variant="gray" size="lg" class="w-full sm:w-auto">
-              무료로 시작하기
-            </BaseButton>
+            <BaseButton variant="gray" size="lg" class="w-full sm:w-auto"
+              >무료로 시작하기</BaseButton
+            >
           </router-link>
           <router-link to="/risk-check">
-            <BaseButton variant="outline" size="lg" class="w-full sm:w-auto">
-              위험도 분석 체험하기
-            </BaseButton>
+            <BaseButton variant="outline" size="lg" class="w-full sm:w-auto"
+              >위험도 분석 체험하기</BaseButton
+            >
           </router-link>
         </div>
       </div>
@@ -259,3 +276,12 @@
 <script setup>
 import BaseButton from '@/components/common/BaseButton.vue'
 </script>
+
+<style scoped>
+/* 사용자가 '감소된 모션' 설정 시 자동재생/애니메이션 최소화 */
+@media (prefers-reduced-motion: reduce) {
+  video {
+    animation: none !important;
+  }
+}
+</style>
