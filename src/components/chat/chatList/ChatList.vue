@@ -10,7 +10,7 @@
         "
         @click="changeTab('owner')"
       >
-        임대인
+        내가 파는 매물
       </button>
       <button
         class="flex-1 py-2 text-center font-semibold"
@@ -21,7 +21,7 @@
         "
         @click="changeTab('buyer')"
       >
-        임차인
+        내가 사는 매물
       </button>
     </div>
 
@@ -62,6 +62,7 @@
 import { ref, computed, onMounted, onUnmounted, nextTick, watch, provide } from 'vue'
 import ChatItem from './ChatItem.vue'
 import { getOwnerChatRooms, getBuyerChatRooms } from '@/apis/chatApi'
+import { useRoute, useRouter } from 'vue-router'
 
 const props = defineProps({
   initialRoomId: {
@@ -79,6 +80,8 @@ const loading = ref(false)
 const error = ref(null)
 const currentUserId = ref(null)
 const updateTrigger = ref(0)
+const router = useRouter()
+const route = useRoute()
 
 // 현재 선택된 채팅방 ID 추적
 const currentChatRoomId = ref(null)
@@ -172,6 +175,11 @@ function selectRoom(room) {
 
     emit('selectRoom', null)
 
+    router.push({
+      path: route.path,
+      query: { ...route.query, roomId: undefined },
+    })
+
     setTimeout(() => {
       handleLeaveChatRoom(room.chatRoomId)
       cleanupChatRoomSubscriptions(room.chatRoomId)
@@ -195,11 +203,21 @@ function selectRoom(room) {
       currentChatRoomId.value = room.chatRoomId
       markRoomAsRead(room.chatRoomId)
       emit('selectRoom', room)
+
+      router.push({
+        path: route.path,
+        query: { ...route.query, roomId: room.chatRoomId },
+      })
     }, 100)
   } else {
     currentChatRoomId.value = room.chatRoomId
     markRoomAsRead(room.chatRoomId)
     emit('selectRoom', room)
+
+    router.push({
+      path: route.path,
+      query: { ...route.query, roomId: room.chatRoomId },
+    })
   }
 }
 
@@ -494,20 +512,24 @@ async function selectInitialRoom() {
   // 모든 채팅방에서 initialRoomId와 일치하는 방 찾기
   const findAndSelectRoom = () => {
     const allRooms = [...ownerRooms.value, ...buyerRooms.value]
-    const targetRoom = allRooms.find((room) => String(room.chatRoomId) === String(props.initialRoomId))
-    
+    const targetRoom = allRooms.find(
+      (room) => String(room.chatRoomId) === String(props.initialRoomId),
+    )
+
     if (targetRoom) {
       console.log('초기 채팅방 찾음:', targetRoom)
       selectRoom(targetRoom)
-      
+
       // 해당 채팅방이 있는 탭으로 자동 전환
-      const isOwnerRoom = ownerRooms.value.some(room => String(room.chatRoomId) === String(props.initialRoomId))
+      const isOwnerRoom = ownerRooms.value.some(
+        (room) => String(room.chatRoomId) === String(props.initialRoomId),
+      )
       if (isOwnerRoom && selectedTab.value !== 'owner') {
         selectedTab.value = 'owner'
       } else if (!isOwnerRoom && selectedTab.value !== 'buyer') {
         selectedTab.value = 'buyer'
       }
-      
+
       return true
     }
     return false
