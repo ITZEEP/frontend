@@ -421,3 +421,12 @@ export const postFinalConfirmResponse = async (contractChatId, data) => {
     console.error('최종 특약 확정 요청 응답 (임차인) 실패: ', error)
   }
 }
+
+export const getMoveContractChat = async (chatRoomId) => {
+  try {
+    const response = await apiRequest(`/${chatRoomId}/moveContractChat`)
+    return response.data
+  } catch (error) {
+    console.error('계약 채팅방 URL 받기 실패: ', error)
+  }
+}
