@@ -13,3 +13,4 @@ build
 coverage
 .eslintcache
 *.log
+.npmrc

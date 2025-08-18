@@ -82,7 +82,7 @@ class WebSocketService {
     })
   }
 
-  async sendMessage(destination, message, retryCount = 3) {
+  async sendMessage(destination, message, retryCount = 10) {
     console.log('sendMessage 호출:', { destination, message })
     console.log('STOMP 클라이언트 상태:', {
       hasClient: !!this.stompClient,
@@ -101,7 +101,7 @@ class WebSocketService {
     if (this.stompClient.state !== 1 && retryCount > 0) {
       // 1 = CONNECTED
       console.warn(`STOMP 연결이 완전히 준비되지 않음. 재시도 대기... (남은 시도: ${retryCount})`)
-      await new Promise(resolve => setTimeout(resolve, 200))
+      await new Promise((resolve) => setTimeout(resolve, 200))
       return this.sendMessage(destination, message, retryCount - 1)
     } else if (this.stompClient.state !== 1) {
       console.error('STOMP 연결 실패 - 재시도 횟수 초과')
@@ -124,7 +124,7 @@ class WebSocketService {
       console.error('메시지 전송 실패:', error)
       if (retryCount > 0) {
         console.log(`메시지 전송 재시도... (남은 시도: ${retryCount})`)
-        await new Promise(resolve => setTimeout(resolve, 200))
+        await new Promise((resolve) => setTimeout(resolve, 200))
         return this.sendMessage(destination, message, retryCount - 1)
       }
       return false
