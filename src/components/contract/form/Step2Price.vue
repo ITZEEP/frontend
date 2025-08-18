@@ -1,7 +1,7 @@
 <template>
   <section
     class="flex flex-col gap-4 transition-opacity duration-300"
-    :class="{ 'opacity-50 pointer-events-none': currentStep !== 2 }"
+    :class="{ 'opacity-50 pointer-events-none': !(currentStep === 2 || currentStep === 4) }"
   >
     <div class="flex items-center gap-2 mb-2">
       <i class="fa-solid fa-calendar-days text-yellow-primary"></i>

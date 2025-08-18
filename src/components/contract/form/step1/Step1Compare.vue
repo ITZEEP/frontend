@@ -1,7 +1,7 @@
 <template>
   <div
     class="flex flex-col gap-6 transition-opacity duration-300"
-    :class="{ 'opacity-50 pointer-events-none': currentStep !== 1 }"
+    :class="{ 'opacity-50 pointer-events-none': !(currentStep === 1 || currentStep === 4) }"
   >
     <ContractParties :basic="basic" />
     <PropertySummary :basic="basic" />
