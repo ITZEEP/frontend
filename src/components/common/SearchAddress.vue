@@ -65,7 +65,7 @@ const pagedResults = computed(() => {
   return places.value.slice(start, start + itemsPerPage)
 })
 
-const waitForKakao = (timeout = 10000) => {
+const waitForKakao = (timeout = 100000) => {
   return new Promise((resolve, reject) => {
     const startTime = Date.now()
     const check = () => {
