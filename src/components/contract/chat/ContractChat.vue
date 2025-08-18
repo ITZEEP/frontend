@@ -50,7 +50,7 @@
     </div>
 
     <!-- 스텝 별 시나리오 메시지 -->
-    <StepContainer class="shrink-0" />
+    <StepContainer class="shrink-0" @owner-edit-request="onOwnerEditRequest" />
 
     <!-- 입력 -->
     <ContractChatInput
@@ -64,6 +64,8 @@
       @typing="() => {}"
       @setStartPoint="handleSetStartPoint"
       @exportMessages="handleExportMessages"
+      @owner-edit-request="onOwnerEditRequest"
+      @owner-edit-failed="onOwnerEditFailed"
       class="shrink-0"
     />
 
@@ -72,7 +74,12 @@
     </div>
 
     <LoadingOverlay
-      :loading="isLoadingOverlayVisible"
+      :loading="amOwner && isLoadingOverlayVisible"
+      message="임대인 및 AI 응답 대기중 ..."
+      sub-message="임대인이 수락하면 AI 분석 요청됩니다. 잠시만 기다려주세요"
+    />
+    <LoadingOverlay
+      :loading="!amOwner && isLoadingOverlayVisible"
       message="AI가 특약 수정 중..."
       sub-message="잠시만 기다려주세요"
     />
@@ -124,6 +131,8 @@ const store = useSpecialContractStore()
 const route = useRoute()
 const router = useRouter()
 
+const stepFromUrl = computed(() => Number(route.query.step ?? props.currentStep ?? 3))
+
 const inflightSync = ref(false)
 let syncTimer = null
 
@@ -161,7 +170,7 @@ const {
 } = useContractChat(actualContractChatId, currentUserId, contractData)
 
 // 5) AI 버튼 규칙
-const { stepNum, isAi, aiButtons } = useChatAiButtons(props.currentStep, () => isOwner.value)
+const { stepNum, isAi, aiButtons } = useChatAiButtons(stepFromUrl, () => isOwner.value)
 
 // UI 상태
 const isLoadingOverlayVisible = ref(false)
@@ -329,6 +338,20 @@ const responseFinalConfirm = async (accepted) => {
   if (res?.success) store.bumpFinalContractVersion()
 }
 
+const onOwnerEditRequest = () => {
+  if (amOwner.value) isLoadingOverlayVisible.value = true
+}
+const onOwnerEditFailed = () => {
+  if (amOwner.value) isLoadingOverlayVisible.value = false
+}
+
+const RE_ROUND_DONE = /(\d+)\s*차\s*수정이\s*완료되었습니다!.*\s*협상\s*라운드가\s*시작됩니다\./
+
+const RE_TENANT_ACCEPT_MOD =
+  /임차인이\s*특약\s*(\d+)\s*번\s*수정\s*요청을\s*수락했습니다\.\s*특약이\s*변경되었습니다\./
+const RE_TENANT_ACCEPT_DEL =
+  /임차인이\s*특약\s*(\d+)\s*번\s*삭제\s*요청을\s*수락했습니다\.\s*특약이\s*삭제되었습니다\./
+
 // 4단계 적법성 검토
 const responseFinal = async (accepted) => {
   const id = String(actualContractChatId.value)
@@ -378,47 +401,40 @@ const handleAiAction = (payload) => {
 
 // 전송
 const sendMessageUi = async (content, callback) => {
-  console.log('📨 ContractChat: 메시지 전송 요청:', content)
-
   if (!isInputReady.value) {
     const result = { success: false, error: '채팅방이 준비되지 않았습니다.' }
-    if (callback) callback(result)
+    callback?.(result)
     return result
   }
 
   try {
-    // useContractChat의 sendContractMessage 호출
-    const result = sendContractMessage(content, 'TEXT')
+    // 서버 전송 (실패 시 throw)
+    await sendContractMessage(content, 'TEXT')
 
-    console.log('📤 ContractChat: 전송 결과:', result)
+    // ✅ 낙관적 업데이트: 즉시 로컬에 메시지 추가
+    hookMessages.value.push({
+      id: Date.now(), // 임시 키
+      _localId: (crypto?.randomUUID && crypto.randomUUID()) || `local-${Date.now()}`,
+      senderId: currentUserId.value,
+      receiverId: contractReceiverId.value,
+      content,
+      sendTime: new Date().toISOString(),
+      type: 'TEXT',
+      isRead: false,
+    })
 
-    // 🔧 전송 성공한 경우에만 화면에 메시지 추가
-    if (result) {
-      hookMessages.value.push({
-        id: Date.now(),
-        senderId: currentUserId.value,
-        receiverId: contractReceiverId.value,
-        content,
-        sendTime: new Date().toISOString(),
-        type: 'TEXT',
-        isRead: false,
-      })
-      nextTick(forceScrollToBottom)
-    } else {
-      console.warn('메시지 전송 실패:', result?.error || '알 수 없는 오류')
-    }
+    nextTick(forceScrollToBottom)
 
-    // 🔧 콜백으로 결과 전달
-    if (callback) callback(result)
-    return result
+    const ok = { success: true }
+    callback?.(ok)
+    return ok
   } catch (error) {
-    console.error('계약 메시지 전송 중 오류:', error)
-    const errorResult = {
+    const err = {
       success: false,
-      error: error.message || '메시지 전송 중 오류가 발생했습니다.',
+      error: error?.message || '메시지 전송 중 오류가 발생했습니다.',
     }
-    if (callback) callback(errorResult)
-    return errorResult
+    callback?.(err)
+    return err
   }
 }
 
@@ -480,7 +496,7 @@ const mergedMessages = computed(() => {
 
   const map = new Map()
   a.forEach((m, i) => map.set(keyOf(m, i), m))
-  b.forEach((m, i) => map.set(keyOf(m, i + 10000), m))
+  b.forEach((m, i) => map.set(keyOf(m, i, 10000), m))
 
   const arr = [...map.values()]
   arr.sort((x, y) => tsOf(x, 0) - tsOf(y, 0))
@@ -495,7 +511,7 @@ const isNewerThanApi = (live) => {
   return liveTs > apiTs
 }
 
-// 단일 디바운스 + 중복 방지
+// 단일 디바운스 중복 방지
 const scheduleSync = () => {
   const id = actualContractChatId.value
   if (!id) return
@@ -605,6 +621,19 @@ watch(
       return
     }
 
+    // 1) 임차인이 거절한 경우: "임차인이 특약 대화를 더 요청했습니다."
+    if (amOwner.value && t.includes('임차인이 특약 대화를 더 요청했습니다.')) {
+      isLoadingOverlayVisible.value = false
+    }
+    // 2) 임차인이 수락 → AI(9998)가 라운드 시작 알림을 보냄
+    if (amOwner.value && sid === '9998' && RE_ROUND_DONE.test(t)) {
+      isLoadingOverlayVisible.value = false
+    }
+
+    if (RE_TENANT_ACCEPT_MOD.test(t) || RE_TENANT_ACCEPT_DEL.test(t)) {
+      store.bumpFinalContractVersion()
+    }
+
     // --- 특약 수정 요청 허용 트리거 감지 ---
     if (t.includes('위 문제점들을 검토하시고 필요시 임대인께서 수정 요청을 해주세요')) {
       try {
@@ -697,6 +726,13 @@ watch(
     }
   },
   { immediate: false },
+)
+
+watch(
+  () => store.currentRound,
+  () => {
+    isLoadingOverlayVisible.value = false
+  },
 )
 </script>
 

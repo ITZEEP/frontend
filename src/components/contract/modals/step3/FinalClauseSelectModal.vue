@@ -65,8 +65,13 @@ const labelForRound = (roundNum) => (roundNum === 1 ? '초안' : `${roundNum - 1
 const rounds = computed(() => Object.keys(clausesByRound.value))
 
 const onClose = () => props.onClose?.()
-const onSelect = () => props.onSelect?.()
-
+const onSelect = async () => {
+  try {
+    await props.onSelect?.()
+  } finally {
+    props.onClose?.()
+  }
+}
 onMounted(async () => {
   store.markAllCompleted()
 

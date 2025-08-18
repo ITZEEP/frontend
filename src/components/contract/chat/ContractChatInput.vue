@@ -39,21 +39,21 @@
           @click="handleExportRequest"
           :disabled="isProcessing || !canSendMessage"
         >
-          {{ isProcessing ? '처리 중...' : '요청하기' }}
+          {{ isProcessing ? '처리 중...' : 'AI 수정 요청하기' }}
         </BaseButton>
         <BaseButton
           v-if="!props.isOwner"
           @click="handleExportReject"
           :disabled="isProcessing || !canSendMessage"
         >
-          {{ isProcessing ? '처리 중...' : '거절' }}
+          {{ isProcessing ? '처리 중...' : 'AI 수정 거절하기' }}
         </BaseButton>
         <BaseButton
           v-if="!props.isOwner"
           @click="handleExportMessages"
           :disabled="isProcessing || !canSendMessage"
         >
-          {{ isProcessing ? '내보내는 중...' : '수락 후 AI 수정 요청' }}
+          {{ isProcessing ? '내보내는 중...' : 'AI 수정 수락하기' }}
         </BaseButton>
       </template>
     </div>
@@ -109,7 +109,7 @@
 
       <div class="mt-4 flex gap-2">
         <BaseButton
-          class="bg-blue-600 hover:bg-blue-700 text-white"
+          variant="outline"
           :disabled="isProcessing || !canSendMessage"
           @click="submitPriceRequest"
         >
@@ -191,6 +191,8 @@ const emit = defineEmits([
   'exportMessages',
   'exportRequest',
   'exportReject',
+  'owner-edit-request',
+  'owner-edit-failed',
 ])
 
 const props = defineProps({
@@ -342,7 +344,7 @@ const sendMessage = async () => {
       isTypingActive.value = false
     }
     const result = await new Promise((resolve) => emit('sendMessage', content, resolve))
-    if (result && result.success) messageInput.value = ''
+    if (!result || result.success !== false) messageInput.value = ''
   } finally {
     setTimeout(() => (isSending.value = false), 500)
   }
@@ -383,8 +385,19 @@ const handleBlur = () => {
 const handleExportRequest = async () => {
   if (!isProcessing.value) {
     isProcessing.value = true
-    await requestEndPointExport(props.chatRoomId)
-    isProcessing.value = false
+    // 부모에 즉시 알려서 오버레이 ON
+    emit('owner-edit-request')
+    try {
+      const res = await requestEndPointExport(props.chatRoomId)
+      if (!res?.success) {
+        // 실패면 부모에 OFF 알림(안 끄면 stuck 될 수 있음)
+        emit('owner-edit-failed', res?.message || '요청 실패')
+      }
+    } catch (e) {
+      emit('owner-edit-failed', e?.message || '요청 실패')
+    } finally {
+      isProcessing.value = false
+    }
   }
 }
 const handleExportReject = async () => {
