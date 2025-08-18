@@ -77,10 +77,17 @@
       sub-message="잠시만 기다려주세요"
     />
   </div>
+
+  <div
+    v-if="redirectCountdown > 0"
+    class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-yellow-primary text-white px-4 py-2 rounded-full shadow"
+  >
+    계약서 서명 페이지로 이동합니다… {{ redirectCountdown }}초
+  </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, watch, nextTick, onUnmounted } from 'vue'
 import { useRoundQuerySync } from '@/composables/chat/useRoundQuerySync'
 import { useChatBasics } from '@/composables/chat/useChatBasics'
 import { useChatMessages } from '@/composables/chat/useChatMessages'
@@ -347,6 +354,31 @@ const responseFinal = async (accepted) => {
     alert('최종 확정 응답 중 오류가 발생했습니다.')
   }
 }
+
+const redirectCountdown = ref(0)
+let redirectInterval = null
+
+const startCountdownRedirect = () => {
+  if (redirectCountdown.value > 0) return
+  if (String(route.query.step) !== '4') return
+
+  redirectCountdown.value = 3
+  redirectInterval = setInterval(() => {
+    redirectCountdown.value -= 1
+    if (redirectCountdown.value <= 0) {
+      if (redirectInterval) {
+        clearInterval(redirectInterval)
+        redirectInterval = null
+      }
+      const id = String(actualContractChatId.value || '')
+      if (id) router.push(`/contract/complete/${id}`)
+    }
+  }, 1000)
+}
+
+onUnmounted(() => {
+  if (redirectInterval) clearInterval(redirectInterval)
+})
 
 const dispatchAction = createActionDispatchers({
   modalStore,
@@ -615,6 +647,11 @@ watch(
       if (store && 'allowOwnerOngoingEdit' in store) {
         store.allowOwnerOngoingEdit = true
       }
+    }
+
+    if (t.includes('임차인이 최종 계약서를 수락했습니다! 계약서 서명하러 갈께요!')) {
+      startCountdownRedirect()
+      return
     }
   },
   { immediate: true },
