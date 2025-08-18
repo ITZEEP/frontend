@@ -147,7 +147,7 @@ const handleSubmit = async () => {
     const homeId = response
     console.log('✅ API 응답으로 받은 homeId:', homeId)
 
-    alert('매물 등록 완료')
+    alert('본인 인증 완료 후 등록이 완료됩니다.')
     router.push(`/homes/create/${homeId}/verification`)
   } catch (e) {
     console.error('❌ 등록 실패:', e)
