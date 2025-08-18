@@ -91,9 +91,11 @@
               </div>
             </div>
 
-            <div v-else-if="message.type === 'CONTRACT_REQUEST'">
-              <BaseButton @click="handleAcceptContract">계약 요청 수락하기</BaseButton>
-              <BaseButton>거절</BaseButton>
+            <div v-else-if="message.type === 'CONTRACT_REQUEST'" class="flex flex-col gap-2">
+              <BaseButton @click="handleAcceptContract" variant="outline"
+                >계약 요청 수락하기</BaseButton
+              >
+              <BaseButton variant="outline">계약 요청 거절하기</BaseButton>
             </div>
 
             <div class="text-xs mt-1 opacity-70 flex justify-between items-center">
@@ -138,9 +140,11 @@
               </BaseButton>
             </div>
 
-            <div v-else-if="message.type === 'CONTRACT_REQUEST'">
-              <BaseButton @click="handleAcceptContract">계약 요청 수락하기</BaseButton>
-              <BaseButton>거절</BaseButton>
+            <div v-else-if="message.type === 'CONTRACT_REQUEST'" class="flex flex-col gap-2">
+              <BaseButton @click="handleAcceptContract" variant="outline"
+                >계약 요청 수락하기</BaseButton
+              >
+              <BaseButton variant="outline">계약 요청 거절하기</BaseButton>
             </div>
             <!-- 파일 메시지 -->
             <div v-else-if="message.type === 'FILE'" class="space-y-2">
