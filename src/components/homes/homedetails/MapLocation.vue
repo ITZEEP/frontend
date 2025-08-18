@@ -1,6 +1,6 @@
 <script src="../../../apis/listing.js"></script>
 <script setup>
-import { reactive, ref } from 'vue'
+import { reactive, ref, watch } from 'vue' // watch 추가
 import { KakaoMap, KakaoMapMarker } from 'vue3-kakao-maps'
 
 const props = defineProps({
@@ -16,18 +16,42 @@ const coordinate = reactive({
 const map = ref(null)
 const visibleRef = ref(false)
 
-const onLoadKakaoMap = (mapRef) => {
-  map.value = mapRef
+// 주소 변경을 감지하여 지도 위치를 업데이트
+watch(
+  () => props.address,
+  (newAddress) => {
+    if (newAddress) {
+      updateMapWithAddress(newAddress)
+    }
+  },
+  { immediate: true },
+)
+
+const updateMapWithAddress = (address) => {
+  if (!address) {
+    console.warn('유효한 주소 정보가 없어 지도를 표시할 수 없습니다.')
+    return
+  }
 
   const geocoder = new kakao.maps.services.Geocoder()
-  geocoder.addressSearch(props.address, (result, status) => {
+  geocoder.addressSearch(address, (result, status) => {
     if (status === kakao.maps.services.Status.OK) {
       coordinate.lat = parseFloat(result[0].y)
       coordinate.lng = parseFloat(result[0].x)
+      // 지도가 이미 로드되었으면 중심 위치 변경
+      if (map.value) {
+        map.value.setCenter(new kakao.maps.LatLng(coordinate.lat, coordinate.lng))
+      }
     } else {
       console.warn('주소를 찾을 수 없습니다.')
     }
   })
+}
+
+const onLoadKakaoMap = (mapRef) => {
+  map.value = mapRef
+  // 초기 로딩 시 주소 검색
+  updateMapWithAddress(props.address)
 }
 
 const onClickKakaoMapMarker = () => {
