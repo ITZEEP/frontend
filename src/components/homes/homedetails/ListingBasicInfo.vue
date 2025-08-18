@@ -6,10 +6,11 @@
       {{
         listing.leaseType === '전세'
           ? '전세 ' + formatNumber(listing.depositPrice) + '원'
-          : '월세 ' +
+          : '보증금 ' +
             formatNumber(listing.depositPrice) +
             '원' +
             ' / ' +
+            '월세 ' +
             formatNumber(listing.monthlyRent) +
             '원'
       }}
