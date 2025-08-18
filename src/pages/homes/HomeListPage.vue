@@ -36,7 +36,20 @@
         >개 매물
       </div>
 
-      <div v-if="listings.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- 로딩 상태 -->
+      <div v-if="isLoading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div v-for="n in 6" :key="n" class="animate-pulse rounded-xl border border-gray-200 p-4">
+          <div class="h-40 bg-gray-200 rounded-md mb-4"></div>
+          <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+          <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+        </div>
+      </div>
+
+      <!-- 데이터 있음 -->
+      <div
+        v-else-if="listings.length > 0"
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+      >
         <ListingCard
           v-for="listing in listings"
           :key="listing.homeId"
@@ -45,13 +58,15 @@
           class="cursor-pointer"
         />
       </div>
+
+      <!-- ✅ 데이터 없음 -->
       <div v-else class="text-gray-500 col-span-full text-center py-10">
         조건에 맞는 매물이 없습니다.
       </div>
 
       <div v-if="totalPages > 1" class="flex justify-center mt-8 space-x-2">
         <button
-          :disabled="page === 1"
+          :disabled="page === 1 || isLoading"
           @click="changePage(page - 1)"
           class="px-4 py-2 bg-gray-200 rounded-md disabled:opacity-50"
         >
@@ -61,16 +76,17 @@
           v-for="p in totalPages"
           :key="p"
           @click="changePage(p)"
+          :disabled="isLoading"
           :class="{
             'bg-yellow-primary text-white': p === page,
             'bg-gray-200': p !== page,
           }"
-          class="px-4 py-2 rounded-md"
+          class="px-4 py-2 rounded-md disabled:opacity-50"
         >
           {{ p }}
         </button>
         <button
-          :disabled="page === totalPages"
+          :disabled="page === totalPages || isLoading"
           @click="changePage(page + 1)"
           class="px-4 py-2 bg-gray-200 rounded-md disabled:opacity-50"
         >
@@ -83,19 +99,13 @@
       <div class="p-4 flex justify-between items-center border-b">
         <h2 class="text-xl font-bold">필터</h2>
         <button @click="toggleFilter" class="text-gray-500">
-          <svg
-            class="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
               stroke-width="2"
               d="M6 18L18 6M6 6l12 12"
-            ></path>
+            />
           </svg>
         </button>
       </div>
@@ -114,6 +124,8 @@ import { fetchListings } from '@/apis/listing.js'
 const router = useRouter()
 
 const listings = ref([])
+const isLoading = ref(false) // ✅ 로딩 상태
+
 const filters = ref({
   city: '전체',
   district: '전체',
@@ -152,9 +164,7 @@ const selectedGu = computed(() => {
 })
 
 const otherCount = computed(() => {
-  if (!Array.isArray(listings.value) || listings.value.length <= 1) {
-    return 0
-  }
+  if (!Array.isArray(listings.value) || listings.value.length <= 1) return 0
   const uniqueGus = new Set(listings.value.map((listing) => listing.addr1))
   return uniqueGus.size > 1 ? uniqueGus.size - 1 : 0
 })
@@ -182,6 +192,7 @@ function goDetailPage(id) {
 }
 
 async function loadListings() {
+  isLoading.value = true // ✅ 시작
   try {
     const params = {
       page: page.value,
@@ -208,9 +219,7 @@ async function loadListings() {
       delete params.maxMonthlyRent
     }
 
-    if (filters.value.direction) {
-      params.homeDirection = filters.value.direction
-    }
+    if (filters.value.direction) params.homeDirection = filters.value.direction
 
     if (filters.value.floor) {
       if (filters.value.floor === '반지하') {
@@ -232,19 +241,15 @@ async function loadListings() {
     }
 
     if (Array.isArray(filters.value.conditions)) {
-      if (filters.value.conditions.includes('반려동물 가능')) {
-        params.isPet = true
-      }
-      if (filters.value.conditions.includes('주차 가능')) {
-        params.isParking = true
-      }
+      if (filters.value.conditions.includes('반려동물 가능')) params.isPet = true
+      if (filters.value.conditions.includes('주차 가능')) params.isParking = true
     }
 
     const response = await fetchListings(params)
 
     if (response && response.content) {
       listings.value = response.content
-      totalItems.value = response.totalElements || response.data.length
+      totalItems.value = response.totalElements || response.data?.length || 0
     } else {
       listings.value = []
       totalItems.value = 0
@@ -255,6 +260,8 @@ async function loadListings() {
     console.error('목록 조회 실패:', err)
     listings.value = []
     totalItems.value = 0
+  } finally {
+    isLoading.value = false // ✅ 종료
   }
 }
 
