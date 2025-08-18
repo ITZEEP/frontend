@@ -187,7 +187,7 @@ const handleNotificationClick = async (notification) => {
 
     if (notification.type === 'CHAT' && notification.relatedId) {
       // 채팅 알림 - 채팅방으로 이동
-      targetUrl = `/chat?room=${notification.relatedId}`
+      targetUrl = `/chat?roomId=${notification.relatedId}`
     } else if (notification.type.includes('CONTRACT') && notification.relatedId) {
       // 계약 관련 알림 - 계약 페이지로 이동
       targetUrl = `/contract/${notification.relatedId}`
