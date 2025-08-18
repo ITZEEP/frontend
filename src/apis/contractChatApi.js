@@ -556,7 +556,26 @@ export const sendContractEmail = async (contractChatId, data) => {
 export const createTempPdfUrl = async (contractChatId) => {
   try {
     const response = await api.get(`/api/contract/${contractChatId}/preview`)
-    return response.data
+    console.log('createTempPdfUrl response:', response.data)
+
+    // API에서 이미 전체 S3 URL을 반환
+    if (response.data && response.data.success && response.data.data) {
+      const s3Url = response.data.data
+      console.log('S3 URL from API:', s3Url)
+
+      // 이미 전체 URL이므로 바로 반환
+      if (s3Url.startsWith('http')) {
+        console.log('Using full URL from API:', s3Url)
+        return s3Url
+      } else {
+        // 혹시 S3 key만 반환된 경우 (fallback)
+        const s3BaseUrl = 'https://itjib-bucket.s3.ap-northeast-2.amazonaws.com'
+        const fullUrl = `${s3BaseUrl}/${s3Url}`
+        console.log('Generated S3 full URL (fallback):', fullUrl)
+        return fullUrl
+      }
+    }
+    throw new Error('S3 URL을 받을 수 없습니다')
   } catch (error) {
     console.error('임시 PDF URL 생성 실패: ', error)
     if (error.response?.status === 403) {

@@ -38,8 +38,17 @@
 
     <!-- PDF 미리보기 -->
     <div v-else-if="pdfData" class="pdf-container">
-      <!-- PdfViewer 컴포넌트 사용 -->
+      <!-- URL인 경우 직접 iframe으로 표시 -->
+      <iframe 
+        v-if="isPdfUrl"
+        :src="pdfData"
+        class="w-full h-[600px] border-0"
+        title="PDF Viewer"
+        type="application/pdf"
+      />
+      <!-- ArrayBuffer나 base64인 경우 PdfViewer 컴포넌트 사용 -->
       <PdfViewer
+        v-else
         :source="pdfData"
         :initial-scale="1"
         @loaded="handlePdfLoaded"
@@ -59,7 +68,8 @@
 <script setup>
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import PdfViewer from '@/components/common/PdfViewer.vue'
-import { startContractExport } from '@/apis/contractChatApi'
+import { createTempPdfUrl } from '@/apis/contractChatApi'
+import api from '@/apis'
 
 const props = defineProps({
   contractChatId: {
@@ -85,6 +95,7 @@ const error = ref(null)
 const pdfData = ref(null)
 const currentPage = ref(1)
 const totalPages = ref(1)
+const isPdfUrl = ref(false)
 
 // PDF 불러오기
 const loadPDF = async () => {
@@ -92,22 +103,17 @@ const loadPDF = async () => {
   error.value = null
   
   try {
-    // API 호출하여 PDF 데이터 받기 (ArrayBuffer 형태)
-    const response = await startContractExport(props.contractChatId)
-    console.log('API Response:', response)
+    // preview-url 엔드포인트에서 S3 key 받기 (createTempPdfUrl 사용)
+    const s3Url = await createTempPdfUrl(props.contractChatId)
+    console.log('S3 URL received from createTempPdfUrl:', s3Url)
     
-    if (response) {
-      // ArrayBuffer를 직접 사용 (pdfjs-dist가 ArrayBuffer를 지원함)
-      if (response instanceof ArrayBuffer || response.byteLength) {
-        pdfData.value = response
-        console.log('Using ArrayBuffer directly, size:', response.byteLength)
-      } else if (typeof response === 'string') {
-        // 이미 base64 문자열인 경우
-        pdfData.value = response.startsWith('data:') ? response : `data:application/pdf;base64,${response}`
-        console.log('Using base64 string')
-      }
+    if (s3Url) {
+      // S3 URL을 직접 iframe에서 사용
+      pdfData.value = s3Url
+      isPdfUrl.value = true
+      console.log('Using S3 URL for iframe display:', s3Url)
     } else {
-      throw new Error('PDF 데이터를 받을 수 없습니다')
+      throw new Error('S3 URL을 받을 수 없습니다')
     }
   } catch (err) {
     console.error('PDF 로드 실패:', err)

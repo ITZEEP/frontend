@@ -40,7 +40,7 @@ class WebSocketService {
       const socket = new SockJS(import.meta.env.VITE_WS_URL || 'http://localhost:8080/ws')
       this.stompClient = new Client({
         webSocketFactory: () => socket,
-        reconnectDelay: 5000,
+        reconnectDelay: 2000, // 재연결 지연 시간 단축
         debug: (str) => console.log('[STOMP DEBUG]', str),
         onConnect: (frame) => {
           console.log('STOMP 연결 성공:', frame)
@@ -82,7 +82,7 @@ class WebSocketService {
     })
   }
 
-  sendMessage(destination, message) {
+  async sendMessage(destination, message, retryCount = 3) {
     console.log('sendMessage 호출:', { destination, message })
     console.log('STOMP 클라이언트 상태:', {
       hasClient: !!this.stompClient,
@@ -97,10 +97,14 @@ class WebSocketService {
       return false
     }
 
-    // STOMP 상태가 CONNECTED가 아니면 대기
-    if (this.stompClient.state !== 1) {
+    // STOMP 상태가 CONNECTED가 아니면 재시도
+    if (this.stompClient.state !== 1 && retryCount > 0) {
       // 1 = CONNECTED
-      console.warn('STOMP 연결이 완전히 준비되지 않음. 잠시 대기...')
+      console.warn(`STOMP 연결이 완전히 준비되지 않음. 재시도 대기... (남은 시도: ${retryCount})`)
+      await new Promise(resolve => setTimeout(resolve, 200))
+      return this.sendMessage(destination, message, retryCount - 1)
+    } else if (this.stompClient.state !== 1) {
+      console.error('STOMP 연결 실패 - 재시도 횟수 초과')
       return false
     }
 
@@ -118,6 +122,11 @@ class WebSocketService {
       return true
     } catch (error) {
       console.error('메시지 전송 실패:', error)
+      if (retryCount > 0) {
+        console.log(`메시지 전송 재시도... (남은 시도: ${retryCount})`)
+        await new Promise(resolve => setTimeout(resolve, 200))
+        return this.sendMessage(destination, message, retryCount - 1)
+      }
       return false
     }
   }
@@ -219,21 +228,17 @@ class WebSocketService {
 
   subscribeToTopic(topic, handler) {
     if (!this.stompClient || !this.stompClient.connected || !this.isConnected.value) {
-      console.warn('구독 불가 - STOMP 연결 상태 불안정:', {
-        hasClient: !!this.stompClient,
-        clientConnected: this.stompClient?.connected,
-        isConnected: this.isConnected.value,
-      })
+      console.warn('구독 불가 - STOMP 연결 상태 불안정')
       if (!this.pendingSubscriptions.find((p) => p.topic === topic)) {
         this.pendingSubscriptions.push({ topic, handler })
       }
       return
     }
 
-    // 🔧 이미 구독된 토픽인지 확인
-    if (this.messageHandlers.has(topic)) {
-      console.log('이미 구독된 토픽:', topic)
-      return this.messageHandlers.get(topic)
+    // 🔧 이미 구독된 토픽인지 확인 (빠른 리턴)
+    const existingSubscription = this.messageHandlers.get(topic)
+    if (existingSubscription) {
+      return existingSubscription
     }
 
     try {

@@ -40,7 +40,7 @@
         <button @click="zoomOut" class="toolbar-btn" title="축소">-</button>
         <span class="zoom-info">{{ Math.round(currentScale * 100) }}%</span>
         <button @click="zoomIn" class="toolbar-btn" title="확대">+</button>
-        
+
         <select v-model="scaleMode" @change="changeScale" class="scale-select">
           <option value="auto">자동 맞춤</option>
           <option value="page-width">너비 맞춤</option>
@@ -72,11 +72,7 @@
 
       <!-- Fallback 뷰어 -->
       <div v-else-if="useFallback && pdfBlobUrl" class="fallback-viewer">
-        <iframe 
-          :src="pdfBlobUrl" 
-          class="w-full h-full border-0"
-          title="PDF Viewer"
-        />
+        <iframe :src="pdfBlobUrl" class="w-full h-full border-0" title="PDF Viewer" />
       </div>
 
       <!-- PDF 캔버스 -->
@@ -98,31 +94,31 @@ import * as pdfjsLib from 'pdfjs-dist'
 // PDF.js worker 설정
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   'pdfjs-dist/build/pdf.worker.mjs',
-  import.meta.url
+  import.meta.url,
 ).href
 
 // Props
 const props = defineProps({
   source: {
     type: [String, ArrayBuffer, Uint8Array],
-    required: true
+    required: true,
   },
   initialPage: {
     type: Number,
-    default: 1
+    default: 1,
   },
   initialScale: {
     type: Number,
-    default: 1.0
+    default: 1.0,
   },
   hideToolbar: {
     type: Boolean,
-    default: false
+    default: false,
   },
   height: {
     type: String,
-    default: '600px'
-  }
+    default: '600px',
+  },
 })
 
 // Emits
@@ -166,7 +162,7 @@ const loadPdf = async () => {
 
   try {
     console.log('PDF 로드 시작:', typeof props.source, props.source?.constructor?.name)
-    
+
     let pdfSource = props.source
 
     // 데이터 타입별 처리
@@ -221,9 +217,8 @@ const loadPdf = async () => {
 
     emit('loaded', {
       numPages: totalPages.value,
-      currentPage: currentPage.value
+      currentPage: currentPage.value,
     })
-
   } catch (err) {
     console.error('PDF 로드 실패:', err)
     error.value = `PDF를 불러올 수 없습니다: ${err.message}`
@@ -239,17 +234,17 @@ const renderPage = async (pageNum) => {
 
   try {
     console.log(`페이지 ${pageNum} 렌더링 시작`)
-    
+
     const page = await pdfDoc.value.getPage(pageNum)
     const canvas = canvasRef.value
     const context = canvas.getContext('2d')
 
     // 뷰포트 계산
     const viewport = page.getViewport({ scale: 1.0 })
-    
+
     // 스케일 계산
     let scale = currentScale.value
-    
+
     if (scaleMode.value === 'auto' || scaleMode.value === 'page-width') {
       if (containerRef.value) {
         const containerWidth = containerRef.value.clientWidth - 40 // 패딩
@@ -277,15 +272,14 @@ const renderPage = async (pageNum) => {
     // 렌더링
     const renderContext = {
       canvasContext: context,
-      viewport: scaledViewport
+      viewport: scaledViewport,
     }
 
     await page.render(renderContext).promise
-    
-    console.log(`페이지 ${pageNum} 렌더링 완료`)
-    
-    emit('page-change', pageNum)
 
+    console.log(`페이지 ${pageNum} 렌더링 완료`)
+
+    emit('page-change', pageNum)
   } catch (err) {
     console.error(`페이지 ${pageNum} 렌더링 실패:`, err)
     error.value = `페이지 ${pageNum} 렌더링에 실패했습니다`
@@ -347,10 +341,10 @@ const retry = () => {
 const useFallbackViewer = () => {
   useFallback.value = true
   error.value = null
-  
+
   try {
     let pdfData = props.source
-    
+
     if (typeof pdfData === 'string') {
       if (pdfData.startsWith('data:application/pdf;base64,')) {
         pdfBlobUrl.value = pdfData
@@ -361,7 +355,7 @@ const useFallbackViewer = () => {
       const blob = new Blob([pdfData], { type: 'application/pdf' })
       pdfBlobUrl.value = URL.createObjectURL(blob)
     }
-    
+
     console.log('Fallback 뷰어 활성화')
   } catch (err) {
     console.error('Fallback 뷰어 설정 실패:', err)
@@ -371,7 +365,11 @@ const useFallbackViewer = () => {
 
 // 리사이즈 핸들러
 const handleResize = () => {
-  if (scaleMode.value === 'auto' || scaleMode.value === 'page-width' || scaleMode.value === 'page-fit') {
+  if (
+    scaleMode.value === 'auto' ||
+    scaleMode.value === 'page-width' ||
+    scaleMode.value === 'page-fit'
+  ) {
     renderPage(currentPage.value)
   }
 }
@@ -384,29 +382,36 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
-  
+
   if (pdfDoc.value) {
     pdfDoc.value.destroy()
   }
-  
+
   if (pdfBlobUrl.value) {
     URL.revokeObjectURL(pdfBlobUrl.value)
   }
 })
 
 // 감시자
-watch(() => props.source, () => {
-  if (props.source) {
-    loadPdf()
-  }
-}, { immediate: false })
+watch(
+  () => props.source,
+  () => {
+    if (props.source) {
+      loadPdf()
+    }
+  },
+  { immediate: false },
+)
 
-watch(() => props.initialPage, (newPage) => {
-  currentPage.value = newPage
-  if (pdfDoc.value) {
-    renderPage(currentPage.value)
-  }
-})
+watch(
+  () => props.initialPage,
+  (newPage) => {
+    currentPage.value = newPage
+    if (pdfDoc.value) {
+      renderPage(currentPage.value)
+    }
+  },
+)
 </script>
 
 <style scoped>
