@@ -1,13 +1,17 @@
 <template>
   <div class="max-w-4xl mx-auto p-4 md:p-6">
     <ImageGallery
-      v-if="images.length > 0"
+      v-if="!isLoading && images.length > 0"
       :images="images"
       :homeId="id"
       :initialIsFavorite="isFavorite"
     />
 
-    <div v-if="listing" class="mt-6 space-y-10">
+    <!-- 로딩 상태 -->
+    <div v-if="isLoading" class="text-center text-gray-400 mt-10">불러오는 중입니다...</div>
+
+    <!-- 데이터 있음 -->
+    <div v-else-if="listing" class="mt-6 space-y-10">
       <ListingBasicInfo :listing="listing" />
       <RoomDetails :listing="listing" />
 
@@ -27,6 +31,7 @@
       </div>
     </div>
 
+    <!-- 데이터 없음 -->
     <div v-else class="text-center text-gray-400 mt-10">매물을 찾을 수 없습니다.</div>
   </div>
 </template>
@@ -48,6 +53,7 @@ const route = useRoute()
 const router = useRouter()
 const id = Number(route.params.no)
 
+const isLoading = ref(true)
 const listing = ref(null)
 const images = ref([])
 const isFavorite = ref(false)
@@ -56,47 +62,31 @@ const processedAddress = ref('')
 onMounted(async () => {
   try {
     const data = await fetchListingById(id)
-    console.log('✅ 매물 상세 API 응답:', data)
-
     if (data) {
       listing.value = data
       images.value = data.imageUrls || []
-
-      if (data.addr1) {
-        processedAddress.value = data.addr1
-      } else {
-        processedAddress.value = data.addr2 || '주소정보 없음'
-      }
-
-      console.log('최종 가공된 주소:', processedAddress.value)
+      processedAddress.value = data.addr1 || data.addr2 || '주소정보 없음'
     }
   } catch (err) {
     console.error('매물 조회 실패:', err)
+  } finally {
+    isLoading.value = false
   }
 })
 
 const isCreatingChat = ref(false)
 
 const goToChat = async () => {
-  // props 대신 id 변수를 직접 사용합니다.
   if (!id) {
-    console.log('채팅방을 만들 수 없습니다 - 매물 ID 없음')
     alert('매물 정보를 찾을 수 없습니다. 페이지를 새로고침 해주세요.')
     return
   }
-
   isCreatingChat.value = true
   try {
-    console.log('Creating chat room with propertyId:', id)
     const response = await createChatRoom(id)
-    console.log('Chat room creation response:', response)
-
     if (response && response.data) {
-      // 채팅방 생성 성공 시 해당 채팅방으로 이동
-      console.log('Navigating to chat with roomId:', response.data)
       router.push(`/chat?roomId=${response.data}`)
     } else {
-      console.error('채팅방 생성 실패: 응답에 chatRoomId가 없습니다', response)
       alert('채팅방 생성에 실패했습니다. 다시 시도해주세요.')
     }
   } catch (error) {
