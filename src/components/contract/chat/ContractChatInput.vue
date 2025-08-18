@@ -1,11 +1,39 @@
 <template>
   <div class="border-t bg-white">
-    <!-- 특약 관련 버튼들 -->
+    <!-- 상단 버튼 영역 -->
     <div
       class="w-full p-2 border-b flex flex-wrap gap-2 md:gap-4 md:flex-nowrap sm:gap-4 sm:flex-nowrap"
     >
+      <!-- ===== 2단계 버튼 ===== -->
+      <template v-if="stepNum === 2">
+        <!-- 임대인: 금액 요청하기 (폼 토글) -->
+        <BaseButton
+          v-if="props.isOwner"
+          @click="handlePriceRequest"
+          :disabled="isProcessing || !canSendMessage"
+        >
+          {{ showPriceForm ? '닫기' : '금액 요청하기' }}
+        </BaseButton>
+
+        <!-- 임차인: 거절/수락 -->
+        <BaseButton
+          v-if="!props.isOwner"
+          @click="handlePriceReject"
+          :disabled="isProcessing || !canSendMessage"
+        >
+          {{ isProcessing ? '처리 중...' : '거절하기' }}
+        </BaseButton>
+        <BaseButton
+          v-if="!props.isOwner"
+          @click="handlePriceAccept"
+          :disabled="isProcessing || !canSendMessage"
+        >
+          {{ isProcessing ? '처리 중...' : '수락하기' }}
+        </BaseButton>
+      </template>
+
+      <!-- ===== 3단계 버튼 (기존) ===== -->
       <template v-if="stepNum === 3">
-        <!-- 임대인 전용: 요청하기 -->
         <BaseButton
           v-if="props.isOwner"
           @click="handleExportRequest"
@@ -13,8 +41,6 @@
         >
           {{ isProcessing ? '처리 중...' : '요청하기' }}
         </BaseButton>
-
-        <!-- 임차인 전용: 거절 / 수락 후 AI 수정 요청 -->
         <BaseButton
           v-if="!props.isOwner"
           @click="handleExportReject"
@@ -22,7 +48,6 @@
         >
           {{ isProcessing ? '처리 중...' : '거절' }}
         </BaseButton>
-
         <BaseButton
           v-if="!props.isOwner"
           @click="handleExportMessages"
@@ -33,25 +58,75 @@
       </template>
     </div>
 
-    <!-- 오프라인 상태 알림 -->
-    <div v-if="!canSendMessage" class="w-full p-3 bg-yellow-50 border-b border-yellow-200">
-      <div class="flex items-center justify-center gap-2 text-yellow-800">
-        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-          <path
-            fill-rule="evenodd"
-            d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-            clip-rule="evenodd"
+    <!-- ===== 2단계: 금액 입력 폼 ===== -->
+    <div
+      v-if="stepNum === 2 && showPriceForm && props.isOwner"
+      class="px-4 py-3 border-b bg-gray-50"
+    >
+      <!-- 전/월세 선택 -->
+      <div class="mb-3 flex gap-3">
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input type="radio" value="JEONSE" v-model="priceType" />
+          <span>전세</span>
+        </label>
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input type="radio" value="WOLSE" v-model="priceType" />
+          <span>월세</span>
+        </label>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <!-- 보증금 -->
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">보증금(원)</label>
+          <input
+            :value="depositInput"
+            @input="onDepositInput"
+            inputmode="numeric"
+            class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="예: 83,000,000"
           />
-        </svg>
-        <span class="text-sm font-medium">
-          상대방이 오프라인 상태입니다. 메시지 전송이 제한됩니다.
-        </span>
+          <p v-if="priceErrors.deposit" class="text-xs text-red-500 mt-1">
+            {{ priceErrors.deposit }}
+          </p>
+        </div>
+
+        <!-- 월세 (월세일 때만 노출) -->
+        <div v-if="priceType === 'WOLSE'">
+          <label class="block text-sm text-gray-600 mb-1">월세(원)</label>
+          <input
+            :value="monthlyInput"
+            @input="onMonthlyInput"
+            inputmode="numeric"
+            class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="예: 700,000"
+          />
+          <p v-if="priceErrors.monthly" class="text-xs text-red-500 mt-1">
+            {{ priceErrors.monthly }}
+          </p>
+        </div>
+      </div>
+
+      <div class="mt-4 flex gap-2">
+        <BaseButton
+          class="bg-blue-600 hover:bg-blue-700 text-white"
+          :disabled="isProcessing || !canSendMessage"
+          @click="submitPriceRequest"
+        >
+          {{ isProcessing ? '요청 중...' : '확인하여 요청' }}
+        </BaseButton>
+        <BaseButton
+          class="bg-gray-200 hover:bg-gray-300 text-gray-800"
+          :disabled="isProcessing"
+          @click="showPriceForm = false"
+        >
+          취소
+        </BaseButton>
       </div>
     </div>
 
     <!-- 메시지 입력 영역 -->
     <div class="flex px-4 pt-2 pb-4 gap-2">
-      <!-- 메시지 입력창 -->
       <input
         ref="messageInputRef"
         v-model="messageInput"
@@ -68,8 +143,6 @@
         :placeholder="canSendMessage ? '메시지를 입력하세요' : '상대방이 오프라인 상태입니다'"
         :disabled="isSending || !canSendMessage"
       />
-
-      <!-- 전송 버튼 -->
       <button
         @click="sendMessage"
         :disabled="!messageInput.trim() || isSending || !canSendMessage"
@@ -101,25 +174,15 @@
         <span v-else>전송</span>
       </button>
     </div>
-
-    <!-- 오프라인 상태 상세 정보 (개발/디버깅용) -->
-    <div v-if="showDebugInfo && !canSendMessage" class="px-4 pb-2">
-      <div class="text-xs text-gray-500 bg-gray-50 p-2 rounded">
-        <div>🔍 디버그 정보:</div>
-        <div>• 메시지 전송 가능: {{ canSendMessage ? 'Yes' : 'No' }}</div>
-        <div>• 처리 중: {{ isProcessing ? 'Yes' : 'No' }}</div>
-        <div>• 전송 중: {{ isSending ? 'Yes' : 'No' }}</div>
-        <div>• 입력값 있음: {{ messageInput.trim() ? 'Yes' : 'No' }}</div>
-      </div>
-    </div>
   </div>
 </template>
 
 <script setup>
 import BaseButton from '@/components/common/BaseButton.vue'
-import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
+import { ref, watch, computed, onMounted, onUnmounted } from 'vue'
 import { requestEndPointExport, rejectEndPointExport } from '@/apis/contractChatApi'
 import { useRoute } from 'vue-router'
+import { contractApi } from '@/apis/contractApi'
 
 const emit = defineEmits([
   'sendMessage',
@@ -129,33 +192,23 @@ const emit = defineEmits([
   'exportRequest',
   'exportReject',
 ])
+
 const props = defineProps({
-  chatRoomId: {
-    type: [String, Number],
-    required: true,
-  },
-  receiverId: {
-    type: [String, Number],
-    required: true,
-  },
-  canSendMessage: {
-    type: Boolean,
-    default: true,
-  },
-  showDebugInfo: {
-    type: Boolean,
-    default: false, // 개발 시에만 true로 설정
-  },
+  chatRoomId: [String, Number],
+  receiverId: [String, Number],
+  canSendMessage: { type: Boolean, default: true },
+  showDebugInfo: { type: Boolean, default: false },
   isOwner: { type: Boolean, default: false },
+  rentContext: { type: Object, default: () => ({ type: null, deposit: null, monthly: null }) },
 })
 
 const route = useRoute()
 const stepNum = computed(() => {
   const s = Number(route.query.step)
-  return Number.isFinite(s) ? s : 3 // 기본 3으로
+  return Number.isFinite(s) ? s : 3
 })
 
-// 상태 관리
+// 상태
 const messageInput = ref('')
 const messageInputRef = ref(null)
 const isSending = ref(false)
@@ -163,222 +216,191 @@ const isProcessing = ref(false)
 const typingTimer = ref(null)
 const isTypingActive = ref(false)
 
-// canSendMessage 변경 감지
+// ===== 금액 입력 상태 =====
+const showPriceForm = ref(false)
+const priceType = ref('WOLSE')
+const depositInput = ref('')
+const monthlyInput = ref('')
+const priceErrors = ref({ deposit: '', monthly: '' })
+
+// 감지값 반영
 watch(
-  () => props.canSendMessage,
-  (newValue, oldValue) => {
-    console.log('📱 ContractChatInput: canSendMessage 변경:', oldValue, '->', newValue)
-
-    if (!newValue) {
-      // 메시지 전송이 불가능해지면 입력창 비우기
-      messageInput.value = ''
-
-      // 타이핑 상태 종료
-      if (isTypingActive.value) {
-        isTypingActive.value = false
-        emit('typing', false)
-      }
-
-      if (typingTimer.value) {
-        clearTimeout(typingTimer.value)
-      }
-    }
+  () => props.rentContext,
+  (ctx) => {
+    if (!ctx) return
+    if (ctx.type) priceType.value = ctx.type
+    if (Number.isFinite(ctx.deposit)) depositInput.value = formatNumber(ctx.deposit)
+    if (Number.isFinite(ctx.monthly)) monthlyInput.value = formatNumber(ctx.monthly)
   },
+  { immediate: true, deep: true },
 )
 
+function onlyDigits(s = '') {
+  return String(s).replace(/[^\d]/g, '')
+}
+function toNumber(s = '') {
+  const n = Number(onlyDigits(s))
+  return Number.isFinite(n) ? n : 0
+}
+function formatNumber(n) {
+  return n ? n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') : ''
+}
+
+const onDepositInput = (e) => {
+  depositInput.value = formatNumber(onlyDigits(e.target.value))
+}
+const onMonthlyInput = (e) => {
+  monthlyInput.value = formatNumber(onlyDigits(e.target.value))
+}
+
+function validatePrice() {
+  priceErrors.value = { deposit: '', monthly: '' }
+  const dep = toNumber(depositInput.value)
+  if (dep <= 0) priceErrors.value.deposit = '보증금을 입력하세요.'
+  if (priceType.value === 'WOLSE') {
+    const mon = toNumber(monthlyInput.value)
+    if (mon <= 0) priceErrors.value.monthly = '월세를 입력하세요.'
+  }
+  return !priceErrors.value.deposit && !priceErrors.value.monthly
+}
+
+const handlePriceRequest = () => {
+  if (props.isOwner) showPriceForm.value = !showPriceForm.value
+}
+
+const submitPriceRequest = async () => {
+  if (isProcessing.value || !props.canSendMessage) return
+  if (!validatePrice()) return
+  try {
+    isProcessing.value = true
+    const body =
+      priceType.value === 'JEONSE'
+        ? { depositPrice: toNumber(depositInput.value) }
+        : { depositPrice: toNumber(depositInput.value), monthlyRent: toNumber(monthlyInput.value) }
+    const res = await contractApi.postRequestPrice(props.chatRoomId, body)
+    if (!res?.success) {
+      alert(res?.message || '금액 요청 실패')
+      return
+    }
+    showPriceForm.value = false
+  } catch (e) {
+    console.error(e)
+    alert('금액 요청 중 오류')
+  } finally {
+    setTimeout(() => (isProcessing.value = false), 600)
+  }
+}
+
+// 임차인: 거절
+const handlePriceReject = async () => {
+  if (isProcessing.value || !props.canSendMessage) return
+  try {
+    isProcessing.value = true
+    const res = await contractApi.postRejectPrice(props.chatRoomId)
+    if (!res?.success) {
+      alert(res?.message || '거절 실패')
+      return
+    }
+    // 필요 시 UI 갱신/알림
+    // alert('금액 확정 요청을 거절했습니다.')
+  } catch (e) {
+    console.error('금액 거절 실패:', e)
+    alert('거절 중 오류가 발생했습니다.')
+  } finally {
+    setTimeout(() => (isProcessing.value = false), 600)
+  }
+}
+
+// 임차인: 수락
+const handlePriceAccept = async () => {
+  if (isProcessing.value || !props.canSendMessage) return
+  try {
+    isProcessing.value = true
+    const res = await contractApi.postAcceptPrice(props.chatRoomId) // ✅ PATCH /price/accept
+    if (!res?.success) {
+      alert(res?.message || '수락 실패')
+      return
+    }
+    // 필요 시 UI 갱신/알림
+    // alert('금액을 수락했습니다.')
+  } catch (e) {
+    console.error('금액 수락 실패:', e)
+    alert('수락 중 오류가 발생했습니다.')
+  } finally {
+    setTimeout(() => (isProcessing.value = false), 600)
+  }
+}
+
+// ===== 기존 메시지 전송 =====
 const sendMessage = async () => {
   const content = messageInput.value.trim()
-
-  if (!content || isSending.value || !props.canSendMessage) {
-    console.warn('메시지 전송 조건 미충족:', {
-      hasContent: !!content,
-      isSending: isSending.value,
-      canSendMessage: props.canSendMessage,
-    })
-    return
-  }
-
+  if (!content || isSending.value || !props.canSendMessage) return
   try {
     isSending.value = true
-
-    // 타이핑 상태 종료
     if (isTypingActive.value) {
       emit('typing', false)
       isTypingActive.value = false
     }
-
-    // 메시지 전송
-    emit('sendMessage', content)
-
-    // 입력창 초기화
-    messageInput.value = ''
-
-    // 포커스 유지
-    if (messageInputRef.value && props.canSendMessage) {
-      messageInputRef.value.focus()
-    }
-  } catch (error) {
-    console.error('❌ ContractChatInput: 메시지 전송 실패:', error)
+    const result = await new Promise((resolve) => emit('sendMessage', content, resolve))
+    if (result && result.success) messageInput.value = ''
   } finally {
-    setTimeout(() => {
-      isSending.value = false
-    }, 500)
+    setTimeout(() => (isSending.value = false), 500)
   }
 }
 
-// 타이핑 상태 처리
 const handleTyping = () => {
-  if (!props.canSendMessage) {
-    return
-  }
-
-  const currentText = messageInput.value.trim()
-
-  // 타이핑 시작
-  if (currentText.length > 0 && !isTypingActive.value) {
+  if (!props.canSendMessage) return
+  const cur = messageInput.value.trim()
+  if (cur.length > 0 && !isTypingActive.value) {
     isTypingActive.value = true
     emit('typing', true)
   }
-
-  // 기존 타이머 제거
-  if (typingTimer.value) {
-    clearTimeout(typingTimer.value)
-  }
-
-  // 1.5초 후 타이핑 상태 종료
+  if (typingTimer.value) clearTimeout(typingTimer.value)
   typingTimer.value = setTimeout(() => {
     if (isTypingActive.value) {
       isTypingActive.value = false
       emit('typing', false)
     }
   }, 1500)
-
-  // 입력창이 비어있으면 즉시 타이핑 상태 종료
-  if (currentText.length === 0 && isTypingActive.value) {
+  if (cur.length === 0 && isTypingActive.value) {
     isTypingActive.value = false
     emit('typing', false)
-    if (typingTimer.value) {
-      clearTimeout(typingTimer.value)
-    }
   }
 }
 
-// 입력창 포커스 시
 const handleFocus = () => {
-  if (!props.canSendMessage && messageInputRef.value) {
-    messageInputRef.value.blur()
-  }
+  if (!props.canSendMessage && messageInputRef.value) messageInputRef.value.blur()
 }
-
-// 입력창 블러 시
 const handleBlur = () => {
   if (isTypingActive.value) {
     isTypingActive.value = false
     emit('typing', false)
   }
-
-  if (typingTimer.value) {
-    clearTimeout(typingTimer.value)
-  }
+  if (typingTimer.value) clearTimeout(typingTimer.value)
 }
 
+// ===== 3단계 관련 기존 함수들 =====
 const handleExportRequest = async () => {
-  if (isProcessing.value || !props.canSendMessage) {
-    console.warn('요청 불가:', {
-      isProcessing: isProcessing.value,
-      canSendMessage: props.canSendMessage,
-    })
-    return
-  }
-
-  try {
+  if (!isProcessing.value) {
     isProcessing.value = true
-
-    const result = await requestEndPointExport(props.chatRoomId)
-    if (result.success) {
-      emit('exportRequest') // 부모에 알림
-    } else {
-      alert('요청 실패: ' + result.message)
-    }
-  } catch (error) {
-    console.error('종료 요청 에러:', error)
-    alert('요청 중 에러 발생')
-  } finally {
-    setTimeout(() => {
-      isProcessing.value = false
-    }, 1000)
+    await requestEndPointExport(props.chatRoomId)
+    isProcessing.value = false
   }
 }
-
-// 종료 요청 거절 (거절 버튼)
 const handleExportReject = async () => {
-  if (isProcessing.value || !props.canSendMessage) {
-    console.warn('거절 불가:', {
-      isProcessing: isProcessing.value,
-      canSendMessage: props.canSendMessage,
-    })
-    return
-  }
-
-  try {
+  if (!isProcessing.value) {
     isProcessing.value = true
-    const result = await rejectEndPointExport(props.chatRoomId)
-    if (result.success) {
-      emit('exportReject') // 부모에 알림
-    } else {
-      alert('거절 실패: ' + result.message)
-    }
-  } catch (error) {
-    console.error('거절 에러:', error)
-    alert('거절 중 에러 발생')
-  } finally {
-    setTimeout(() => {
-      isProcessing.value = false
-    }, 1000)
+    await rejectEndPointExport(props.chatRoomId)
+    isProcessing.value = false
   }
 }
+const handleExportMessages = () => emit('exportMessages')
 
-// 특약 내보내기
-const handleExportMessages = async () => {
-  if (isProcessing.value || !props.canSendMessage) {
-    console.warn('내보내기 불가:', {
-      isProcessing: isProcessing.value,
-      canSendMessage: props.canSendMessage,
-    })
-    return
-  }
-
-  try {
-    isProcessing.value = true
-    emit('exportMessages')
-  } catch (error) {
-    console.error('ContractChatInput: 내보내기 실패:', error)
-  } finally {
-    setTimeout(() => {
-      isProcessing.value = false
-    }, 1000)
-  }
-}
-
-// 컴포넌트 마운트 시
 onMounted(() => {
-  // 입력창에 포커스 (온라인 상태일 때만)
-  if (messageInputRef.value && props.canSendMessage) {
-    messageInputRef.value.focus()
-  }
+  if (messageInputRef.value && props.canSendMessage) messageInputRef.value.focus()
 })
-
-// 컴포넌트 언마운트 시
 onUnmounted(() => {
-  // 타이머 정리
-  if (typingTimer.value) {
-    clearTimeout(typingTimer.value)
-  }
-
-  // 타이핑 상태 종료
-  if (isTypingActive.value) {
-    emit('typing', false)
-  }
+  if (typingTimer.value) clearTimeout(typingTimer.value)
 })
 </script>
 

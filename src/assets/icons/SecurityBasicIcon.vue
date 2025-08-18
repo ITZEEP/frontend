@@ -2,9 +2,10 @@
   <svg
     :width="width"
     :height="height"
-    viewBox="0 0 24 24"
+    viewBox="0 0 13.2 14.4"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
+    preserveAspectRatio="xMidYMid meet"
   >
     <path
       fill="currentColor"

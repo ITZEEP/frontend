@@ -100,17 +100,14 @@ const onParkingCountInput = (e) => {
 }
 
 watch(
-  [
-    facilityRepairNeeded,
-    interiorCleaningNeeded,
-    applianceInstallationPlan,
-    hasParking,
-    parkingCount,
-  ],
-  ([repair, clean, installation, parking, count]) => {
+  [facilityRepairNeeded, interiorCleaningNeeded, applianceInstallationPlan, hasParking],
+  ([repair, clean, installation, parking]) => {
     const basicFilled = repair !== null && clean !== null && installation !== null
-    const parkingFilled = parking === true ? count !== null && Number(count) >= 1 : true
-    const allFilled = basicFilled && parkingFilled
+
+    // 주차 토글은 “표시되는 경우에만” 필수
+    const parkingToggleFilled = !storeHasParking.value /* 토글 안 보이면 통과 */ || parking !== null
+
+    const allFilled = basicFilled && parkingToggleFilled
     store.setCanProceed(allFilled)
   },
 )

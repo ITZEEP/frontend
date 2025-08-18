@@ -297,7 +297,7 @@ export const postSpecialContractSelection = async (contractChatId, data) => {
 // 미완료 특약 문서 목록 조회
 export const getIncompleteSpecialContracts = async (contractChatId) => {
   try {
-    const result = await apiRequest(`/special-contract/${contractChatId}/incomplete`)
+    const result = await apiRequest(`/special-contract/${contractChatId}/incomplete/now`)
     return result.data
   } catch (error) {
     console.error('미완료 특약 문서 목록 조회 실패: ', error)
@@ -419,5 +419,14 @@ export const postFinalConfirmResponse = async (contractChatId, data) => {
     return await apiPost(`/${contractChatId}/final-contract/accept-confirmation`, data)
   } catch (error) {
     console.error('최종 특약 확정 요청 응답 (임차인) 실패: ', error)
+  }
+}
+
+export const getMoveContractChat = async (chatRoomId) => {
+  try {
+    const response = await apiRequest(`/${chatRoomId}/moveContractChat`)
+    return response.data
+  } catch (error) {
+    console.error('계약 채팅방 URL 받기 실패: ', error)
   }
 }

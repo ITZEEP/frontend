@@ -42,6 +42,15 @@
               {{ message.content }}
             </div>
 
+            <div v-else-if="message.type === 'URLLINK'">
+              <BaseButton
+                :disabled="isMyMessage(message)"
+                @click="!isMyMessage(message) && handleUrlLinkClick(message)"
+                class="disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {{ preContractButtonLabel(message) }}
+              </BaseButton>
+            </div>
             <!-- 파일 메시지 -->
             <div v-else-if="message.type === 'FILE'" class="space-y-2">
               <!-- 이미지 파일 -->
@@ -120,14 +129,13 @@
             </div>
 
             <div v-else-if="message.type === 'URLLINK'">
-              <a
-                :href="message.content"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="underline text-blue-500 hover:text-blue-700 break-all"
+              <BaseButton
+                :disabled="isMyMessage(message)"
+                @click="!isMyMessage(message) && handleUrlLinkClick(message)"
+                class="disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {{ message.content }}
-              </a>
+                {{ preContractButtonLabel(message) }}
+              </BaseButton>
             </div>
 
             <div v-else-if="message.type === 'CONTRACT_REQUEST'">
@@ -226,7 +234,8 @@ import ChatInput from './ChatInput.vue'
 import { acceptContract, getChatMessages, getCurrentUser, markChatRoomAsRead } from '@/apis/chatApi'
 import websocketService from '../../../apis/websocket'
 import BaseButton from '@/components/common/BaseButton.vue'
-import router from '@/router'
+import { useRouter } from 'vue-router'
+import { getMoveContractChat } from '@/apis/contractChatApi'
 
 const props = defineProps({
   room: {
@@ -237,6 +246,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['room-closed'])
+const router = useRouter()
 
 // API에서 로드된 기존 메시지들
 const apiMessages = ref([])
@@ -742,6 +752,74 @@ const handleGoToContractRoom = () => {
   } else {
     console.error('계약 채팅방 ID가 설정되지 않았습니다.')
     alert('계약 채팅방 정보가 없습니다.')
+  }
+}
+
+// 버튼 라벨 결정: content가 URL이면 role 추정, placeholder면 "계약 채팅방 바로가기"
+function preContractButtonLabel(message) {
+  const c = String(message?.content || '')
+
+  // placeholder 케이스
+  if (c === '계약 채팅방 URL') {
+    return '계약 채팅방 바로가기'
+  }
+
+  // URL에서 owner/buyer 추정
+  const url = c.toLowerCase()
+  const isOwner = url.includes('/owner') || /[?&](role=|who=)owner\b/.test(url)
+  const isBuyer = url.includes('/buyer') || /[?&](role=|who=)buyer\b/.test(url)
+
+  if (isOwner) return '임대인 계약 사전 조사 바로가기'
+  if (isBuyer) return '임차인 계약 사전 조사 바로가기'
+  return '계약 사전 조사 바로가기'
+}
+
+async function handleUrlLinkClick(message) {
+  const content = String(message?.content || '')
+  try {
+    if (content === '계약 채팅방 URL') {
+      const res = await getMoveContractChat(message.chatRoomId)
+      const targetUrl = res
+      if (typeof targetUrl === 'string' && targetUrl.length > 0) {
+        openUrl(targetUrl)
+      } else {
+        alert('계약 채팅방 URL을 가져올 수 없습니다.')
+      }
+      return
+    }
+
+    openUrl(content)
+  } catch (e) {
+    console.error('URLLINK 이동 실패:', e)
+    alert('이동 중 오류가 발생했습니다.')
+  }
+}
+
+async function openUrl(raw) {
+  try {
+    const cleaned = String(raw || '').replace(/null$/i, '')
+    const u = new URL(cleaned, window.location.origin)
+
+    if (u.origin === window.location.origin) {
+      const path = u.pathname
+      const query = Object.fromEntries(u.searchParams.entries())
+      const hash = u.hash || undefined
+
+      const to = { path, query, hash }
+      const resolved = router.resolve(to)
+
+      if (resolved.fullPath === router.currentRoute.value.fullPath) {
+        await router.replace(to)
+      } else {
+        await router.push(to)
+      }
+      return
+    }
+
+    window.open(u.toString(), '_blank', 'noopener,noreferrer')
+  } catch (e) {
+    console.warn('[openUrl] URL parse 실패, raw로 이동 시도:', raw, e)
+    window.open(raw, '_blank', 'noopener,noreferrer')
   }
 }
 
