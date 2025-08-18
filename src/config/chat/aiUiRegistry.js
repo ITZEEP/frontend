@@ -63,7 +63,38 @@ export const contentRulesByStep = {
       buttons: [{ label: '특약 수정 과정 확인하기', action: 'step3.openFinalClause' }],
     },
   ],
-  4: [],
+  4: [
+    {
+      when: (message) =>
+        typeof message?.content === 'string' &&
+        message.content.includes('임대인이 특약') &&
+        message.content.includes('수정을 요청'),
+      buttons: [
+        { label: '거절', action: 'step4.modification.reject' },
+        { label: '수락', action: 'step4.modification.accept' },
+      ],
+    },
+    {
+      when: (message) =>
+        typeof message?.content === 'string' &&
+        message.content.includes('임대인이 특약') &&
+        message.content.includes('삭제를 요청'),
+      buttons: [
+        { label: '거절', action: 'step4.deletion.reject' },
+        { label: '수락', action: 'step4.deletion.accept' },
+      ],
+    },
+    {
+      when: (message) =>
+        typeof message?.content === 'string' &&
+        message.content.includes('임대인이 최종 계약서') &&
+        message.content.includes('확인을 요청'),
+      buttons: [
+        { label: '거절', action: 'step4.final.reject' },
+        { label: '수락', action: 'step4.final.accept' },
+      ],
+    },
+  ],
 }
 
 // senderId 기반 기본 매핑
