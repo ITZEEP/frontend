@@ -1,13 +1,13 @@
 <template>
-  <div class="flex h-full">
-    <div class="w-1/3 border-r">
+  <div class="flex h-[calc(100dvh-64px)] min-h-0">
+    <div class="w-1/3 border-r min-h-0 overflow-y-auto">
       <ChatList
         @selectRoom="handleRoomSelection"
         :initial-room-id="initialRoomId"
         ref="chatListRef"
       />
     </div>
-    <div class="flex-1">
+    <div class="flex-1 min-h-0 overflow-hidden flex flex-col">
       <!--  선택된 채팅방이 있을 때만 렌더링 -->
       <ChatRoom
         v-if="selectedRoom"
