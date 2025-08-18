@@ -21,7 +21,7 @@ const homeId = route.query.homeId || route.params.homeId
 
 function handleVerified() {
   showVerification.value = false
-  alert('인증이 완료되었습니다.')
+  alert('매물 등록이 완료되었습니다.')
   router.push('/homes')
 }
 </script>
