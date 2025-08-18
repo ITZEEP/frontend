@@ -609,7 +609,9 @@ watch(
     if (t.includes('위 문제점들을 검토하시고 필요시 임대인께서 수정 요청을 해주세요')) {
       try {
         localStorage.setItem('specialContract_allowOwnerOngoingEdit', 'true')
-      } catch (e) {}
+      } catch (e) {
+        console.log(e)
+      }
       if (store && 'allowOwnerOngoingEdit' in store) {
         store.allowOwnerOngoingEdit = true
       }
