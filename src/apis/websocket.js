@@ -37,14 +37,7 @@ class WebSocketService {
 
       this.isConnecting.value = true
 
-      console.log('SockJS 연결 시도: http://localhost:8080/ws')
-      const socket = new SockJS('http://localhost:8080/ws')
-
-      // SockJS 이벤트 리스너 추가
-      socket.onopen = () => console.log('SockJS 연결 성공')
-      socket.onclose = (event) => console.log('SockJS 연결 종료:', event)
-      socket.onerror = (error) => console.error('SockJS 에러:', error)
-
+      const socket = new SockJS(import.meta.env.VITE_WS_URL || 'http://localhost:8080/ws')
       this.stompClient = new Client({
         webSocketFactory: () => socket,
         reconnectDelay: 5000,

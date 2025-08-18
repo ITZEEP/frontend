@@ -17,23 +17,8 @@ export function createActionDispatchers({
 
   const handlers = {
     // Step1
-    // 'step1.openGuide': () => {
-    //   safeCall(step1.openGuide)
-    // },
-    // 'step1.openResult': () => {
-    //   safeCall(step1.openResult)
-    // },
-
-    // Step2
-    // 'step2.openHelp': () => {
-    //   safeCall(step2.openHelp)
-    // },
-    // 'step2.openReview': () => {
-    //   safeCall(step2.openReview)
-    // },
-    // 'step2.openVerifyResult': () => {
-    //   safeCall(step2.openVerifyResult)
-    // },
+    'step1.gotoStep2.accept': (payload) => safeCall(step1.respondGoToStep2, true, payload),
+    'step1.gotoStep2.reject': (payload) => safeCall(step1.respondGoToStep2, false, payload),
 
     // Step3
     'step3.openTermsReview': () => {
@@ -54,13 +39,18 @@ export function createActionDispatchers({
     'step3.finalConfirm.accept': (payload) => safeCall(step3.responseFinalConfirm, true, payload),
     'step3.finalConfirm.reject': (payload) => safeCall(step3.responseFinalConfirm, false, payload),
 
-    // Step4
-    // 'step4.openChecklist': () => {
-    //   safeCall(step4.openChecklist)
-    // },
-    // 'step4.openSubmitResult': () => {
-    //   safeCall(step4.openSubmitResult)
-    // },
+    // Step 4
+    'step4.modification.accept': (payload) => safeCall(step4.respondModification, true, payload),
+    'step4.modification.reject': (payload) => safeCall(step4.respondModification, false, payload),
+
+    'step4.deletion.accept': (payload) => safeCall(step4.responseDeletion, true, payload),
+    'step4.deletion.reject': (payload) => safeCall(step4.responseDeletion, false, payload),
+
+    'step4.final.accept': (payload) => safeCall(step4.responseFinal, true, payload),
+    'step4.final.reject': (payload) => safeCall(step4.responseFinal, false, payload),
+
+    'legal.terms': () => safeCall(step1.openLegalTerms),
+    'legal.tips': () => safeCall(step1.openLegalTips),
   }
 
   // 레거시 액션명 호환 (기존 코드에서 쓰던 명칭)

@@ -297,7 +297,7 @@ export const postSpecialContractSelection = async (contractChatId, data) => {
 // 미완료 특약 문서 목록 조회
 export const getIncompleteSpecialContracts = async (contractChatId) => {
   try {
-    const result = await apiRequest(`/special-contract/${contractChatId}/incomplete`)
+    const result = await apiRequest(`/special-contract/${contractChatId}/incomplete/now`)
     return result.data
   } catch (error) {
     console.error('미완료 특약 문서 목록 조회 실패: ', error)
@@ -422,6 +422,15 @@ export const postFinalConfirmResponse = async (contractChatId, data) => {
   }
 }
 
+export const getMoveContractChat = async (chatRoomId) => {
+  try {
+    const response = await apiRequest(`/${chatRoomId}/moveContractChat`)
+    return response.data
+  } catch (error) {
+    console.error('계약 채팅방 URL 받기 실패: ', error)
+  }
+}
+
 // 계약서 내보내기 시작 - 초기 PDF 생성
 // 사용자 역할 확인
 export const getUserRole = async (contractChatId) => {
@@ -437,7 +446,10 @@ export const getUserRole = async (contractChatId) => {
 // HTTP를 통한 서명 상태 업데이트 (WebSocket 대안)
 export const updateSignatureStatus = async (contractChatId, signatureData) => {
   try {
-    const response = await api.post(`/api/contract/${contractChatId}/export/signature-status`, signatureData)
+    const response = await api.post(
+      `/api/contract/${contractChatId}/export/signature-status`,
+      signatureData,
+    )
     return response.data
   } catch (error) {
     console.error('서명 상태 업데이트 실패:', error)
@@ -461,17 +473,17 @@ export const startContractExport = async (contractChatId) => {
     const response = await api.post(`/api/contract/${contractChatId}/start-export`, null, {
       responseType: 'arraybuffer',
       headers: {
-        'Accept': 'application/pdf',
-        'Content-Type': 'application/json'
-      }
+        Accept: 'application/pdf',
+        'Content-Type': 'application/json',
+      },
     })
-    
+
     // ArrayBuffer가 비어있지 않은지 확인
     if (!response.data || response.data.byteLength === 0) {
       console.error('빈 PDF 데이터를 받았습니다')
       return null
     }
-    
+
     console.log('PDF 데이터 수신 성공, 크기:', response.data.byteLength, 'bytes')
     return response.data
   } catch (error) {
@@ -492,11 +504,11 @@ export const saveSignature = async (contractChatId, signatureData) => {
     if (signatureData.imgFiles) {
       formData.append('imgFiles', signatureData.imgFiles)
     }
-    
+
     const response = await api.post(`/api/contract/${contractChatId}/signature/tax`, formData, {
       headers: {
-        'Content-Type': 'multipart/form-data'
-      }
+        'Content-Type': 'multipart/form-data',
+      },
     })
     return response.data
   } catch (error) {
@@ -520,7 +532,7 @@ export const saveFinalContract = async (contractChatId, data) => {
 export const downloadContractPDF = async (contractChatId, data) => {
   try {
     const response = await api.post(`/api/contract/${contractChatId}/pdf`, data, {
-      responseType: 'blob'
+      responseType: 'blob',
     })
     return response.data
   } catch (error) {
