@@ -419,23 +419,46 @@ watch(
 
 // WebSocket 메시지 핸들러
 const handleExportStatusUpdate = (data) => {
-  console.log('WebSocket 메시지 수신:', data)
+  console.log('=== WebSocket 상태 업데이트 수신 ===')
+  console.log('받은 데이터:', JSON.stringify(data, null, 2))
+  console.log('현재 userRole:', userRole.value)
 
   // 이전 상태 저장
   const prevStatus = exportStatus.value ? { ...exportStatus.value } : null
+  console.log('이전 상태:', prevStatus)
 
   // 새로운 상태 업데이트
   exportStatus.value = data
 
-  // 상대방이 방금 서명한 경우 - UI 상태만 업데이트 (alert 제거)
+  // 상태 변경 감지
   if (prevStatus && data) {
     const wasOwnerSigned = prevStatus.ownerSignatureCompleted
-    const isBuyerSigned = prevStatus.buyerSignatureCompleted
+    const wasBuyerSigned = prevStatus.buyerSignatureCompleted
     const nowOwnerSigned = data.ownerSignatureCompleted
     const nowBuyerSigned = data.buyerSignatureCompleted
 
-    // 상태 변경이 있으면 자동으로 UI가 업데이트됨
-    // alert 없이 진행 상태만 표시
+    // 상대방이 방금 서명한 경우
+    if (!wasOwnerSigned && nowOwnerSigned && userRole.value !== 'owner') {
+      console.log('임대인이 서명을 완료했습니다')
+    }
+    if (!wasBuyerSigned && nowBuyerSigned && userRole.value === 'owner') {
+      console.log('임차인이 서명을 완료했습니다')
+    }
+    
+    // 양쪽 모두 서명 완료된 경우
+    if (nowOwnerSigned && nowBuyerSigned && (!wasOwnerSigned || !wasBuyerSigned)) {
+      console.log('양쪽 서명 완료! 최종 계약서 생성 시작...')
+      isLoading.value = true
+      
+      // 최종 PDF가 이미 있으면 바로 완료 화면으로
+      if (data.finalPdfUrl) {
+        loadFinalPdf(data.finalPdfUrl).then(() => {
+          currentStep.value = 'complete'
+          isLoading.value = false
+          isWaitingForOther.value = false
+        })
+      }
+    }
   }
 }
 
@@ -467,20 +490,15 @@ const setupWebSocket = async () => {
       `/topic/contract/${contractId.value}/export/status`,
       handleExportStatusUpdate,
     )
-    console.log('WebSocket 구독 완료:', `/topic/contract/${contractId.value}/export/status`)
 
     // 계약 완료 알림 구독
     websocketService.onMessage(
       `/topic/contract/${contractId.value}/completion`,
       handleContractCompletion,
     )
-    console.log('WebSocket 완료 알림 구독:', `/topic/contract/${contractId.value}/completion`)
 
-    // 초기 상태 요청 (즉시 전송)
-    console.log('초기 상태 요청 즉시 전송')
-    console.log('WebSocket 연결 상태:', websocketService.getConnectionStatus())
-    const result = websocketService.getContractExportStatus(contractId.value)
-    console.log('초기 상태 요청 결과:', result)
+    // 초기 상태 요청
+    await websocketService.getContractExportStatus(contractId.value)
   } catch (error) {
     console.error('WebSocket 연결 실패:', error)
     isConnected.value = false
@@ -702,7 +720,9 @@ const proceedToPassword = async () => {
   isLoading.value = true
   try {
     // 서버에 서명 저장
+    console.log('서명 서버 저장 시작...')
     await saveSignatureToServer()
+    console.log('서명 서버 저장 완료')
 
     // WebSocket 연결 확인
     if (!websocketService.getConnectionStatus()) {
@@ -735,25 +755,59 @@ const proceedToPassword = async () => {
     console.log('WebSocket 연결 상태:', websocketService.getConnectionStatus())
 
     // WebSocket 서비스 메서드 사용 (await 추가)
+    console.log('서명 전송 시작, contractId:', contractId.value)
+    console.log('서명 메시지:', JSON.stringify(signatureMessage, null, 2))
+    
+    // WebSocket 전송 시도
     const sendResult = await websocketService.sendContractExportSignature(
       contractId.value,
       signatureMessage,
     )
-    console.log('메시지 전송 결과:', sendResult)
+    console.log('WebSocket 서명 전송 결과:', sendResult)
 
+    // WebSocket 실패 시 또는 백업으로 HTTP API 사용
     if (!sendResult) {
       console.warn('WebSocket 메시지 전송 실패. HTTP API 사용...')
-      try {
-        // HTTP API를 통한 서명 상태 업데이트
-        const httpResult = await updateSignatureStatus(contractId.value, signatureMessage)
-        console.log('HTTP API 서명 상태 업데이트 결과:', httpResult)
-
-        // 상태 폴링 시작
-        startStatusPolling()
-      } catch (error) {
-        console.error('HTTP API 서명 상태 업데이트 실패:', error)
-      }
     }
+    
+    // 항상 HTTP API로도 전송 (백업)
+    try {
+      console.log('HTTP API로 서명 상태 업데이트 시도...')
+      const httpResult = await updateSignatureStatus(contractId.value, signatureMessage)
+      console.log('HTTP API 서명 상태 업데이트 결과:', httpResult)
+      
+      // HTTP API 성공 시 본인 서명 상태를 즉시 업데이트
+      if (httpResult && httpResult.success) {
+        if (userRole.value === 'owner') {
+          exportStatus.value = {
+            ...exportStatus.value,
+            ownerSignatureCompleted: true,
+          }
+        } else {
+          exportStatus.value = {
+            ...exportStatus.value,
+            buyerSignatureCompleted: true,
+          }
+        }
+      }
+    } catch (error) {
+      console.error('HTTP API 서명 상태 업데이트 실패:', error)
+      alert('서명 전송에 실패했습니다. 다시 시도해주세요.')
+      return // 실패 시 대기 화면으로 가지 않음
+    }
+    
+    // 서명 완료 후 즉시 상태 폴링 시작
+    console.log('상태 폴링 시작...')
+    startStatusPolling()
+    
+    // WebSocket이 실패한 경우에도 HTTP API로 상태 조회
+    setTimeout(async () => {
+      const latestStatus = await getExportStatus(contractId.value)
+      if (latestStatus) {
+        console.log('HTTP로 가져온 최신 상태:', latestStatus)
+        exportStatus.value = latestStatus
+      }
+    }, 1000)
 
     // 대기 화면으로 이동 (백엔드에서 자동으로 최종 계약서 생성)
     console.log('서명 완료. 최종 계약서 생성 대기 중...')
@@ -931,24 +985,66 @@ let pollingInterval = null
 
 const startStatusPolling = () => {
   console.log('상태 폴링 시작')
+  
+  // 즉시 한 번 실행
+  getExportStatus(contractId.value).then(status => {
+    if (status) {
+      console.log('초기 폴링 상태:', status)
+      exportStatus.value = status
+    }
+  }).catch(err => {
+    console.error('초기 상태 조회 실패:', err)
+  })
 
   pollingInterval = setInterval(async () => {
     try {
       const status = await getExportStatus(contractId.value)
       console.log('폴링 상태 확인:', status)
+      
+      // null 체크
+      if (!status) {
+        console.warn('상태 조회 결과가 null입니다')
+        return
+      }
 
       // 상태 업데이트
       exportStatus.value = status
+      
+      // 양쪽 서명 완료 확인
+      if (status.ownerSignatureCompleted && status.buyerSignatureCompleted) {
+        console.log('양쪽 서명 완료 확인!')
+        
+        // 최종 PDF가 생성되었으면
+        if (status.finalPdfUrl) {
+          console.log('최종 계약서 생성 완료!')
+          stopStatusPolling()
+          isWaitingForOther.value = false
+          isLoading.value = false
+          
+          // 완료 화면으로 이동
+          loadFinalPdf(status.finalPdfUrl).then(() => {
+            currentStep.value = 'complete'
+            alert('계약서 서명이 완료되어 최종 계약서가 생성되었습니다!')
+          })
+        } else {
+          // PDF 생성 중
+          console.log('최종 계약서 생성 중...')
+          isLoading.value = true
+        }
+      }
 
-      // 완료 상태 확인
+      // 완료 상태 확인 (별도 체크)
       if ((status.isCompleted || status.completed) && status.finalPdfUrl) {
         console.log('폴링: 최종 계약서 생성 완료!')
         stopStatusPolling()
+        isWaitingForOther.value = false
+        isLoading.value = false
 
         // 완료 화면으로 이동
         if (currentStep.value === 'waiting') {
           loadFinalPdf(status.finalPdfUrl).then(() => {
             currentStep.value = 'complete'
+            alert('계약서 서명이 완료되어 최종 계약서가 생성되었습니다!')
           })
         }
       }
