@@ -257,9 +257,9 @@
           AI 기술의 지원으로 더 이상 부동산 사기를 걱정하지 마세요
         </p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
-          <router-link to="/signup">
+          <router-link to="/auth/signin">
             <BaseButton variant="gray" size="lg" class="w-full sm:w-auto"
-              >무료로 시작하기</BaseButton
+              >로그인하러 가기</BaseButton
             >
           </router-link>
           <router-link to="/risk-check">
