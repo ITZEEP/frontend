@@ -363,6 +363,9 @@ const RE_TENANT_ACCEPT_MOD =
 const RE_TENANT_ACCEPT_DEL =
   /임차인이\s*특약\s*(\d+)\s*번\s*삭제\s*요청을\s*수락했습니다\.\s*특약이\s*삭제되었습니다\./
 
+const RE_MORE_REQUEST = /(임차인|임대인).?이?\s*특약\s*대화를\s*더\s*요청했습니다\.?/
+const RE_START_CLAUSE_TALK = /(\d+)\s*번\s*특약에\s*대한\s*대화를\s*시작합니다!?/
+
 // 4단계 적법성 검토
 const responseFinal = async (accepted) => {
   const id = String(actualContractChatId.value)
@@ -625,9 +628,15 @@ watch(
   (m) => {
     if (!m) return
     const sid = String(m.senderId)
-    if (sid !== '9998' && sid !== '9999') return
-
     const t = normalizeText(m.content)
+
+    // ✅ 발신자와 무관하게 로딩 해제 트리거 우선 처리
+    if (RE_MORE_REQUEST.test(t) || RE_START_CLAUSE_TALK.test(t)) {
+      isLoadingOverlayVisible.value = false
+    }
+
+    // ⬇️ 아래부터는 AI 메시지에만 적용되는 기존 단계 전환/동기화 로직 유지
+    if (sid !== '9998' && sid !== '9999') return
 
     // --- 1단계 감지 ---
     if (t.includes(`사전 조사를 토대로`)) {
@@ -659,10 +668,6 @@ watch(
       return
     }
 
-    // 1) 임차인이 거절한 경우: "임차인이 특약 대화를 더 요청했습니다."
-    if (amOwner.value && t.includes('임차인이 특약 대화를 더 요청했습니다.')) {
-      isLoadingOverlayVisible.value = false
-    }
     // 2) 임차인이 수락 → AI(9998)가 라운드 시작 알림을 보냄
     if (amOwner.value && sid === '9998' && RE_ROUND_DONE.test(t)) {
       isLoadingOverlayVisible.value = false
