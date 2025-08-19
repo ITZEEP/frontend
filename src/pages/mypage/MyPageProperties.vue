@@ -39,7 +39,7 @@
         <div v-for="property in properties" :key="property.id" class="property-card">
           <!-- 이미지 -->
           <PropertyImage
-            :src="property.images?.[0]"
+            :src="property.images && property.images.length > 0 ? property.images[0] : ''"
             :alt="property.title"
             :property-type="property.type || '매물'"
             size="large"
@@ -76,13 +76,14 @@
 
             <!-- 액션 버튼 -->
             <div class="property-actions">
-              <button class="edit-btn" @click="handleEdit(property)">
+              <button class="edit-btn" @click="handleEdit(property)" :disabled="deletingPropertyId === property.id">
                 <i class="fas fa-edit"></i>
                 수정
               </button>
-              <button class="delete-btn" @click="handleDelete(property)">
-                <i class="fas fa-trash"></i>
-                삭제
+              <button class="delete-btn" @click="handleDelete(property)" :disabled="deletingPropertyId === property.id">
+                <i v-if="deletingPropertyId === property.id" class="fas fa-spinner fa-spin"></i>
+                <i v-else class="fas fa-trash"></i>
+                {{ deletingPropertyId === property.id ? '삭제 중...' : '삭제' }}
               </button>
             </div>
           </div>
@@ -161,6 +162,7 @@ const handleCancel = () => {
 
 // 상태
 const loading = ref(true)
+const deletingPropertyId = ref(null)
 
 // 매물 목록
 const properties = ref([])
@@ -225,18 +227,37 @@ const handleEdit = (property) => {
 
 // 매물 삭제
 const handleDelete = async (property) => {
-  const confirmed = await showConfirm('정말로 이 매물을 삭제하시겠습니까?')
+  const confirmed = await showConfirm(`정말로 "${property.title}" 매물을 삭제하시겠습니까?\n\n삭제된 매물은 복구할 수 없습니다.`, '매물 삭제')
   if (confirmed) {
+    deletingPropertyId.value = property.id
     try {
-      // TODO: 매물 삭제 API 구현 후 연결
-      await showAlert('매물 삭제 기능은 준비 중입니다.')
-      // await mypageAPI.deleteProperty(property.id)
-      // 삭제 성공 시 목록에서 제거
-      // properties.value = properties.value.filter(p => p.id !== property.id)
-      // await showAlert('매물이 삭제되었습니다.')
+      const response = await mypageAPI.deleteProperty(property.id)
+      
+      if (response.success) {
+        // 삭제 성공 시 목록에서 제거
+        properties.value = properties.value.filter(p => p.id !== property.id)
+        await showAlert('매물이 성공적으로 삭제되었습니다.', '삭제 완료')
+      } else {
+        await showAlert(response.message || '매물 삭제에 실패했습니다.', '삭제 실패')
+      }
     } catch (error) {
       console.error('Delete property error:', error)
-      await showAlert('매물 삭제에 실패했습니다.')
+      
+      // 에러 메시지 처리
+      let errorMessage = '매물 삭제 중 오류가 발생했습니다.'
+      if (error.response) {
+        if (error.response.status === 404) {
+          errorMessage = '삭제하려는 매물을 찾을 수 없습니다.'
+        } else if (error.response.status === 403) {
+          errorMessage = '이 매물을 삭제할 권한이 없습니다.'
+        } else if (error.response.status === 400) {
+          errorMessage = '이미 계약이 진행 중인 매물은 삭제할 수 없습니다.'
+        }
+      }
+      
+      await showAlert(errorMessage, '삭제 실패')
+    } finally {
+      deletingPropertyId.value = null
     }
   }
 }
@@ -250,12 +271,12 @@ onMounted(async () => {
       properties.value = response.data.content.map((property) => ({
         id: property.propertyId,
         title: property.address || '주소 미정',
-        type: property.propertyType,
-        status: property.status ? property.status.toLowerCase() : 'active',
+        type: property.buildingType || property.propertyType,
+        status: property.status || 'active',
         price: property.deposit || property.monthlyRent || 0,
         viewCount: property.viewCount || 0,
-        likeCount: property.wishCount || 0,
-        images: property.imageUrls || [],
+        likeCount: property.likeCount || property.wishCount || 0,
+        images: property.imageUrl ? [property.imageUrl] : [],  // imageUrl을 배열로 변환
       }))
     }
   } catch (error) {
@@ -580,17 +601,23 @@ onMounted(async () => {
   color: #484b51;
 }
 
-.edit-btn:hover {
-  background-color: #eaeaeb;
-}
-
 .delete-btn {
   background-color: #fef2f2;
   color: #dc2626;
 }
 
-.delete-btn:hover {
+.delete-btn:hover:not(:disabled) {
   background-color: #fee2e2;
+}
+
+.edit-btn:disabled,
+.delete-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.edit-btn:hover:not(:disabled) {
+  background-color: #eaeaeb;
 }
 
 /* 반응형 디자인 */

@@ -481,17 +481,23 @@ const handleDrop = (event, dropIndex) => {
 
 // 매물 수정
 const handleEdit = (property) => {
-  router.push(`/home/edit/${property.id}`)
+  // propertyId를 사용
+  router.push(`/home/edit/${property.propertyId || property.id}`)
 }
 
 // 매물 삭제
 const handleDelete = async (property) => {
+  console.log('삭제할 매물:', property)
   const confirmed = await showConfirm('정말로 이 매물을 삭제하시겠습니까?', '매물 삭제')
   if (confirmed) {
     try {
-      await myPageStore.deleteProperty(property.id)
+      // propertyId를 사용
+      const propertyId = property.propertyId || property.id
+      console.log('삭제 요청 ID:', propertyId)
+      await myPageStore.deleteProperty(propertyId)
       await showAlert('매물이 삭제되었습니다.')
     } catch (error) {
+      console.error('매물 삭제 실패:', error)
       await showAlert('매물 삭제에 실패했습니다.')
     }
   }
@@ -551,11 +557,14 @@ onMounted(async () => {
     if (contractsResponse.success && contractsResponse.data) {
       contracts.value = contractsResponse.data.content.map((contract) => ({
         id: contract.contractId,
-        title: `${contract.address || '주소 미정'} (${getBuildingTypeLabel(contract.buildingType)})`,
+        contractId: contract.contractId,
+        chatRoomId: contract.contractId, // 계약서 ID를 채팅방 ID로 사용
+        title: `${contract.address || '주소 미정'} ${getBuildingTypeLabel(contract.buildingType)} 임대차 계약서`,
         status: contract.status || 'STEP0',
         createdAt: contract.contractDate,
         fileUrl: contract.fileUrl,
         leaseType: contract.leaseType,
+        userType: contract.userType, // OWNER or BUYER
       }))
     }
 

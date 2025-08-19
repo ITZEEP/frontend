@@ -22,8 +22,22 @@
         </div>
 
         <div class="contract-actions">
-          <button class="view-btn">보기</button>
-          <button class="download-btn" :disabled="contract.status !== 'completed'">다운로드</button>
+          <button 
+            class="view-btn"
+            @click="handleView(contract)"
+          >
+            <i v-if="contract.status === 'COMPLETED' || contract.status === 'completed'" class="fas fa-file-pdf"></i>
+            <i v-else class="fas fa-comments"></i>
+            <span>{{ contract.status === 'COMPLETED' || contract.status === 'completed' ? '계약서 보기' : '채팅방 이동' }}</span>
+          </button>
+          <button 
+            v-if="contract.fileUrl"
+            class="download-btn"
+            @click="handleDownload(contract)"
+          >
+            <i class="fas fa-download"></i>
+            <span>다운로드</span>
+          </button>
         </div>
       </div>
     </div>
@@ -35,7 +49,10 @@
 </template>
 
 <script setup>
+import { useRouter } from 'vue-router'
 import ContractsCardSkeleton from '@/components/mypage/skeleton/ContractsCardSkeleton.vue'
+
+const router = useRouter()
 
 defineProps({
   contracts: {
@@ -47,6 +64,32 @@ defineProps({
     default: false,
   },
 })
+
+const handleView = (contract) => {
+  // 완료된 계약서는 완료 페이지로
+  if (contract.status === 'COMPLETED' || contract.status === 'completed') {
+    if (contract.fileUrl) {
+      // PDF 다운로드
+      handleDownload(contract)
+    }
+  } else if (contract.chatRoomId || contract.contractId) {
+    // 채팅방으로 이동
+    router.push(`/contract/${contract.chatRoomId || contract.contractId}`)
+  }
+}
+
+const handleDownload = (contract) => {
+  if (!contract.fileUrl) return
+  
+  // PDF 다운로드
+  const link = document.createElement('a')
+  link.href = contract.fileUrl
+  link.download = `계약서_${contract.contractId}.pdf`
+  link.target = '_blank'
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+}
 
 const getStatusLabel = (status) => {
   const labels = {
@@ -153,23 +196,23 @@ const formatDate = (dateString) => {
 
 .view-btn,
 .download-btn {
-  @apply flex-1 h-8 border-none rounded text-sm font-medium cursor-pointer transition-all duration-200 flex items-center justify-center;
+  @apply flex-1 h-8 border-none rounded text-sm font-medium cursor-pointer transition-all duration-200 flex items-center justify-center gap-1;
 }
 
 .view-btn {
   @apply bg-gray-100 text-gray-700 hover:bg-gray-200;
 }
 
+.view-btn i {
+  @apply text-xs;
+}
+
 .download-btn {
-  @apply bg-gray-100 text-gray-700 ml-2;
+  @apply bg-yellow-100 text-gray-700 ml-2 hover:bg-yellow-200;
 }
 
-.download-btn:hover:not(:disabled) {
-  @apply bg-gray-200;
-}
-
-.download-btn:disabled {
-  @apply bg-gray-50 text-gray-400 cursor-not-allowed opacity-60;
+.download-btn i {
+  @apply text-xs;
 }
 
 .view-all-section {

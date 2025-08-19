@@ -39,9 +39,7 @@ const fetchAnalysisHistory = async () => {
     isLoading.value = true
     error.value = null
     
-    console.log('분석 기록 조회 시작...')
     const response = await fraudApi.getRiskCheckList(1, 20) // 첫 페이지, 20개 조회
-    console.log('분석 기록 API 응답:', response)
     
     if (response && response.content) {
       // PageResponse의 content 직접 사용
@@ -53,14 +51,12 @@ const fetchAnalysisHistory = async () => {
         address: item.address || '',
         detailAddress: item.detailAddress || '',
         type: item.residenceType || '매물',
-        imageUrl: item.imageUrl || '',
+        image: item.imageUrl || '',  // PropertyItem은 image 필드를 사용
         checkedAt: item.checkedAt,
         riskCheckId: item.riskCheckId
       }))
-      console.log('변환된 분석 기록:', analysisHistory.value)
     } else {
       analysisHistory.value = []
-      console.log('분석 기록이 없습니다.')
     }
   } catch (err) {
     console.error('분석 기록 조회 실패:', err)

@@ -49,13 +49,28 @@
 
           <!-- 액션 버튼들 -->
           <div class="contract-actions">
-            <button class="view-btn" @click="handleView(contract)">보기</button>
-            <button
-              class="download-btn"
-              :disabled="contract.status !== 'completed'"
-              @click="handleDownload(contract)"
+            <button 
+              class="view-btn" 
+              @click="handleView(contract)"
+              :disabled="navigatingContractId === contract.id"
             >
-              다운로드
+              <i v-if="navigatingContractId === contract.id" class="fas fa-spinner fa-spin"></i>
+              <i v-else-if="contract.status === 'COMPLETED'" class="fas fa-file-pdf"></i>
+              <i v-else class="fas fa-comments"></i>
+              <span>{{ 
+                navigatingContractId === contract.id ? '처리 중...' : 
+                contract.status === 'COMPLETED' ? '계약서 보기' : '채팅방 이동' 
+              }}</span>
+            </button>
+            <!-- 완료된 계약서 다운로드 버튼 -->
+            <button 
+              v-if="contract.fileUrl"
+              class="download-btn"
+              @click.stop="handleDownload(contract)"
+              title="계약서 다운로드"
+            >
+              <i class="fas fa-download"></i>
+              <span>다운로드</span>
             </button>
           </div>
         </div>
@@ -65,10 +80,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMyPageStore } from '@/stores/mypage'
 import { mypageAPI } from '@/apis/mypage'
+import { contractApi } from '@/apis/contractApi'
 import ModalAlert from '@/components/common/ModalAlert.vue'
 
 const router = useRouter()
@@ -118,6 +134,7 @@ const handleCancel = () => {
 
 // 상태
 const loading = ref(true)
+const navigatingContractId = ref(null)
 
 // 계약서 목록
 const contracts = ref([])
@@ -152,29 +169,93 @@ const formatDate = (dateString) => {
 }
 
 // 계약서 보기
-const handleView = (contract) => {
-  router.push(`/contract/view/${contract.id}`)
+const handleView = async (contract) => {
+  console.log('handleView 호출:', contract)
+  navigatingContractId.value = contract.id
+  try {
+    // 완료된 계약의 경우 다운로드
+    if (contract.status === 'COMPLETED' && contract.fileUrl) {
+      console.log('완료된 계약 - 다운로드 실행')
+      await handleDownloadWithPassword(contract)
+      return
+    }
+    
+    // chatRoomId가 있는 경우 계약 채팅방으로 이동
+    if (contract.chatRoomId) {
+      console.log('채팅방으로 이동, chatRoomId:', contract.chatRoomId)
+      const response = await contractApi.moveContractChat(contract.chatRoomId)
+      console.log('moveContractChat API 응답:', response)
+      
+      if (response.success && response.data) {
+        // 반환된 URL로 이동
+        if (response.data.startsWith('http')) {
+          // 외부 URL인 경우
+          window.location.href = response.data
+        } else if (response.data.startsWith('/')) {
+          // 내부 라우팅 경로인 경우
+          router.push(response.data)
+        } else {
+          // 계약 채팅 페이지로 집접 이동
+          router.push(`/contract-chat/${contract.chatRoomId}`)
+        }
+      } else {
+        // URL을 받지 못한 경우 기본 계약 채팅 페이지로 이동
+        router.push(`/contract-chat/${contract.chatRoomId}`)
+      }
+    } else {
+      // chatRoomId가 없는 경우
+      await showAlert('계약 채팅방 정보가 없습니다.')
+    }
+  } catch (error) {
+    console.error('Contract chat navigation error:', error)
+    
+    // 에러 처리
+    if (error.response?.status === 404) {
+      await showAlert('계약 채팅방을 찾을 수 없습니다.')
+    } else if (error.response?.status === 403) {
+      await showAlert('계약 채팅방에 접근할 권한이 없습니다.')
+    } else {
+      await showAlert('계약 채팅방으로 이동할 수 없습니다.')
+    }
+  } finally {
+    navigatingContractId.value = null
+  }
 }
 
-// 계약서 다운로드
-const handleDownload = async (contract) => {
+// 비밀번호 안내와 함께 계약서 다운로드
+const handleDownloadWithPassword = async (contract) => {
   try {
     if (!contract.fileUrl) {
       await showAlert('다운로드할 파일이 없습니다.')
       return
     }
-
+    
+    // 비밀번호 안내 모달 표시
+    const message = `계약서 PDF 파일이 다운로드됩니다.\n\nPDF 비밀번호는 계약 당사자들의 생년월일(YYMMDD)입니다.\n\n예시: 1995년 3월 15일생 → 950315`
+    await showAlert(message, 'PDF 비밀번호 안내')
+    
+    // 파일명 생성 (주소와 날짜 포함)
+    const date = new Date(contract.createdAt)
+    const dateStr = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`
+    const fileName = `계약서_${dateStr}_${contract.id}.pdf`
+    
     // 파일 URL로 직접 다운로드
     const link = document.createElement('a')
     link.href = contract.fileUrl
-    link.download = contract.title + '.pdf'
+    link.download = fileName
+    link.target = '_blank' // 새 탭에서 열기
+    document.body.appendChild(link)
     link.click()
-
-    await showAlert('계약서가 다운로드되었습니다.')
+    document.body.removeChild(link)
   } catch (error) {
     console.error('Download contract error:', error)
     await showAlert('계약서 다운로드에 실패했습니다.')
   }
+}
+
+// 계약서 다운로드 (기존 함수 유지)
+const handleDownload = async (contract) => {
+  await handleDownloadWithPassword(contract)
 }
 
 // 건물 유형 라벨 (ResidenceType)
@@ -197,16 +278,23 @@ const getBuildingTypeLabel = (type) => {
 onMounted(async () => {
   try {
     const response = await mypageAPI.getMyContracts(0, 20)
+    console.log('계약서 목록 API 응답:', response)
 
     if (response.success && response.data) {
-      contracts.value = response.data.content.map((contract) => ({
-        id: contract.contractId,
-        title: `${contract.address || '주소 미정'} ${getBuildingTypeLabel(contract.buildingType)} 임대차 계약서`,
-        status: contract.status || 'STEP0',
-        createdAt: contract.contractDate,
-        fileUrl: contract.fileUrl,
-        leaseType: contract.leaseType,
-      }))
+      contracts.value = response.data.content.map((contract) => {
+        console.log('원본 계약 데이터:', contract)
+        const mappedContract = {
+          id: contract.contractId,
+          chatRoomId: contract.contractChatId || contract.chatRoomId || contract.contractId, // contractId를 폴백으로 사용
+          title: `${contract.address || '주소 미정'} ${getBuildingTypeLabel(contract.buildingType)} 임대차 계약서`,
+          status: contract.status || 'STEP0',
+          createdAt: contract.contractDate,
+          fileUrl: contract.finalContract || contract.fileUrl, // finalContract 추가
+          leaseType: contract.leaseType,
+        }
+        console.log('매핑된 계약 데이터:', mappedContract)
+        return mappedContract
+      })
     }
   } catch (error) {
     console.error('Load contracts error:', error)
@@ -567,10 +655,16 @@ onMounted(async () => {
 .view-btn {
   background-color: #f7f7f8;
   color: #484b51;
+  gap: 8px;
 }
 
-.view-btn:hover {
+.view-btn:hover:not(:disabled) {
   background-color: #eaeaeb;
+}
+
+.view-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .download-btn {

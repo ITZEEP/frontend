@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 
 export const useSpecialContractStore = defineStore('specialContract', () => {
-  const currentOrder = ref(null)
+  const currentOrder = ref(1) // 기본값을 1로 설정
   const orderStatusMap = ref({})
   const contractOrders = ref([])
   const aiMessageReceived = ref(false)

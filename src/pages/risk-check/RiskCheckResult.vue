@@ -119,7 +119,6 @@ const fetchExternalPropertyData = () => {
   const propertyInfo = fraudStore.getPropertyInfo()
 
   if (!externalResult || !propertyInfo) {
-    console.log('Store에 저장된 분석 결과가 없습니다')
     router.push('/risk-check')
     return false
   }
@@ -155,8 +154,6 @@ const fetchInternalPropertyData = async () => {
   const response = await fraudApi.getRiskCheckDetail(analysisId)
 
   if (response.success && response.data) {
-    console.log('API 응답 데이터:', response.data)
-    console.log('homeId:', response.data.homeId)
     currentAnalysis.value = response.data
 
     const price =
@@ -175,12 +172,17 @@ const fetchInternalPropertyData = async () => {
       transactionType: response.data.transactionType || '매매',
       price: price,
       priceDisplay: priceDisplay,
-      image: response.data.imageUrl || '/property-placeholder.jpg',
+      image:
+        response.data.propertyImageUrl ||
+        response.data.imageUrl ||
+        response.data.image ||
+        response.data.homeImageUrl ||
+        response.data.propertyImage ||
+        '/property-placeholder.jpg',
     }
 
     return true
   } else {
-    console.log('API 응답이 없거나 실패')
     return false
   }
 }
@@ -232,99 +234,12 @@ const analysisResult = computed(() => {
       image:
         currentProperty.value?.image ||
         currentAnalysis.value?.propertyImageUrl ||
+        currentAnalysis.value?.imageUrl ||
+        currentAnalysis.value?.image ||
+        currentAnalysis.value?.homeImageUrl ||
+        currentAnalysis.value?.propertyImage ||
         '/property-placeholder.jpg',
     },
-  }
-})
-
-const categorizedAnalysisDetails = computed(() => {
-  if (!currentAnalysis.value?.detailGroups || currentAnalysis.value.detailGroups.length === 0) {
-    const riskStatus =
-      currentAnalysis.value?.riskType === 'SAFE'
-        ? 'safe'
-        : currentAnalysis.value?.riskType === 'WARN'
-          ? 'warning'
-          : 'danger'
-
-    return {
-      basicInfo: [
-        { name: '소유자 확인', status: riskStatus, description: '분석 데이터가 없습니다.' },
-        { name: '주소 일치', status: riskStatus, description: '분석 데이터가 없습니다.' },
-      ],
-      legalSafety: [
-        { name: '법적 분쟁', status: riskStatus, description: '분석 데이터가 없습니다.' },
-        { name: '위반건축물', status: riskStatus, description: '분석 데이터가 없습니다.' },
-      ],
-      buildingSafety: [
-        { name: '건물 용도', status: riskStatus, description: '분석 데이터가 없습니다.' },
-        { name: '면적 정보', status: riskStatus, description: '분석 데이터가 없습니다.' },
-      ],
-      financialSafety: [
-        { name: '근저당', status: riskStatus, description: '분석 데이터가 없습니다.' },
-        { name: '시세 대비 가격', status: riskStatus, description: '분석 데이터가 없습니다.' },
-      ],
-    }
-  }
-
-  const findInGroups = (groupTitle) => {
-    const group = currentAnalysis.value.detailGroups.find((g) => g.title === groupTitle)
-    if (group && group.items && group.items.length > 0) {
-      return group.items[0].content || '확인 중'
-    }
-    return '확인 중'
-  }
-
-  return {
-    basicInfo: [
-      {
-        name: '소유자 및 주소 확인',
-        status: findInGroups('기본 정보').includes('일치') ? 'safe' : 'warning',
-        description: findInGroups('기본 정보'),
-      },
-    ],
-    legalSafety: [
-      {
-        name: '법적 분쟁',
-        status: 'safe',
-        description: '법적 분쟁이 없습니다.',
-      },
-      {
-        name: '위반건축물',
-        status: findInGroups('건축 관련').includes('적법') ? 'safe' : 'danger',
-        description: findInGroups('건축 관련'),
-      },
-    ],
-    buildingSafety: [
-      {
-        name: '건물 상태',
-        status:
-          findInGroups('건축 관련').includes('적합') || findInGroups('건축 관련').includes('적법')
-            ? 'safe'
-            : 'warning',
-        description: findInGroups('건축 관련'),
-      },
-      {
-        name: '면적 정보',
-        status: 'safe',
-        description: '면적 정보가 정확히 기재되어 있습니다.',
-      },
-    ],
-    financialSafety: [
-      {
-        name: '근저당',
-        status:
-          findInGroups('권리관계 정보').includes('없어') ||
-          findInGroups('권리관계 정보').includes('안전')
-            ? 'safe'
-            : 'warning',
-        description: findInGroups('권리관계 정보'),
-      },
-      {
-        name: '시세 대비 가격',
-        status: 'safe',
-        description: '시세 대비 적정한 가격입니다.',
-      },
-    ],
   }
 })
 
@@ -332,7 +247,7 @@ const categorizedAnalysisDetails = computed(() => {
 const goBack = () => {
   // Check if the previous route was risk-check/confirm
   const previousRoute = router.options.history.state.back
-  
+
   if (previousRoute && previousRoute.includes('/risk-check/confirm')) {
     // If coming from confirm page, go to risk-check home
     router.push('/risk-check')
@@ -383,7 +298,9 @@ watch(dataNotFound, (newValue) => {
         <button @click="goBack" class="p-1 text-gray-600 hover:text-gray-800 transition-colors">
           <IconChevronLeft class="w-[17.5px] h-7" />
         </button>
-        <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-warm-700">AI 위험도 분석 결과</h1>
+        <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-warm-700">
+          AI 위험도 분석 결과
+        </h1>
       </div>
 
       <!-- Loading State -->
@@ -464,10 +381,10 @@ watch(dataNotFound, (newValue) => {
 
         <!-- Recommended Services -->
         <div class="mb-8">
-          <RecommendedServices 
+          <RecommendedServices
             :property-id="currentAnalysis?.homeId"
             :is-external="isExternalProperty"
-            @analyze-another="analyzeAnother" 
+            @analyze-another="analyzeAnother"
           />
         </div>
       </template>

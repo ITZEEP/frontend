@@ -157,9 +157,9 @@ export const mypageAPI = {
   },
 
   // 매물 삭제
-  deleteProperty: async (propertyId) => {
+  deleteProperty: async (homeId) => {
     try {
-      const response = await api.delete(`/api/mypage/properties/${propertyId}`)
+      const response = await api.delete(`/api/homes/${homeId}`)
       return response.data
     } catch (error) {
       console.error('매물 삭제 실패:', error)

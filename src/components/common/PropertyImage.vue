@@ -4,7 +4,7 @@ import PropertyImagePlaceholder from './PropertyImagePlaceholder.vue'
 
 const props = defineProps({
   src: {
-    type: String,
+    type: [String, Array],
     default: ''
   },
   alt: {
@@ -40,10 +40,45 @@ const handleImageLoad = () => {
 
 // 이미지가 유효하지 않은지 확인
 const isInvalidImage = computed(() => {
-  return !props.src || 
-         props.src === '/property-placeholder.jpg' || 
-         props.src.includes('example.com') ||
+  const srcToCheck = processedSrc.value
+  
+  // S3 URL이나 unsplash 이미지는 유효한 것으로 처리
+  if (srcToCheck && (srcToCheck.includes('.s3.') || 
+                     srcToCheck.includes('amazonaws.com') || 
+                     srcToCheck.includes('unsplash.com'))) {
+    return imageError.value // 에러가 발생한 경우에만 invalid로 처리
+  }
+  
+  return !srcToCheck || 
+         srcToCheck === '/property-placeholder.jpg' || 
+         srcToCheck.includes('example.com') ||
          imageError.value
+})
+
+// S3 URL인지 확인하고 처리
+const processedSrc = computed(() => {
+  if (!props.src) return ''
+  
+  // 배열인 경우 첫 번째 이미지 사용
+  let srcUrl = props.src
+  if (Array.isArray(props.src)) {
+    if (props.src.length === 0) return ''
+    srcUrl = props.src[0]
+  }
+  
+  if (!srcUrl || typeof srcUrl !== 'string') return ''
+  
+  // S3 URL 패턴 확인
+  if (srcUrl.includes('.s3.') || srcUrl.includes('amazonaws.com')) {
+    // 이미 전체 URL인 경우 그대로 반환
+    if (srcUrl.startsWith('http://') || srcUrl.startsWith('https://')) {
+      return srcUrl
+    }
+    // 프로토콜이 없는 경우 https 추가
+    return `https://${srcUrl}`
+  }
+  
+  return srcUrl
 })
 
 const sizeClasses = computed(() => {
@@ -93,7 +128,7 @@ const imageClasses = computed(() => {
   <div class="relative block">
     <!-- 로딩 상태 -->
     <div 
-      v-if="imageLoading && !isInvalidImage"
+      v-if="imageLoading && !isInvalidImage && processedSrc"
       :class="[
         sizeClasses,
         roundedClasses,
@@ -117,17 +152,18 @@ const imageClasses = computed(() => {
 
     <!-- 실제 이미지 -->
     <img
-      v-else-if="!isInvalidImage"
-      :src="src"
+      v-if="processedSrc && !isInvalidImage"
+      :src="processedSrc"
       :alt="alt"
       :class="imageClasses"
       @error="handleImageError"
       @load="handleImageLoad"
+      :style="{ display: imageLoading ? 'none' : 'block' }"
     />
 
     <!-- Placeholder -->
     <PropertyImagePlaceholder
-      v-else
+      v-if="!processedSrc || isInvalidImage"
       :type="propertyType"
       :size="size"
     />

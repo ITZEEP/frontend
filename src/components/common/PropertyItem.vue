@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 const props = defineProps({
   property: {
@@ -48,6 +48,25 @@ const handleImageError = () => {
   imageLoading.value = false
   imageError.value = true
 }
+
+// S3 URL 처리
+const processedImageUrl = computed(() => {
+  if (!props.property?.image) return ''
+  
+  const url = props.property.image
+  
+  // S3 URL 패턴 확인
+  if (url.includes('.s3.') || url.includes('amazonaws.com')) {
+    // 이미 전체 URL인 경우 그대로 반환
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url
+    }
+    // 프로토콜이 없는 경우 https 추가
+    return `https://${url}`
+  }
+  
+  return url
+})
 </script>
 
 <template>
@@ -92,8 +111,8 @@ const handleImageError = () => {
 
           <!-- 이미지 -->
           <img
-            v-if="property.image && !imageError"
-            :src="property.image"
+            v-if="processedImageUrl && !imageError"
+            :src="processedImageUrl"
             :alt="property.title || '매물 이미지'"
             @load="handleImageLoad"
             @error="handleImageError"
@@ -104,7 +123,7 @@ const handleImageError = () => {
 
           <!-- 에러 상태 -->
           <div
-            v-if="imageError || !property.image"
+            v-if="imageError || !processedImageUrl"
             class="w-full h-full flex items-center justify-center bg-gray-100"
             role="img"
             :aria-label="`${property.title || '매물'} 이미지 없음`"
