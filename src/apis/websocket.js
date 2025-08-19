@@ -88,22 +88,25 @@ class WebSocketService {
       hasClient: !!this.stompClient,
       isConnected: this.stompClient?.connected,
       internalConnected: this.isConnected.value,
-      stompState: this.stompClient?.state,
     })
 
-    // 내부 연결 상태와 STOMP 연결 상태를 모두 확인
-    if (!this.stompClient || (!this.stompClient.connected && !this.isConnected.value)) {
-      console.error('STOMP가 연결되지 않음')
-      return false
+    if (!this.stompClient || !this.stompClient.connected) {
+      try {
+        await this.connect()
+      } catch (e) {
+        console.error('STOMP 연결 실패:', e)
+        return false
+      }
     }
 
-    // STOMP 상태가 CONNECTED가 아니면 재시도
-    if (this.stompClient.state !== 1 && retryCount > 0) {
-      // 1 = CONNECTED
-      console.warn(`STOMP 연결이 완전히 준비되지 않음. 재시도 대기... (남은 시도: ${retryCount})`)
-      await new Promise((resolve) => setTimeout(resolve, 200))
-      return this.sendMessage(destination, message, retryCount - 1)
-    } else if (this.stompClient.state !== 1) {
+    // 연결 준비될 때까지 폴링 (connected 플래그만 사용)
+    let attempts = retryCount
+    while ((!this.stompClient || !this.stompClient.connected) && attempts > 0) {
+      console.warn(`STOMP 연결 대기... (남은 시도: ${attempts})`)
+      await new Promise((r) => setTimeout(r, 200))
+      attempts--
+    }
+    if (!this.stompClient || !this.stompClient.connected) {
       console.error('STOMP 연결 실패 - 재시도 횟수 초과')
       return false
     }
@@ -131,7 +134,7 @@ class WebSocketService {
     }
   }
 
-  sendChatMessage(chatRoomId, senderId, receiverId, content, type = 'TEXT', fileUrl = null) {
+  async sendChatMessage(chatRoomId, senderId, receiverId, content, type = 'TEXT', fileUrl = null) {
     const success = this.sendMessage('/app/chat/send', {
       chatRoomId,
       senderId,
@@ -163,7 +166,7 @@ class WebSocketService {
     })
   }
 
-  sendContractChatMessage(contractChatId, senderId, receiverId, content, type = 'TEXT') {
+  async sendContractChatMessage(contractChatId, senderId, receiverId, content, type = 'TEXT') {
     const success = this.sendMessage('/app/contract/chat/send', {
       contractChatId,
       senderId,
