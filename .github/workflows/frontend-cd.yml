@@ -93,7 +93,7 @@ jobs:
             docker run -d \
               --name itzeep-frontend \
               --restart unless-stopped \
-              -p 5173:5173 \
+              -p 3000:3000 \
               --network itzeep_itjib-network \
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
@@ -109,4 +109,4 @@ jobs:
           port: ${{ secrets.DEPLOY_PORT }}
           script: |
             sleep 10
-            curl -f http://localhost:5173 || exit 1
+            curl -f http://localhost:3000 || exit 1
