@@ -45,17 +45,22 @@
     </div>
 
     <!-- 찜하기 버튼 -->
-    <div class="flex justify-end gap-2 mt-2">
+    <div class="flex justify-between gap-2 mt-2">
+      <div class="flex items-center gap-1 mt-1 text-green-600 text-sm font-medium select-none">
+        <span class="w-2 h-2 rounded-full bg-green-400 inline-block"></span>
+        <span>실명인증이 완료된 매물입니다.</span>
+      </div>
       <button
         @click="toggleFavorite"
         :class="[
-          'text-sm px-3 rounded border w-[100px] h-8 flex items-center justify-center whitespace-nowrap transition-all duration-200',
+          'text-sm px-3 rounded border w-[100px] h-8 flex items-center justify-center gap-1 transition-all duration-200',
           isFavorite
             ? 'bg-yellow-primary text-white border-yellow-primary'
             : 'bg-white text-yellow-primary border-yellow-primary hover:bg-yellow-50',
         ]"
       >
-        {{ isFavorite ? '★ 찜함' : '☆ 찜하기' }}
+        <span>{{ isFavorite ? '★' : '☆' }}</span>
+        <span>{{ isFavorite ? '즐겨찾기' : '즐겨찾기' }}</span>
       </button>
     </div>
   </div>

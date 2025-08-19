@@ -10,12 +10,12 @@
   </div>
 
   <!--  사용자 정보가 로드된 후에만 채팅방 컴포넌트 렌더링 -->
-  <div v-else class="h-full flex flex-col">
+  <div v-else class="h-full min-h-0 flex flex-col">
     <!-- 상단 헤더 -->
     <RoomNav :room="room" :current-user-id="currentUserId" />
 
     <!-- 채팅 메시지 영역 -->
-    <div class="flex-1 p-4 bg-gray-50 chat-messages-container" ref="messagesContainer">
+    <div class="flex-1 min-h-0 overflow-y-auto p-4 bg-gray-50" ref="messagesContainer">
       <div v-if="loadingMessages" class="text-center text-gray-500">메시지 로딩 중...</div>
 
       <div v-else-if="messagesError" class="text-center text-red-500">
@@ -44,8 +44,8 @@
 
             <div v-else-if="message.type === 'URLLINK'">
               <BaseButton
-                :disabled="isMyMessage(message)"
-                @click="!isMyMessage(message) && handleUrlLinkClick(message)"
+                :disabled="!isClickableUrlButton(message)"
+                @click="isClickableUrlButton(message) && handleUrlLinkClick(message)"
                 class="disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {{ preContractButtonLabel(message) }}
@@ -117,10 +117,10 @@
                 >읽음</span
               >
             </div>
-
+            <!--
             <BaseButton v-if="isSuccessBuildContract" @click="handleGoToContractRoom"
               >계약서 작성하러 가기</BaseButton
-            >
+            > -->
           </div>
         </div>
 
@@ -229,7 +229,12 @@
     </div>
 
     <!-- 입력창 -->
-    <ChatInput @sendMessage="sendMessage" :chatRoomId="chatRoomId" :receiverId="getOtherUserId()" />
+    <ChatInput
+      class="shrink-0 border-t bg-white"
+      @sendMessage="sendMessage"
+      :chatRoomId="chatRoomId"
+      :receiverId="getOtherUserId()"
+    />
 
     <!-- 이미지 확대 모달 -->
     <div
@@ -853,6 +858,17 @@ async function openUrl(raw) {
   }
 }
 
+function isContractChatUrl(message) {
+  const c = String(message?.content || '')
+  // 서버가 보내는 플레이스홀더 or 패턴에 맞는 실제 URL 둘 다 허용
+  return c === '계약 채팅방 URL' || /\/contract-?chat/i.test(c)
+}
+
+function isClickableUrlButton(message) {
+  // 내가 보낸 것이더라도 계약 채팅방 링크면 클릭 허용
+  return !isMyMessage(message) || isContractChatUrl(message)
+}
+
 // chatReady 상태 변경 감지
 watch(chatReady, async (ready, wasReady) => {
   if (ready && !wasReady) {
@@ -1040,8 +1056,6 @@ onUnmounted(() => {
 
 <style scoped>
 .chat-messages-container {
-  height: 100%;
-  max-height: calc(100vh - 200px);
   overflow-y: auto !important;
   overflow-x: hidden;
 
@@ -1171,7 +1185,6 @@ onUnmounted(() => {
     /* 모바일에서 더 부드러운 스크롤 */
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
-    max-height: calc(100vh - 180px); /* 모바일에서 높이 조정 */
   }
 }
 
@@ -1180,16 +1193,5 @@ onUnmounted(() => {
   .max-w-xs {
     max-width: 280px;
   }
-
-  .chat-messages-container {
-    max-height: calc(100vh - 160px); /* 작은 화면에서 높이 조정 */
-  }
-}
-
-/*  전체 채팅 컨테이너 높이 설정 */
-.h-full.flex.flex-col {
-  height: 100vh;
-  max-height: 100vh;
-  overflow: hidden; /* 전체 페이지 스크롤 방지 */
 }
 </style>

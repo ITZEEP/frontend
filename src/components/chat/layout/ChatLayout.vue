@@ -7,7 +7,7 @@
         ref="chatListRef"
       />
     </div>
-    <div class="flex-1 min-h-0 overflow-hidden flex flex-col">
+    <div class="flex-1 min-h-0 flex flex-col">
       <!--  선택된 채팅방이 있을 때만 렌더링 -->
       <ChatRoom
         v-if="selectedRoom"

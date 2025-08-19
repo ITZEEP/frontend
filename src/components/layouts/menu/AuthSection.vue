@@ -2,7 +2,13 @@
   <div class="flex gap-2 items-center">
     <!-- 로그인 했을 때-->
     <template v-if="authStore.isLoggedIn">
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-4">
+        <p class="text-base font-medium">
+          <span class="text-yellow-primary">
+            👋 {{ authStore.user?.nickname || authStore.user?.name || '사용자' }}
+          </span>
+          <span class="text-gray-500">님 안녕하세요!</span>
+        </p>
         <div class="relative">
           <div
             class="w-10 h-10 rounded-full flex items-center justify-center cursor-pointer hover:bg-gray-warm-600 transition-all duration-300 alarm-toggle-button relative shadow-lg hover:shadow-xl"

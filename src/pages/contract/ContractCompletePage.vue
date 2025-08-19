@@ -277,10 +277,18 @@
       </div>
     </div>
 
-    <div v-else-if="currentStep === 'complete'" class="flex gap-6 px-16 py-8">
-      <!-- 완료 단계 -->
-      <ContractPreviewBox :pdfData="finalPdfData" :contractChatId="contractId" />
-      <ContractSidePanel :contractId="contractId" :finalPdfUrl="exportStatus?.finalPdfUrl" />
+    <div v-else-if="currentStep === 'complete'" class="flex flex-col">
+      <div class="flex gap-6 px-16 py-8">
+        <!-- 완료 단계 -->
+        <ContractPreviewBox :pdfData="finalPdfData" :contractChatId="contractId" />
+        <ContractSidePanel :contractId="contractId" :finalPdfUrl="exportStatus?.finalPdfUrl" />
+      </div>
+
+      <div class="w-full flex justify-center items-center mb-8">
+        <BaseButton class="w-96" size="lg" @click="handleGoToHistory"
+          >계약서 내역 확인하기</BaseButton
+        >
+      </div>
     </div>
 
     <!-- 로딩 오버레이 -->
@@ -298,7 +306,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 // PdfViewer 제거 - 기본 iframe 사용
 import ContractCompleteHeader from '@/components/contract/complete/ContractCompleteHeader.vue'
 import ContractPreviewBox from '@/components/contract/complete/ContractPreviewBox.vue'
@@ -306,12 +314,9 @@ import ContractSidePanel from '@/components/contract/complete/ContractSidePanel.
 import SignaturePad from '@/components/common/SignaturePad.vue'
 import websocketService from '@/apis/websocket'
 import SockJS from 'sockjs-client'
-import { useAuthStore } from '@/stores/auth'
 import api from '@/apis'
+import BaseButton from '@/components/common/BaseButton.vue'
 import {
-  startContractExport,
-  saveSignature,
-  saveFinalContract,
   getUserRole,
   updateSignatureStatus,
   getExportStatus,
@@ -319,8 +324,8 @@ import {
 } from '@/apis/contractChatApi'
 
 const route = useRoute()
-const authStore = useAuthStore()
 const contractId = ref(route.params.contractChatId)
+const router = useRouter()
 
 // WebSocket 관련 상태
 const exportStatus = ref(null)
@@ -444,12 +449,12 @@ const handleExportStatusUpdate = (data) => {
     if (!wasBuyerSigned && nowBuyerSigned && userRole.value === 'owner') {
       console.log('임차인이 서명을 완료했습니다')
     }
-    
+
     // 양쪽 모두 서명 완료된 경우
     if (nowOwnerSigned && nowBuyerSigned && (!wasOwnerSigned || !wasBuyerSigned)) {
       console.log('양쪽 서명 완료! 최종 계약서 생성 시작...')
       isLoading.value = true
-      
+
       // 최종 PDF가 이미 있으면 바로 완료 화면으로
       if (data.finalPdfUrl) {
         loadFinalPdf(data.finalPdfUrl).then(() => {
@@ -757,7 +762,7 @@ const proceedToPassword = async () => {
     // WebSocket 서비스 메서드 사용 (await 추가)
     console.log('서명 전송 시작, contractId:', contractId.value)
     console.log('서명 메시지:', JSON.stringify(signatureMessage, null, 2))
-    
+
     // WebSocket 전송 시도
     const sendResult = await websocketService.sendContractExportSignature(
       contractId.value,
@@ -769,13 +774,13 @@ const proceedToPassword = async () => {
     if (!sendResult) {
       console.warn('WebSocket 메시지 전송 실패. HTTP API 사용...')
     }
-    
+
     // 항상 HTTP API로도 전송 (백업)
     try {
       console.log('HTTP API로 서명 상태 업데이트 시도...')
       const httpResult = await updateSignatureStatus(contractId.value, signatureMessage)
       console.log('HTTP API 서명 상태 업데이트 결과:', httpResult)
-      
+
       // HTTP API 성공 시 본인 서명 상태를 즉시 업데이트
       if (httpResult && httpResult.success) {
         if (userRole.value === 'owner') {
@@ -795,11 +800,11 @@ const proceedToPassword = async () => {
       alert('서명 전송에 실패했습니다. 다시 시도해주세요.')
       return // 실패 시 대기 화면으로 가지 않음
     }
-    
+
     // 서명 완료 후 즉시 상태 폴링 시작
     console.log('상태 폴링 시작...')
     startStatusPolling()
-    
+
     // WebSocket이 실패한 경우에도 HTTP API로 상태 조회
     setTimeout(async () => {
       const latestStatus = await getExportStatus(contractId.value)
@@ -826,10 +831,10 @@ const proceedToPassword = async () => {
 
 // 자동으로 최종 계약서 생성 (현재는 백엔드에서 자동 처리)
 // 이 함수는 참조용으로 남겨둠
-const autoCompleteFinalContract = async () => {
-  // 백엔드에서 자동으로 처리하므로 프론트엔드에서는 대기만 함
-  console.log('백엔드에서 최종 계약서 자동 생성 중...')
-}
+// const autoCompleteFinalContract = async () => {
+//   // 백엔드에서 자동으로 처리하므로 프론트엔드에서는 대기만 함
+//   console.log('백엔드에서 최종 계약서 자동 생성 중...')
+// }
 
 // 계약 완료 (수동 암호 설정용 - 현재는 사용하지 않음)
 const completeContract = async () => {
@@ -915,7 +920,7 @@ const saveSignatureToServer = async () => {
     formData.append('dto', dtoBlob, 'dto.json')
 
     // 이미지 파일들 추가
-    signatureBlobs.forEach((file, index) => {
+    signatureBlobs.forEach((file) => {
       formData.append('imgFiles', file)
     })
 
@@ -985,22 +990,24 @@ let pollingInterval = null
 
 const startStatusPolling = () => {
   console.log('상태 폴링 시작')
-  
+
   // 즉시 한 번 실행
-  getExportStatus(contractId.value).then(status => {
-    if (status) {
-      console.log('초기 폴링 상태:', status)
-      exportStatus.value = status
-    }
-  }).catch(err => {
-    console.error('초기 상태 조회 실패:', err)
-  })
+  getExportStatus(contractId.value)
+    .then((status) => {
+      if (status) {
+        console.log('초기 폴링 상태:', status)
+        exportStatus.value = status
+      }
+    })
+    .catch((err) => {
+      console.error('초기 상태 조회 실패:', err)
+    })
 
   pollingInterval = setInterval(async () => {
     try {
       const status = await getExportStatus(contractId.value)
       console.log('폴링 상태 확인:', status)
-      
+
       // null 체크
       if (!status) {
         console.warn('상태 조회 결과가 null입니다')
@@ -1009,18 +1016,18 @@ const startStatusPolling = () => {
 
       // 상태 업데이트
       exportStatus.value = status
-      
+
       // 양쪽 서명 완료 확인
       if (status.ownerSignatureCompleted && status.buyerSignatureCompleted) {
         console.log('양쪽 서명 완료 확인!')
-        
+
         // 최종 PDF가 생성되었으면
         if (status.finalPdfUrl) {
           console.log('최종 계약서 생성 완료!')
           stopStatusPolling()
           isWaitingForOther.value = false
           isLoading.value = false
-          
+
           // 완료 화면으로 이동
           loadFinalPdf(status.finalPdfUrl).then(() => {
             currentStep.value = 'complete'
@@ -1069,5 +1076,10 @@ const cancelExport = () => {
     // TODO: 이전 페이지로 이동
     window.history.back()
   }
+}
+
+// 계약서 확인하러 가기 매물
+const handleGoToHistory = () => {
+  router.push('/mypage/contracts')
 }
 </script>
