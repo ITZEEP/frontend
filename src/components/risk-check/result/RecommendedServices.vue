@@ -28,13 +28,13 @@ const goToInsurance = () => {
 const goToChat = async () => {
   console.log('goToChat called, propertyId:', props.propertyId, 'isExternal:', props.isExternal)
   console.log('propertyId type:', typeof props.propertyId)
-  
+
   if (props.isExternal) {
     console.log('Cannot create chat - External property')
     alert('외부 매물은 채팅 기능을 사용할 수 없습니다.')
     return
   }
-  
+
   if (!props.propertyId) {
     console.log('Cannot create chat - No propertyId')
     alert('매물 정보를 찾을 수 없습니다. 페이지를 새로고침 해주세요.')
@@ -47,7 +47,7 @@ const goToChat = async () => {
     console.log('Creating chat room with propertyId:', props.propertyId)
     const response = await createChatRoom(props.propertyId)
     console.log('Chat room creation response:', response)
-    
+
     if (response && response.data) {
       // 채팅방 생성 성공 시 해당 채팅방으로 이동
       console.log('Navigating to chat with roomId:', response.data)
@@ -66,7 +66,9 @@ const goToChat = async () => {
 </script>
 
 <template>
-  <div class="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-300 p-4 sm:p-6 lg:p-8">
+  <div
+    class="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-300 p-4 sm:p-6 lg:p-8"
+  >
     <h3 class="text-lg sm:text-xl font-semibold text-gray-warm-700 mb-4 sm:mb-6">추천 서비스</h3>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-10">
@@ -89,8 +91,13 @@ const goToChat = async () => {
         >
           {{ isCreatingChat ? '채팅방 생성 중...' : '채팅하기' }}
         </h4>
-        <p :class="isExternal ? 'text-gray-400' : 'text-white opacity-90'" class="text-xs sm:text-sm px-2">
-          {{ isExternal ? '서비스 내부 매물만 채팅 가능합니다' : '매물 소유자와 직접 대화해보세요' }}
+        <p
+          :class="isExternal ? 'text-gray-400' : 'text-white opacity-90'"
+          class="text-xs sm:text-sm px-2"
+        >
+          {{
+            isExternal ? '서비스 내부 매물만 채팅 가능합니다' : '매물 소유자와 직접 대화해보세요'
+          }}
         </p>
       </div>
 
@@ -102,7 +109,9 @@ const goToChat = async () => {
         <div class="w-10 h-10 sm:w-12 sm:h-12 mb-3 sm:mb-4 flex items-center justify-center">
           <IconShield class="text-white w-full h-full" />
         </div>
-        <h4 class="font-medium text-sm sm:text-base text-white mb-1.5 sm:mb-2">보증보험 알아보기</h4>
+        <h4 class="font-medium text-sm sm:text-base text-white mb-1.5 sm:mb-2">
+          보증보험 알아보기
+        </h4>
         <p class="text-xs sm:text-sm text-white opacity-90 px-2">
           안전한 거래를 위한 보증보험 상품을 확인하세요
         </p>

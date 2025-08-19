@@ -1,28 +1,37 @@
 <template>
-  <div>
-    <div class="flex border-b mb-2">
-      <button
-        class="flex-1 py-2 text-center font-semibold"
-        :class="
-          selectedTab === 'owner'
-            ? 'border-b-2 border-yellow-primary text-yellow-primary'
-            : 'text-gray-500'
-        "
-        @click="changeTab('owner')"
-      >
-        내가 파는 매물
-      </button>
-      <button
-        class="flex-1 py-2 text-center font-semibold"
-        :class="
-          selectedTab === 'buyer'
-            ? 'border-b-2 border-yellow-primary text-yellow-primary'
-            : 'text-gray-500'
-        "
-        @click="changeTab('buyer')"
-      >
-        내가 사는 매물
-      </button>
+  <div class="h-full flex flex-col bg-white">
+    <!-- 상단 탭 메뉴 - 채팅 목록 영역 내부에만 표시 -->
+    <div class="bg-white border-b sticky top-0 z-10">
+      <div class="flex">
+        <button
+          class="flex-1 py-3 px-4 text-center relative transition-all text-sm md:text-base"
+          :class="{
+            'text-gray-900 font-semibold': selectedTab === 'owner',
+            'text-gray-500': selectedTab !== 'owner'
+          }"
+          @click="changeTab('owner')"
+        >
+          내가 파는 매물
+          <div 
+            v-if="selectedTab === 'owner'"
+            class="absolute bottom-0 left-0 right-0 h-0.5 bg-yellow-primary"
+          ></div>
+        </button>
+        <button
+          class="flex-1 py-3 px-4 text-center relative transition-all text-sm md:text-base"
+          :class="{
+            'text-gray-900 font-semibold': selectedTab === 'buyer',
+            'text-gray-500': selectedTab !== 'buyer'
+          }"
+          @click="changeTab('buyer')"
+        >
+          내가 사는 매물
+          <div 
+            v-if="selectedTab === 'buyer'"
+            class="absolute bottom-0 left-0 right-0 h-0.5 bg-yellow-primary"
+          ></div>
+        </button>
+      </div>
     </div>
 
     <div v-if="loading" class="p-4 text-center text-gray-500">
@@ -42,17 +51,24 @@
       </button>
     </div>
 
-    <div v-else-if="filteredRooms.length === 0" class="p-8 text-center text-gray-400">
-      <p class="text-lg">채팅방이 없습니다</p>
-      <p class="text-sm mt-1">새로운 대화를 시작해보세요!</p>
+    <div v-else-if="filteredRooms.length === 0" class="flex-1 flex items-center justify-center">
+      <div class="text-center text-gray-400">
+        <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+        </svg>
+        <p class="text-lg font-medium mb-1">채팅방이 없습니다</p>
+        <p class="text-sm">새로운 대화를 시작해보세요!</p>
+      </div>
     </div>
 
-    <div v-else class="divide-y divide-gray-100">
+    <!-- 카카오톡 스타일 채팅 목록 -->
+    <div v-else class="flex-1 overflow-y-auto">
       <ChatItem
         v-for="room in filteredRooms"
         :key="`room-${room.chatRoomId}-${room._lastUpdated || 0}`"
         :room="room"
         @click="selectRoom(room)"
+        class="kakao-chat-item"
       />
     </div>
   </div>
@@ -98,6 +114,7 @@ const filteredRooms = computed(() => {
 
   const rooms = selectedTab.value === 'owner' ? ownerRooms.value : buyerRooms.value
   const filtered = rooms.filter((room) => room && room.chatRoomId)
+  
   return filtered
 })
 
@@ -109,7 +126,7 @@ function triggerUpdate() {
   })
 }
 
-// 탭 변경
+// 탭 변경 함수
 function changeTab(tab) {
   selectedTab.value = tab
   if (tab === 'owner' && ownerRooms.value.length === 0) {
@@ -329,7 +346,8 @@ function updateRoomLastMessage(chatRoomId, message, timestamp, senderId, unreadC
 
     targetRoom._lastUpdated = currentTime
 
-    if (roomIndex !== 0) {
+    // 새로운 메시지가 있을 때만 순서 변경 (단순 읽음 처리는 제외)
+    if (message && message !== '' && roomIndex !== 0) {
       const updatedRoom = roomListRef.value.splice(roomIndex, 1)[0]
       roomListRef.value.unshift(updatedRoom)
     }
@@ -356,20 +374,17 @@ function updateRoomLastMessage(chatRoomId, message, timestamp, senderId, unreadC
 
 function markRoomAsRead(chatRoomId) {
   let wasMarked = false
-  const currentTime = Date.now()
 
-  // 직접 속성 변경으로 반응성 보장
+  // 직접 속성 변경으로 반응성 보장 - _lastUpdated는 변경하지 않음 (순서 유지)
   const ownerRoom = ownerRooms.value.find((room) => room.chatRoomId === chatRoomId)
   if (ownerRoom && ownerRoom.unreadMessageCount > 0) {
     ownerRoom.unreadMessageCount = 0
-    ownerRoom._lastUpdated = currentTime
     wasMarked = true
   }
 
   const buyerRoom = buyerRooms.value.find((room) => room.chatRoomId === chatRoomId)
   if (buyerRoom && buyerRoom.unreadMessageCount > 0) {
     buyerRoom.unreadMessageCount = 0
-    buyerRoom._lastUpdated = currentTime
     wasMarked = true
   }
 
@@ -520,15 +535,7 @@ async function selectInitialRoom() {
       console.log('초기 채팅방 찾음:', targetRoom)
       selectRoom(targetRoom)
 
-      // 해당 채팅방이 있는 탭으로 자동 전환
-      const isOwnerRoom = ownerRooms.value.some(
-        (room) => String(room.chatRoomId) === String(props.initialRoomId),
-      )
-      if (isOwnerRoom && selectedTab.value !== 'owner') {
-        selectedTab.value = 'owner'
-      } else if (!isOwnerRoom && selectedTab.value !== 'buyer') {
-        selectedTab.value = 'buyer'
-      }
+      // 해당 채팅방이 있는 탭으로 자동 전환 - 부모 컴포넌트에서 처리
 
       return true
     }
