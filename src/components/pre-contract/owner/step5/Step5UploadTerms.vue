@@ -3,7 +3,7 @@
     <!-- 안내문구 -->
     <div class="flex flex-col items-center justify-center gap-2">
       <h1 class="text-gray-warm-700 font-bold text-xl">계약서 업로드</h1>
-      <p class="text-gray-500">미리 작성된 계약서를 업로드하여 기존 특약을 추가하세요.</p>
+      <p class="text-gray-500">미리 작성된 계약서가 있다면 업로드하여 기존 특약을 추가하세요.</p>
     </div>
 
     <!-- 특약 안내 설명 -->
