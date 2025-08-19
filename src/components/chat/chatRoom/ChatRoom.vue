@@ -44,8 +44,8 @@
 
             <div v-else-if="message.type === 'URLLINK'">
               <BaseButton
-                :disabled="isMyMessage(message)"
-                @click="!isMyMessage(message) && handleUrlLinkClick(message)"
+                :disabled="!isClickableUrlButton(message)"
+                @click="isClickableUrlButton(message) && handleUrlLinkClick(message)"
                 class="disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {{ preContractButtonLabel(message) }}
@@ -851,6 +851,17 @@ async function openUrl(raw) {
     console.warn('[openUrl] URL parse 실패, raw로 이동 시도:', raw, e)
     window.open(raw, '_blank', 'noopener,noreferrer')
   }
+}
+
+function isContractChatUrl(message) {
+  const c = String(message?.content || '')
+  // 서버가 보내는 플레이스홀더 or 패턴에 맞는 실제 URL 둘 다 허용
+  return c === '계약 채팅방 URL' || /\/contract-?chat/i.test(c)
+}
+
+function isClickableUrlButton(message) {
+  // 내가 보낸 것이더라도 계약 채팅방 링크면 클릭 허용
+  return !isMyMessage(message) || isContractChatUrl(message)
 }
 
 // chatReady 상태 변경 감지
