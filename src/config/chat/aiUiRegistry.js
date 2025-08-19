@@ -103,7 +103,7 @@ export const buttonsByStep = {
   2: {},
   3: {
     [AI_SENDER.PLAIN]: [],
-    [AI_SENDER.BUTTON]: [{ label: '특약 검토', action: 'step3.openTermsReview' }],
+    [AI_SENDER.BUTTON]: [],
   },
   4: {},
 }
