@@ -7,7 +7,8 @@ class WebSocketService {
     this.stompClient = null
     this.isConnected = ref(false)
     this.isConnecting = ref(false)
-    this.messageHandlers = new Map()
+    this.messageHandlers = new Map() // topic -> subscription
+    this.handlersByTopic = new Map() // topic -> handler  ✅ 추가
     this.connectionHandlers = []
     this.pendingSubscriptions = [] // 대기 중인 구독들
   }
@@ -135,7 +136,7 @@ class WebSocketService {
   }
 
   async sendChatMessage(chatRoomId, senderId, receiverId, content, type = 'TEXT', fileUrl = null) {
-    const success = this.sendMessage('/app/chat/send', {
+    const success = await this.sendMessage('/app/chat/send', {
       chatRoomId,
       senderId,
       receiverId,
