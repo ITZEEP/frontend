@@ -60,10 +60,16 @@
           {{ convertToPyeong(listing.exclusiveArea) }}평 · {{ listing.homeFloor }}층
         </div>
 
-        <div class="flex gap-2 text-xs mt-2 text-gray-500 select-none">
-          <div>❤️ {{ listing.likeCnt ?? 0 }}</div>
-          <div>👁️ {{ listing.viewCnt ?? 0 }}</div>
-          <div>💬 {{ listing.chatCnt ?? 0 }}</div>
+        <div class="flex justify-between">
+          <div class="flex gap-2 text-xs mt-2 text-gray-500 select-none">
+            <div>❤️ {{ listing.likeCnt ?? 0 }}</div>
+            <div>👁️ {{ listing.viewCnt ?? 0 }}</div>
+            <div>💬 {{ listing.chatCnt ?? 0 }}</div>
+          </div>
+          <div class="flex items-center gap-1 mt-1 text-green-600 text-sm font-medium select-none">
+            <span class="w-2 h-2 rounded-full bg-green-400 inline-block"></span>
+            <span>실명인증</span>
+          </div>
         </div>
       </div>
     </div>
