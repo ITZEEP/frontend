@@ -92,10 +92,23 @@
             </div>
 
             <div v-else-if="message.type === 'CONTRACT_REQUEST'" class="flex flex-col gap-2">
-              <BaseButton @click="handleAcceptContract" variant="outline"
-                >계약 요청 수락하기</BaseButton
+              <BaseButton
+                variant="outline"
+                :disabled="isMyMessage(message) || acceptBusy"
+                @click="!isMyMessage(message) && handleAcceptContract()"
+                class="disabled:opacity-50 disabled:cursor-not-allowed"
               >
-              <BaseButton variant="outline">계약 요청 거절하기</BaseButton>
+                계약 요청 수락하기
+              </BaseButton>
+
+              <BaseButton
+                variant="outline"
+                :disabled="isMyMessage(message) || rejectBusy"
+                @click="!isMyMessage(message) && handleRejectContract()"
+                class="disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                계약 요청 거절하기
+              </BaseButton>
             </div>
 
             <div class="text-xs mt-1 opacity-70 flex justify-between items-center">
@@ -141,10 +154,23 @@
             </div>
 
             <div v-else-if="message.type === 'CONTRACT_REQUEST'" class="flex flex-col gap-2">
-              <BaseButton @click="handleAcceptContract" variant="outline"
-                >계약 요청 수락하기</BaseButton
+              <BaseButton
+                variant="outline"
+                :disabled="isMyMessage(message) || acceptBusy"
+                @click="!isMyMessage(message) && handleAcceptContract()"
+                class="disabled:opacity-50 disabled:cursor-not-allowed"
               >
-              <BaseButton variant="outline">계약 요청 거절하기</BaseButton>
+                계약 요청 수락하기
+              </BaseButton>
+
+              <BaseButton
+                variant="outline"
+                :disabled="isMyMessage(message) || rejectBusy"
+                @click="!isMyMessage(message) && handleRejectContract()"
+                class="disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                계약 요청 거절하기
+              </BaseButton>
             </div>
             <!-- 파일 메시지 -->
             <div v-else-if="message.type === 'FILE'" class="space-y-2">
@@ -188,7 +214,7 @@
 
             <div class="text-xs mt-1 opacity-70 flex justify-between items-center">
               <span>{{ formatMessageTime(message.sendTime) }}</span>
-              <span v-if="isMyMessage(message) && message.isRead" class="text-blue-300">읽음</span>
+              <span v-if="isMyMessage(message) && message.isRead" class="text-white">읽음</span>
             </div>
           </div>
         </div>
