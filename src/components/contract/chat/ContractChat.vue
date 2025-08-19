@@ -250,6 +250,21 @@ const respondGoToStep2 = async (accepted) => {
       console.warn('postGoToStep2 실패:', res?.message)
       return
     }
+
+    if (accepted) {
+      alert(
+        amOwner.value
+          ? '임대인이 2단계 진행을 수락했습니다.'
+          : '임차인이 2단계 진행을 수락했습니다.',
+      )
+    } else {
+      alert(
+        amOwner.value
+          ? '임대인이 2단계 진행을 거절했습니다.'
+          : '임차인이 2단계 진행을 거절했습니다.',
+      )
+    }
+
     await loadMessages(id)
     nextTick(forceScrollToBottom)
   } catch (e) {
