@@ -83,11 +83,22 @@
       message="AI가 특약 수정 중..."
       sub-message="잠시만 기다려주세요"
     />
+
+    <div
+      v-if="signingCountdown > 0"
+      class="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999]"
+    >
+      <div class="bg-white rounded-xl p-6 shadow-xl text-center w-[320px]">
+        <p class="text-lg font-semibold mb-2">임차인이 최종 확정했어요</p>
+        <p class="text-sm text-gray-600 mb-4">서명 페이지로 이동합니다…</p>
+        <div class="text-4xl font-bold text-yellow-primary">{{ signingCountdown }}</div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, watch, nextTick, onUnmounted } from 'vue'
 import { useRoundQuerySync } from '@/composables/chat/useRoundQuerySync'
 import { useChatBasics } from '@/composables/chat/useChatBasics'
 import { useChatMessages } from '@/composables/chat/useChatMessages'
@@ -371,6 +382,25 @@ const responseFinal = async (accepted) => {
   }
 }
 
+const signingCountdown = ref(0)
+let signingTimer = null
+
+const RE_TENANT_FINAL_ACCEPT =
+  /임차인이\s*최종\s*계약서를\s*수락했습니다!\s*계약서\s*서명하러\s*갈께요!?/
+
+const startSigningCountdown = (sec = 3) => {
+  if (signingTimer) clearInterval(signingTimer)
+  signingCountdown.value = sec
+  signingTimer = setInterval(() => {
+    signingCountdown.value -= 1
+    if (signingCountdown.value <= 0) {
+      clearInterval(signingTimer)
+      signingTimer = null
+      router.push(`/contract/complete/${String(actualContractChatId.value)}`)
+    }
+  }, 1000)
+}
+
 const dispatchAction = createActionDispatchers({
   modalStore,
   step1: {
@@ -582,6 +612,14 @@ const visibleButtons = (message) => {
   return btns
 }
 
+onMounted(() => {
+  // 혹시 남아있던 타이머 정리
+  if (signingTimer) clearInterval(signingTimer)
+})
+onUnmounted(() => {
+  if (signingTimer) clearInterval(signingTimer)
+})
+
 watch(
   latestMsg,
   (m) => {
@@ -644,6 +682,15 @@ watch(
       if (store && 'allowOwnerOngoingEdit' in store) {
         store.allowOwnerOngoingEdit = true
       }
+    }
+
+    // --- 4단계 감지 ---
+    if (RE_TENANT_FINAL_ACCEPT.test(t)) {
+      // 중복 실행 방지
+      if (signingCountdown.value <= 0) {
+        startSigningCountdown(3)
+      }
+      return
     }
   },
   { immediate: true },
