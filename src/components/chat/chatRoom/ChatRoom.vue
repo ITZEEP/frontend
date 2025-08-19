@@ -10,12 +10,12 @@
   </div>
 
   <!--  사용자 정보가 로드된 후에만 채팅방 컴포넌트 렌더링 -->
-  <div v-else class="h-full flex flex-col">
+  <div v-else class="h-full min-h-0 flex flex-col">
     <!-- 상단 헤더 -->
     <RoomNav :room="room" :current-user-id="currentUserId" />
 
     <!-- 채팅 메시지 영역 -->
-    <div class="flex-1 p-4 bg-gray-50 chat-messages-container" ref="messagesContainer">
+    <div class="flex-1 min-h-0 overflow-y-auto p-4 bg-gray-50" ref="messagesContainer">
       <div v-if="loadingMessages" class="text-center text-gray-500">메시지 로딩 중...</div>
 
       <div v-else-if="messagesError" class="text-center text-red-500">
@@ -229,7 +229,12 @@
     </div>
 
     <!-- 입력창 -->
-    <ChatInput @sendMessage="sendMessage" :chatRoomId="chatRoomId" :receiverId="getOtherUserId()" />
+    <ChatInput
+      class="shrink-0 border-t bg-white"
+      @sendMessage="sendMessage"
+      :chatRoomId="chatRoomId"
+      :receiverId="getOtherUserId()"
+    />
 
     <!-- 이미지 확대 모달 -->
     <div
@@ -1051,8 +1056,6 @@ onUnmounted(() => {
 
 <style scoped>
 .chat-messages-container {
-  height: 100%;
-  max-height: calc(100vh - 200px);
   overflow-y: auto !important;
   overflow-x: hidden;
 
@@ -1182,7 +1185,6 @@ onUnmounted(() => {
     /* 모바일에서 더 부드러운 스크롤 */
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
-    max-height: calc(100vh - 180px); /* 모바일에서 높이 조정 */
   }
 }
 
@@ -1191,16 +1193,5 @@ onUnmounted(() => {
   .max-w-xs {
     max-width: 280px;
   }
-
-  .chat-messages-container {
-    max-height: calc(100vh - 160px); /* 작은 화면에서 높이 조정 */
-  }
-}
-
-/*  전체 채팅 컨테이너 높이 설정 */
-.h-full.flex.flex-col {
-  height: 100vh;
-  max-height: 100vh;
-  overflow: hidden; /* 전체 페이지 스크롤 방지 */
 }
 </style>
