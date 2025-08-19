@@ -610,12 +610,12 @@ const loadContractInfo = async () => {
 const initializeFinalContract = async () => {
   try {
     console.log('finalContract 레코드 초기화 시도...')
-    
+
     // final_contract 테이블에 초기 레코드 생성
     // GET /api/contract/{contractChatId}/final_contract 호출
     // 이 API가 내부적으로 insertFinalContractInit을 호출하여 레코드 생성
     const response = await api.get(`/api/contract/${contractId.value}/final_contract`)
-    
+
     if (response.data && response.data.success) {
       console.log('finalContract 레코드 초기화 성공')
     } else {
