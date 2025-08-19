@@ -16,8 +16,10 @@
       }}
     </div>
 
+    <label class="text-gray-800">{{ listing.addr1 }}</label>
     <div class="text-yellow-500 font-semibold text-md">
-      관리비 {{ formatNumber(listing.maintenaceFee) }}원
+      관리비
+      {{ formatNumber(listing.maintenaceFee) }}원
     </div>
   </div>
 </template>
