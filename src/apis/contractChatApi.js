@@ -461,10 +461,14 @@ export const updateSignatureStatus = async (contractChatId, signatureData) => {
 export const getExportStatus = async (contractChatId) => {
   try {
     const response = await api.get(`/api/contract/${contractChatId}/export/status`)
-    return response.data.data
+    if (response.data && response.data.success) {
+      return response.data.data
+    } else {
+      return null
+    }
   } catch (error) {
     console.error('내보내기 상태 조회 실패:', error)
-    throw error
+    return null
   }
 }
 
