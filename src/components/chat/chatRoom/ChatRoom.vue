@@ -117,10 +117,10 @@
                 >읽음</span
               >
             </div>
-
+            <!--
             <BaseButton v-if="isSuccessBuildContract" @click="handleGoToContractRoom"
               >계약서 작성하러 가기</BaseButton
-            >
+            > -->
           </div>
         </div>
 
