@@ -22,19 +22,19 @@
         </div>
 
         <div class="contract-actions">
-          <button 
-            class="view-btn"
-            @click="handleView(contract)"
-          >
-            <i v-if="contract.status === 'COMPLETED' || contract.status === 'completed'" class="fas fa-file-pdf"></i>
+          <button class="view-btn" @click="handleView(contract)">
+            <i
+              v-if="contract.status === 'COMPLETED' || contract.status === 'completed'"
+              class="fas fa-file-pdf"
+            ></i>
             <i v-else class="fas fa-comments"></i>
-            <span>{{ contract.status === 'COMPLETED' || contract.status === 'completed' ? '계약서 보기' : '채팅방 이동' }}</span>
+            <span>{{
+              contract.status === 'COMPLETED' || contract.status === 'completed'
+                ? '계약서 보기'
+                : '채팅방 이동'
+            }}</span>
           </button>
-          <button 
-            v-if="contract.fileUrl"
-            class="download-btn"
-            @click="handleDownload(contract)"
-          >
+          <button v-if="contract.fileUrl" class="download-btn" @click="handleDownload(contract)">
             <i class="fas fa-download"></i>
             <span>다운로드</span>
           </button>
@@ -74,13 +74,27 @@ const handleView = (contract) => {
     }
   } else if (contract.chatRoomId || contract.contractId) {
     // 채팅방으로 이동
-    router.push(`/contract/${contract.chatRoomId || contract.contractId}`)
+    if (contract.status == 'STEP0') {
+      router.push(
+        `/pre-contract/${contract.id}/${contract.userType === 'BUYER' ? 'buyer' : 'owner'}`,
+      )
+    } else if (contract.status == 'STEP1' || contract.status == 'STEP2') {
+      router.push(`/contract/${contract.id}/step1`)
+    } else if (['ROUND0', 'ROUND1', 'ROUND2', 'ROUND3'].includes(contract.status)) {
+      router.push(`/contract/${contract.id}/round`)
+    } else if (contract.status == 'COMPLETED') {
+      router.push(`/contract/${contract.id}/completed`)
+    } else if (contract.status == 'STEP4') {
+      router.push(`/contract/${contract.id}`)
+    } else if (contract.status == 'COMPLETED') {
+      router.push(`/contract/completed/${contract.id}`)
+    }
   }
 }
 
 const handleDownload = (contract) => {
   if (!contract.fileUrl) return
-  
+
   // PDF 다운로드
   const link = document.createElement('a')
   link.href = contract.fileUrl
