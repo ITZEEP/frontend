@@ -83,33 +83,34 @@ class WebSocketService {
     })
   }
 
-  async sendMessage(destination, message, retryCount = 30) {
+  async sendMessage(destination, message, retryCount = 5) {
     console.log('sendMessage 호출:', { destination, message })
-    console.log('STOMP 클라이언트 상태:', {
+
+    // STOMP 클라이언트가 없으면 연결 시도
+    if (!this.stompClient) {
+      console.log('STOMP 클라이언트가 없음, 연결 시도...')
+      await this.connect()
+    }
+
+    // 연결 상태 확인
+    const isReady = this.stompClient?.connected && this.isConnected.value
+
+    console.log('STOMP 상태:', {
       hasClient: !!this.stompClient,
-      isConnected: this.stompClient?.connected,
+      connected: this.stompClient?.connected,
       internalConnected: this.isConnected.value,
+      isReady: isReady,
     })
 
-    if (!this.stompClient || !this.stompClient.connected) {
-      try {
-        await this.connect()
-      } catch (e) {
-        console.error('STOMP 연결 실패:', e)
+    if (!isReady) {
+      if (retryCount > 0) {
+        console.warn(`STOMP 연결 대기 중... (남은 시도: ${retryCount})`)
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+        return this.sendMessage(destination, message, retryCount - 1)
+      } else {
+        console.error('STOMP 연결 실패 - 재시도 횟수 초과')
         return false
       }
-    }
-
-    // 연결 준비될 때까지 폴링 (connected 플래그만 사용)
-    let attempts = retryCount
-    while ((!this.stompClient || !this.stompClient.connected) && attempts > 0) {
-      console.warn(`STOMP 연결 대기... (남은 시도: ${attempts})`)
-      await new Promise((r) => setTimeout(r, 200))
-      attempts--
-    }
-    if (!this.stompClient || !this.stompClient.connected) {
-      console.error('STOMP 연결 실패 - 재시도 횟수 초과')
-      return false
     }
 
     try {
@@ -168,7 +169,7 @@ class WebSocketService {
   }
 
   async sendContractChatMessage(contractChatId, senderId, receiverId, content, type = 'TEXT') {
-    const success = this.sendMessage('/app/contract/chat/send', {
+    const success = await this.sendMessage('/app/contract/chat/send', {
       contractChatId,
       senderId,
       receiverId,
