@@ -1,7 +1,7 @@
 <template>
   <div class="w-full h-[728px] flex flex-col gap-4 overflow-y-auto">
     <div class="w-full flex gap-4">
-      <h2 class="text-base font-semibold">
+      <h2 class="text-base font-semibold whitespace-nowrap">
         <template v-if="isAllDone">최종 확정된 특약</template>
         <template v-else>현재 조율 중인 특약</template>
         <span v-if="!isAllDone">
@@ -14,8 +14,8 @@
         임대인이 특약을 수정·삭제하거나 최종 확정을 요청할 예정입니다.
       </p>
 
-      <p v-if="isAllDone && isOwner" class="text-xs text-green-500 mt-1">
-        특약 변경이나 최종 확정을 요청하면, 임차인이 승인 또는 거절합니다.
+      <p v-if="isAllDone && isOwner" class="text-xs text-green-500 mt-1 whitespace-nowrap">
+        특약 변경이나 최종 확정을 요청하면, 임차인이 승인/거절합니다.
       </p>
     </div>
 
@@ -31,15 +31,16 @@
         >
           <div class="w-full flex justify-between items-start">
             <div class="w-full flex-1">
-              <div class="w-full flex justify-between items-center">
+              <!-- 기존: w-full flex justify-between items-center -->
+              <div class="w-full flex flex-wrap items-center gap-2">
                 <!-- 제목 -->
-                <p class="text-sm font-medium mb-1">
+                <p class="text-sm font-medium mb-1 flex-1 min-w-0">
                   {{ clause.order ?? clause.id ?? clause.clauseId }}.
                   <template v-if="isOwner && isEditing(clause.order)">
                     <input
                       v-model="editTitleMap[clause.order]"
                       type="text"
-                      class="border rounded px-2 py-1 w-96 text-sm"
+                      class="border rounded px-2 py-1 w-full max-w-[32rem] min-w-0 text-sm"
                       :placeholder="clause.title ?? clause.name ?? '제목'"
                     />
                   </template>
@@ -47,8 +48,12 @@
                     {{ clause.title ?? clause.name }}
                   </template>
                 </p>
-                <!-- 임대인만 수정/삭제 버튼 노출 -->
-                <div v-if="isOwner" class="flex items-center gap-3 ml-4 shrink-0">
+
+                <!-- 버튼 박스: 폭이 좁아지면 다음 줄로 내려감 -->
+                <div
+                  v-if="isOwner"
+                  class="flex items-center gap-3 ml-auto sm:ml-4 shrink-0 flex-wrap basis-full sm:basis-auto"
+                >
                   <button
                     class="text-yellow-primary hover:text-yellow-500"
                     title="수정"
@@ -67,39 +72,34 @@
                 </div>
               </div>
 
-              <!-- 내용 -->
-              <div>
-                <template v-if="isOwner && isEditing(clause.order)">
-                  <div class="w-full flex items-center gap-2">
-                    <textarea
-                      v-model="editContentMap[clause.order]"
-                      type="text"
-                      class="border rounded px-2 py-1 w-full text-sm"
-                      :placeholder="clause.content ?? clause.text ?? '내용'"
-                    ></textarea>
-                    <BaseButton
-                      class="w-14"
-                      size="sm"
-                      :loading="saving[clause.order]"
-                      :disabled="saving[clause.order]"
-                      @click="submitModification(clause.order)"
-                    >
-                      수정 요청
-                    </BaseButton>
-                    <button
-                      class="text-xs w-10 text-gray-500 hover:underline"
-                      @click="cancelEdit(clause.order)"
-                    >
-                      취소
-                    </button>
-                  </div>
-                </template>
-                <template v-else>
-                  <p class="text-sm text-gray-600 whitespace-pre-wrap mt-1">
-                    {{ clause.content ?? clause.text }}
-                  </p>
-                </template>
-              </div>
+              <!-- 내용 (편집 모드) -->
+              <template v-if="isOwner && isEditing(clause.order)">
+                <div class="w-full flex flex-wrap items-start gap-2">
+                  <textarea
+                    v-model="editContentMap[clause.order]"
+                    class="border rounded px-2 py-1 flex-1 min-w-[220px] min-h-[84px] text-sm"
+                    :placeholder="clause.content ?? clause.text ?? '내용'"
+                  ></textarea>
+
+                  <!-- 고정폭 제거 + 줄바꿈 금지 -->
+                  <BaseButton
+                    class="shrink-0 whitespace-nowrap px-3"
+                    size="sm"
+                    :loading="saving[clause.order]"
+                    :disabled="saving[clause.order]"
+                    @click="submitModification(clause.order)"
+                  >
+                    수정 요청
+                  </BaseButton>
+
+                  <button
+                    class="text-xs shrink-0 text-gray-500 hover:underline"
+                    @click="cancelEdit(clause.order)"
+                  >
+                    취소
+                  </button>
+                </div>
+              </template>
             </div>
           </div>
         </li>

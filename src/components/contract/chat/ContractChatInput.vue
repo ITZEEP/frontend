@@ -46,14 +46,14 @@
           @click="handleExportReject"
           :disabled="isProcessing || !canSendMessage"
         >
-          {{ isProcessing ? '처리 중...' : 'AI 수정 거절하기' }}
+          {{ isProcessing ? '처리 중...' : 'AI 수정 거절' }}
         </BaseButton>
         <BaseButton
           v-if="!props.isOwner"
           @click="handleExportMessages"
           :disabled="isProcessing || !canSendMessage"
         >
-          {{ isProcessing ? '내보내는 중...' : 'AI 수정 수락하기' }}
+          {{ isProcessing ? '내보내는 중...' : 'AI 수정 수락' }}
         </BaseButton>
       </template>
     </div>
@@ -126,7 +126,7 @@
     </div>
 
     <!-- 메시지 입력 영역 -->
-    <div class="flex px-4 pt-2 pb-4 gap-2">
+    <div class="flex px-4 pt-2 pb-4 gap-2 items-center flex-nowrap">
       <input
         ref="messageInputRef"
         v-model="messageInput"
@@ -134,7 +134,7 @@
         @input="handleTyping"
         @focus="handleFocus"
         @blur="handleBlur"
-        class="flex-1 border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+        class="flex-1 min-w-0 border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
         :class="[
           canSendMessage
             ? 'border-gray-300 focus:border-blue-500'
@@ -146,7 +146,7 @@
       <button
         @click="sendMessage"
         :disabled="!messageInput.trim() || isSending || !canSendMessage"
-        class="px-4 py-2 rounded-lg transition-all duration-200"
+        class="flex-none px-4 py-2 rounded-lg transition-all duration-200"
         :class="[
           canSendMessage && messageInput.trim() && !isSending
             ? 'bg-yellow-primary text-white hover:bg-yellow-600 hover:shadow-md'

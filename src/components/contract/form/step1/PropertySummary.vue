@@ -49,6 +49,7 @@ const residenceTypeLabel = computed(() => {
     HOUSE: '단독/다가구',
     VILLA: '빌라/연립',
     ETC: '기타',
+    OPEN_ONE_ROOM: '오픈 원룸',
   }
   return map[basic.value?.residenceType] ?? basic.value?.residenceType ?? '-'
 })
