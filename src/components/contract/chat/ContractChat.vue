@@ -24,8 +24,15 @@
           v-for="(m, i) in mergedMessages"
           :key="m.id || m._localId || m.tempId || m.sendTime || i"
         >
+          <!-- 법령 카드 (senderId: 9996) -->
+          <LawTipMessage
+            v-if="String(m.senderId) === '9996'"
+            :raw="m.content"
+            :sentAt="m.sendTime"
+          />
+
           <AiChatMessage
-            v-if="isAi(m)"
+            v-else-if="isAi(m)"
             :message="m.content"
             :buttons="visibleButtons(m)"
             :sentAt="m.sendTime"
@@ -40,6 +47,7 @@
             :myUserId="currentUserId"
             :isRead="m.isRead"
             :sendStatus="getMessageStatus(m)"
+            :hideIcon="String(m.senderId) === '9996'"
           />
         </template>
 
@@ -110,6 +118,7 @@ import StepContainer from './StepContainer.vue'
 
 import LoadingOverlay from '@/components/common/LoadingOverlay.vue'
 import AiChatMessage from './messages/AiChatMessage.vue'
+import LawTipMessage from './messages/LawTipMessage.vue'
 import UserChatMessage from './messages/UserChatMessage.vue'
 import ContractChatInput from './ContractChatInput.vue'
 
@@ -204,6 +213,7 @@ const getLoadingMessage = () => {
 }
 
 const getMessageSenderName = (m) => {
+  if (String(m.senderId) === '9996') return '법령 정보'
   if (String(m.senderId) === String(currentUserId.value)) return '나'
   const { ownerId, buyerId } = contractData.value || {}
   if (String(m.senderId) === String(ownerId)) return '소유자'
@@ -403,6 +413,7 @@ const responseFinal = async (accepted) => {
 const signingCountdown = ref(0)
 let signingTimer = null
 
+// 이 부분 계약서\s*서명하러\s*갈께요!?/ 만 남도록 수정할 예정
 const RE_TENANT_FINAL_ACCEPT =
   /임차인이\s*최종\s*계약서를\s*수락했습니다!\s*계약서\s*서명하러\s*갈께요!?/
 

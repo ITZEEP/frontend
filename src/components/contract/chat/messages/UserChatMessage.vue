@@ -8,8 +8,8 @@
       class="flex flex-col gap-1 p-3 rounded-xl w-fit max-w-xs lg:max-w-md relative group transition-all duration-200 hover:shadow-md"
       :class="messageStyle"
     >
-      <!-- 사용자 정보 -->
-      <div class="flex gap-1 items-center">
+      <!-- 사용자 정보 (아이콘/이름) : 9996이면 숨김 -->
+      <div class="flex gap-1 items-center" v-if="!hideHeader">
         <UserIcon
           class="shrink-0"
           :class="isMine ? 'text-white' : 'text-gray-700'"
@@ -122,103 +122,50 @@ import { computed, ref } from 'vue'
 import UserIcon from '@/assets/icons/UserIcon.vue'
 
 const props = defineProps({
-  name: {
-    type: String,
-    required: true,
-  },
-  message: {
-    type: String,
-    required: true,
-  },
-  time: {
-    type: String,
-    required: true,
-  },
-  userId: {
-    type: [String, Number],
-    required: true,
-  },
-  myUserId: {
-    type: [String, Number],
-    required: true,
-  },
-  isRead: {
-    type: Boolean,
-    default: false,
-  },
-  sendStatus: {
-    type: String,
-    default: 'sent', // 'sending', 'sent', 'failed'
-  },
-  showActions: {
-    type: Boolean,
-    default: true,
-  },
-  showCharCount: {
-    type: Boolean,
-    default: false,
-  },
+  name: { type: String, required: true },
+  message: { type: String, required: true },
+  time: { type: String, required: true },
+  userId: { type: [String, Number], required: true },
+  myUserId: { type: [String, Number], required: true },
+  isRead: { type: Boolean, default: false },
+  sendStatus: { type: String, default: 'sent' }, // 'sending', 'sent', 'failed'
+  showActions: { type: Boolean, default: true },
+  showCharCount: { type: Boolean, default: false },
+  hideIcon: { type: Boolean, default: false }, // 외부에서 강제 숨김도 가능
 })
 
 const emit = defineEmits(['reply', 'copy'])
 
-// 상태 관리
 const showCopySuccess = ref(false)
 
-// 내 메시지인지 확인 (타입 안전한 비교)
-const isMine = computed(() => {
-  return String(props.userId) === String(props.myUserId)
-})
+const isMine = computed(() => String(props.userId) === String(props.myUserId))
 
-// 메시지 스타일
-const messageStyle = computed(() => {
-  if (isMine.value) {
-    return 'bg-yellow-primary text-white ml-auto'
-  } else {
-    return 'bg-gray-100 text-gray-700 mr-auto'
-  }
-})
+/** 9996(법령 메시지)면 헤더(아이콘+이름) 숨김 */
+const hideHeader = computed(() => props.hideIcon || String(props.userId) === '9996')
 
-// 메시지 복사
+const messageStyle = computed(() =>
+  isMine.value ? 'bg-yellow-primary text-white ml-auto' : 'bg-gray-100 text-gray-700 mr-auto',
+)
+
 const copyMessage = async () => {
   try {
     await navigator.clipboard.writeText(props.message)
     emit('copy', props.message)
-
-    // 복사 성공 알림 표시
     showCopySuccess.value = true
-    setTimeout(() => {
-      showCopySuccess.value = false
-    }, 2000)
-  } catch (error) {
-    console.error('메시지 복사 실패:', error)
-    // 폴백: 텍스트 선택
-    fallbackCopyToClipboard(props.message)
-  }
-}
-
-// 클립보드 API가 지원되지 않을 때의 폴백 함수
-const fallbackCopyToClipboard = (text) => {
-  const textArea = document.createElement('textarea')
-  textArea.value = text
-  document.body.appendChild(textArea)
-  textArea.focus()
-  textArea.select()
-
-  try {
+    setTimeout(() => (showCopySuccess.value = false), 2000)
+  } catch (e) {
+    const ta = document.createElement('textarea')
+    ta.value = props.message
+    document.body.appendChild(ta)
+    ta.select()
     document.execCommand('copy')
+    document.body.removeChild(ta)
     showCopySuccess.value = true
-    setTimeout(() => {
-      showCopySuccess.value = false
-    }, 2000)
-  } catch (error) {
-    console.error('폴백 복사도 실패:', error)
+    setTimeout(() => (showCopySuccess.value = false), 2000)
+    console.log(e)
   }
-
-  document.body.removeChild(textArea)
 }
 
-// 답장하기
 const replyToMessage = () => {
   emit('reply', {
     originalMessage: props.message,
@@ -229,7 +176,7 @@ const replyToMessage = () => {
 </script>
 
 <style scoped>
-/* 메시지 등장 애니메이션 */
+/* (기존 스타일 동일) */
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -240,12 +187,9 @@ const replyToMessage = () => {
     transform: translateY(0);
   }
 }
-
 .animate-fade-in {
   animation: fade-in 0.3s ease-out;
 }
-
-/* 바운스 애니메이션 */
 @keyframes bounce {
   0%,
   80%,
@@ -256,25 +200,18 @@ const replyToMessage = () => {
     transform: scale(1);
   }
 }
-
 .animate-bounce {
   animation: bounce 1.4s infinite ease-in-out both;
 }
-
-/* 메시지 버블 호버 효과 */
 .group:hover {
   transform: translateY(-1px);
 }
-
-/* 긴 텍스트 줄바꿈 처리 */
 .break-words {
   word-wrap: break-word;
   word-break: break-word;
   overflow-wrap: break-word;
   hyphens: auto;
 }
-
-/* 말풍선 꼬리 효과 (선택사항) */
 .group::before {
   content: '';
   position: absolute;
@@ -282,29 +219,22 @@ const replyToMessage = () => {
   height: 0;
   border-style: solid;
 }
-
-/* 내 메시지 꼬리 (오른쪽) */
 .ml-auto.group::before {
   bottom: 8px;
   right: -8px;
   border-width: 8px 0 0 8px;
   border-color: transparent transparent transparent rgb(251, 191, 36);
 }
-
-/* 상대방 메시지 꼬리 (왼쪽) */
 .mr-auto.group::before {
   bottom: 8px;
   left: -8px;
   border-width: 8px 8px 0 0;
   border-color: transparent rgb(243, 244, 246) transparent transparent;
 }
-
-/* 모바일 최적화 */
 @media (max-width: 640px) {
   .max-w-xs {
     max-width: 16rem;
   }
-
   .lg\:max-w-md {
     max-width: 16rem;
   }
