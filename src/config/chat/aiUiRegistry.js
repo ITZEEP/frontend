@@ -28,6 +28,13 @@ export const contentRulesByStep = {
     {
       when: (message) =>
         typeof message?.content === 'string' &&
+        message.content.includes('수정이 완료되었습니다!') &&
+        message.content.includes('라운드가 시작'),
+      buttons: [{ label: '특약 검토', action: 'step3.openTermsReview' }],
+    },
+    {
+      when: (message) =>
+        typeof message?.content === 'string' &&
         message.content.includes('임대인이 특약') &&
         message.content.includes('수정을 요청'),
       buttons: [
