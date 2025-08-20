@@ -33,7 +33,7 @@ const router = useRouter()
 const isMobile = ref(false)
 
 const checkMobile = () => {
-  isMobile.value = window.innerWidth < 768
+  isMobile.value = window.innerWidth < 640
 }
 
 onMounted(() => {

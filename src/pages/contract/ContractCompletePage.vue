@@ -1,7 +1,7 @@
 <template>
   <!-- 모바일 차단 -->
   <MobileNotSupported v-if="isMobile" />
-  
+
   <!-- 데스크톱 컨텐츠 -->
   <div v-else class="max-w-screen min-h-screen mx-auto bg-yellow-50">
     <!-- 헤더 - 완료 단계에서만 표시 -->
@@ -349,34 +349,6 @@
     </div>
   </div>
 
-  <!-- 본인인증 모달 -->
-  <div
-    v-if="showAuthModal"
-    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-  >
-    <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
-      <div class="flex justify-between items-center p-6 border-b">
-        <h2 class="text-xl font-bold text-gray-900">계약서 본인인증</h2>
-        <button @click="handleAuthCancel" class="text-gray-400 hover:text-gray-600">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M6 18L18 6M6 6l12 12"
-            ></path>
-          </svg>
-        </button>
-      </div>
-      <UserVerification
-        :mode="'pre-end'"
-        :contract-chat-id="contractId"
-        @verified="handleAuthSuccess"
-        @error="handleAuthError"
-      />
-    </div>
-  </div>
-
   <!-- 에러 모달 -->
   <div
     v-if="showErrorModal"
@@ -419,7 +391,6 @@ import MobileNotSupported from '@/components/common/MobileNotSupported.vue'
 import ContractPreviewBox from '@/components/contract/complete/ContractPreviewBox.vue'
 import ContractSidePanel from '@/components/contract/complete/ContractSidePanel.vue'
 import SignaturePad from '@/components/common/SignaturePad.vue'
-import UserVerification from '@/components/common/UserVerification.vue'
 import websocketService from '@/apis/websocket'
 import SockJS from 'sockjs-client'
 import api from '@/apis'
@@ -439,7 +410,7 @@ const router = useRouter()
 const isMobile = ref(false)
 
 const checkMobile = () => {
-  isMobile.value = window.innerWidth < 768
+  isMobile.value = window.innerWidth < 640
 }
 
 // WebSocket 관련 상태
@@ -460,8 +431,6 @@ const hasTaxArrears = ref(false) // false = 없음, true = 있음
 const hasPriorFixedDate = ref(false) // false = 없음, true = 있음
 const mediationAgree = ref(true) // 항상 true로 설정
 
-// 본인인증 모달
-const showAuthModal = ref(false)
 // 에러 모달
 const showErrorModal = ref(false)
 const errorMessage = ref('')
@@ -659,7 +628,7 @@ onMounted(async () => {
   // 모바일 체크
   checkMobile()
   window.addEventListener('resize', checkMobile)
-  
+
   // WebSocket 연결 테스트
   await testWebSocketConnection()
 
@@ -818,9 +787,16 @@ const handleSignature3 = (data) => {
 // 서명 완료 여부
 const isSignatureComplete = computed(() => {
   const hasMainSignature = !!signatures.value.signature1
+
+  // 임차인인 경우 메인 서명만 있으면 완료
+  if (userRole.value === 'buyer' || userRole.value === 'tenant') {
+    return hasMainSignature && mediationAgree.value
+  }
+
+  // 임대인인 경우 추가 서명 필요
   const hasRequiredSignatures =
-    (hasTaxArrears.value || !!signatures.value.signature2) && // 체납이 있으면 서명 불필요, 없으면 서명 필요
-    (hasPriorFixedDate.value || !!signatures.value.signature3) // 확정일자가 있으면 서명 불필요, 없으면 서명 필요
+    (hasTaxArrears?.value || !!signatures.value.signature2) && // 체납이 있으면 서명 불필요, 없으면 서명 필요
+    (hasPriorFixedDate?.value || !!signatures.value.signature3) // 확정일자가 있으면 서명 불필요, 없으면 서명 필요
   return hasMainSignature && hasRequiredSignatures && mediationAgree.value
 })
 
@@ -831,35 +807,16 @@ const isPasswordValid = computed(() => {
   )
 })
 
-// 서명 단계로 진행 (본인인증 필요)
+// 서명 단계로 진행
 const proceedToSignature = () => {
   if (!pdfUrl.value) {
     alert('PDF를 먼저 로드해주세요.')
     return
   }
-  // 본인인증 모달 표시
-  showAuthModal.value = true
-}
-
-// 본인인증 성공 후 처리
-const handleAuthSuccess = () => {
-  showAuthModal.value = false
   // contract_step을 END로 설정하는 API 호출
   updateContractStep('END')
   // 서명 화면으로 이동
   currentStep.value = 'signature'
-}
-
-// 본인인증 취소 처리
-const handleAuthCancel = () => {
-  showAuthModal.value = false
-}
-
-// 본인인증 에러 처리
-const handleAuthError = (error) => {
-  console.error('본인인증 실패:', error)
-  showErrorModal.value = true
-  errorMessage.value = '본인인증에 실패했습니다. 다시 시도해주세요.'
 }
 
 // 전역 에러 처리 함수
@@ -944,8 +901,8 @@ const proceedToPassword = async () => {
       signature1: signatures.value.signature1?.dataUrl || '', // base64 encoded signature
       signature2: signatures.value.signature2?.dataUrl || '',
       signature3: signatures.value.signature3?.dataUrl || '',
-      hasTaxArrears: hasTaxArrears.value,
-      hasPriorFixedDate: hasPriorFixedDate.value,
+      hasTaxArrears: !hasTaxArrears.value,
+      hasPriorFixedDate: !hasPriorFixedDate.value,
       mediationAgree: true, // 항상 true로 설정
       submittedAt: Date.now(),
     }
