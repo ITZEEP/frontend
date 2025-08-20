@@ -6,13 +6,13 @@
         <button
           class="flex-1 py-3 px-4 text-center relative transition-all text-sm md:text-base"
           :class="{
-            'text-gray-900 font-semibold': selectedTab === 'owner',
-            'text-gray-500': selectedTab !== 'owner'
+            'text-yellow-primary font-semibold': selectedTab === 'owner',
+            'text-gray-500': selectedTab !== 'owner',
           }"
           @click="changeTab('owner')"
         >
           내가 파는 매물
-          <div 
+          <div
             v-if="selectedTab === 'owner'"
             class="absolute bottom-0 left-0 right-0 h-0.5 bg-yellow-primary"
           ></div>
@@ -20,13 +20,13 @@
         <button
           class="flex-1 py-3 px-4 text-center relative transition-all text-sm md:text-base"
           :class="{
-            'text-gray-900 font-semibold': selectedTab === 'buyer',
-            'text-gray-500': selectedTab !== 'buyer'
+            'text-yellow-primary font-semibold': selectedTab === 'buyer',
+            'text-gray-500': selectedTab !== 'buyer',
           }"
           @click="changeTab('buyer')"
         >
           내가 사는 매물
-          <div 
+          <div
             v-if="selectedTab === 'buyer'"
             class="absolute bottom-0 left-0 right-0 h-0.5 bg-yellow-primary"
           ></div>
@@ -53,8 +53,18 @@
 
     <div v-else-if="filteredRooms.length === 0" class="flex-1 flex items-center justify-center">
       <div class="text-center text-gray-400">
-        <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+        <svg
+          class="w-16 h-16 mx-auto mb-4 text-gray-300"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1.5"
+            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+          ></path>
         </svg>
         <p class="text-lg font-medium mb-1">채팅방이 없습니다</p>
         <p class="text-sm">새로운 대화를 시작해보세요!</p>
@@ -114,7 +124,7 @@ const filteredRooms = computed(() => {
 
   const rooms = selectedTab.value === 'owner' ? ownerRooms.value : buyerRooms.value
   const filtered = rooms.filter((room) => room && room.chatRoomId)
-  
+
   return filtered
 })
 
