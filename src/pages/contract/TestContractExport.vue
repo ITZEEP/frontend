@@ -1,5 +1,9 @@
 <template>
-  <div class="p-8">
+  <!-- 모바일 차단 -->
+  <MobileNotSupported v-if="isMobile" />
+  
+  <!-- 데스크톱 컨텐츠 -->
+  <div v-else class="p-8">
     <h1 class="text-2xl font-bold mb-6">계약서 내보내기 테스트</h1>
     
     <div class="space-y-4">
@@ -60,15 +64,32 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { startContractExport } from '@/apis/contractChatApi'
 import ContractExportPreview from '@/components/contract/export/ContractExportPreview.vue'
+import MobileNotSupported from '@/components/common/MobileNotSupported.vue'
 
 const router = useRouter()
 const contractChatId = ref('1') // 테스트용 기본값
 const testResult = ref(null)
 const isPreviewVisible = ref(false)
+
+// 모바일 체크
+const isMobile = ref(false)
+
+const checkMobile = () => {
+  isMobile.value = window.innerWidth < 768
+}
+
+onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
+})
 
 // 계약서 내보내기 API 테스트
 const startExport = async () => {

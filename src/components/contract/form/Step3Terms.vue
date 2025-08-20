@@ -171,6 +171,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { useConfirmModal } from '@/composables/useConfirmModal'
 import {
   getSpecialContractForUser,
   getFinalContract,
@@ -297,9 +298,14 @@ const submitModification = async (order) => {
   }
 }
 
+const { openConfirmModal } = useConfirmModal()
+
 const confirmDelete = async (order) => {
   if (!contractChatId.value || deleting.value[order]) return
-  const ok = window.confirm('해당 최종 특약을 삭제 요청하시겠습니까?')
+  const ok = await openConfirmModal({
+    title: '특약 삭제',
+    message: '해당 최종 특약을 삭제 요청하시겠습니까?'
+  })
   if (!ok) return
 
   try {

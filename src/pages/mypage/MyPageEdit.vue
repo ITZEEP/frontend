@@ -100,10 +100,12 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useMyPageStore } from '@/stores/mypage'
 import { mypageAPI } from '@/apis/mypage'
+import { useConfirmModal } from '@/composables/useConfirmModal'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const myPageStore = useMyPageStore()
+const { openConfirmModal } = useConfirmModal()
 
 // 폼 데이터
 const formData = ref({
@@ -202,13 +204,19 @@ const handleFileSelect = async (event) => {
 }
 
 // 회원 탈퇴 처리
-const handleWithdrawal = () => {
-  if (
-    confirm(
-      '정말로 회원 탈퇴를 하시겠습니까?\n\n탈퇴 후에는 모든 데이터가 삭제되며 복구할 수 없습니다.',
-    )
-  ) {
-    if (confirm('마지막 확인입니다. 정말로 탈퇴하시겠습니까?')) {
+const handleWithdrawal = async () => {
+  const firstConfirm = await openConfirmModal({
+    title: '회원 탈퇴',
+    message: '정말로 회원 탈퇴를 하시겠습니까?\n\n탈퇴 후에는 모든 데이터가 삭제되며 복구할 수 없습니다.'
+  })
+  
+  if (firstConfirm) {
+    const secondConfirm = await openConfirmModal({
+      title: '최종 확인',
+      message: '마지막 확인입니다. 정말로 탈퇴하시겠습니까?'
+    })
+    
+    if (secondConfirm) {
       // 회원 탈퇴 처리
       handleAccountDeletion()
     }

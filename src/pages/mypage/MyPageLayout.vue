@@ -87,13 +87,13 @@ const handleLogout = async () => {
     localStorage.removeItem('userInfo')
     localStorage.removeItem('user')
     
-    // 로그인 페이지로 이동
-    router.push('/auth/signin')
+    // 홈 페이지로 이동
+    router.push({ name: 'home' })
   } catch (error) {
     console.error('로그아웃 중 오류 발생:', error)
-    // 오류가 발생해도 로컬 스토리지는 초기화하고 로그인 페이지로 이동
+    // 오류가 발생해도 로컬 스토리지는 초기화하고 홈 페이지로 이동
     localStorage.clear()
-    router.push('/auth/signin')
+    router.push({ name: 'home' })
   }
 }
 </script>

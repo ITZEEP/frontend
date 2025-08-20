@@ -37,7 +37,12 @@ class WebSocketService {
 
       this.isConnecting.value = true
 
-      const socket = new SockJS(import.meta.env.VITE_WS_URL || 'http://localhost:8080/ws')
+      // 개발 환경에서는 상대 경로 사용 (Vite proxy 활용)
+      const wsUrl = import.meta.env.DEV 
+        ? '/ws' 
+        : (import.meta.env.VITE_WS_URL || 'http://localhost:8080/ws')
+      console.log('WebSocket URL:', wsUrl)
+      const socket = new SockJS(wsUrl)
       this.stompClient = new Client({
         webSocketFactory: () => socket,
         reconnectDelay: 2000, // 재연결 지연 시간 단축

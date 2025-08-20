@@ -1,7 +1,11 @@
 <template>
-  <div class="max-w-screen min-h-screen mx-auto bg-yellow-50">
-    <!-- 헤더 -->
-    <ContractCompleteHeader :step="currentStep" />
+  <!-- 모바일 차단 -->
+  <MobileNotSupported v-if="isMobile" />
+  
+  <!-- 데스크톱 컨텐츠 -->
+  <div v-else class="max-w-screen min-h-screen mx-auto bg-yellow-50">
+    <!-- 헤더 - 완료 단계에서만 표시 -->
+    <ContractCompleteHeader v-if="currentStep === 'complete'" />
 
     <!-- 단계별 컨텐츠 -->
     <div v-if="currentStep === 'preview'" class="px-16 py-8">
@@ -29,17 +33,59 @@
           </div>
         </div>
 
-        <!-- 체크박스 (임대인만 표시) -->
-        <div v-if="userRole === 'owner'" class="space-y-4 mb-6">
-          <label class="flex items-center">
-            <input type="checkbox" v-model="hasTaxArrears" class="mr-2" />
-            <span>세금 체납 사실이 없음을 확인합니다.</span>
-          </label>
+        <!-- 세금 체납 여부 (임대인만 표시) -->
+        <div v-if="userRole === 'owner'" class="space-y-6 mb-6 p-4 bg-gray-50 rounded-lg">
+          <div>
+            <h3 class="font-semibold mb-3">세금 체납 여부</h3>
+            <div class="space-y-2">
+              <label class="flex items-center">
+                <input
+                  type="radio"
+                  :value="false"
+                  v-model="hasTaxArrears"
+                  name="taxArrears"
+                  class="mr-2"
+                />
+                <span>세금 체납 사실이 없음</span>
+              </label>
+              <label class="flex items-center">
+                <input
+                  type="radio"
+                  :value="true"
+                  v-model="hasTaxArrears"
+                  name="taxArrears"
+                  class="mr-2"
+                />
+                <span>세금 체납 사실이 있음</span>
+              </label>
+            </div>
+          </div>
 
-          <label class="flex items-center">
-            <input type="checkbox" v-model="hasPriorFixedDate" class="mr-2" />
-            <span>선순위 확정일자가 없음을 확인합니다.</span>
-          </label>
+          <div>
+            <h3 class="font-semibold mb-3">선순위 확정일자 여부</h3>
+            <div class="space-y-2">
+              <label class="flex items-center">
+                <input
+                  type="radio"
+                  :value="false"
+                  v-model="hasPriorFixedDate"
+                  name="priorFixedDate"
+                  class="mr-2"
+                />
+                <span>선순위 확정일자가 없음</span>
+              </label>
+              <label class="flex items-center">
+                <input
+                  type="radio"
+                  :value="true"
+                  v-model="hasPriorFixedDate"
+                  name="priorFixedDate"
+                  class="mr-2"
+                />
+                <span>선순위 확정일자가 있음</span>
+              </label>
+            </div>
+          </div>
         </div>
 
         <!-- 버튼 -->
@@ -82,8 +128,8 @@
             </div>
           </div>
 
-          <!-- 세금 체납 없음 서명 (조건부) -->
-          <div v-if="hasTaxArrears && userRole === 'owner'" class="border rounded-lg p-4">
+          <!-- 세금 체납 없음 서명 (조건부 - 체납이 없을 때만) -->
+          <div v-if="!hasTaxArrears && userRole === 'owner'" class="border rounded-lg p-4">
             <h3 class="font-semibold mb-3">세금 체납 없음 확인 서명</h3>
             <div class="w-full">
               <SignaturePad
@@ -97,8 +143,8 @@
             </div>
           </div>
 
-          <!-- 선순위 확정일자 없음 서명 (조건부) -->
-          <div v-if="hasPriorFixedDate && userRole === 'owner'" class="border rounded-lg p-4">
+          <!-- 선순위 확정일자 없음 서명 (조건부 - 확정일자가 없을 때만) -->
+          <div v-if="!hasPriorFixedDate && userRole === 'owner'" class="border rounded-lg p-4">
             <h3 class="font-semibold mb-3">선순위 확정일자 없음 확인 서명</h3>
             <div class="w-full">
               <SignaturePad
@@ -302,16 +348,78 @@
       </div>
     </div>
   </div>
+
+  <!-- 본인인증 모달 -->
+  <div
+    v-if="showAuthModal"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+  >
+    <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center p-6 border-b">
+        <h2 class="text-xl font-bold text-gray-900">계약서 본인인증</h2>
+        <button @click="handleAuthCancel" class="text-gray-400 hover:text-gray-600">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            ></path>
+          </svg>
+        </button>
+      </div>
+      <UserVerification
+        :mode="'pre-end'"
+        :contract-chat-id="contractId"
+        @verified="handleAuthSuccess"
+        @error="handleAuthError"
+      />
+    </div>
+  </div>
+
+  <!-- 에러 모달 -->
+  <div
+    v-if="showErrorModal"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+  >
+    <div class="bg-white rounded-2xl shadow-xl max-w-md w-full mx-4 p-6">
+      <div class="text-center">
+        <div
+          class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4"
+        >
+          <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.864-.833-2.634 0L5.232 19.5c-.77.833.192 2.5 1.732 2.5z"
+            ></path>
+          </svg>
+        </div>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">오류 발생</h3>
+        <p class="text-sm text-gray-500 mb-6">{{ errorMessage }}</p>
+        <button
+          @click="showErrorModal = false"
+          class="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+        >
+          확인
+        </button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useConfirmModal } from '@/composables/useConfirmModal'
 // PdfViewer 제거 - 기본 iframe 사용
 import ContractCompleteHeader from '@/components/contract/complete/ContractCompleteHeader.vue'
+import MobileNotSupported from '@/components/common/MobileNotSupported.vue'
 import ContractPreviewBox from '@/components/contract/complete/ContractPreviewBox.vue'
 import ContractSidePanel from '@/components/contract/complete/ContractSidePanel.vue'
 import SignaturePad from '@/components/common/SignaturePad.vue'
+import UserVerification from '@/components/common/UserVerification.vue'
 import websocketService from '@/apis/websocket'
 import SockJS from 'sockjs-client'
 import api from '@/apis'
@@ -327,6 +435,13 @@ const route = useRoute()
 const contractId = ref(route.params.contractChatId)
 const router = useRouter()
 
+// 모바일 체크
+const isMobile = ref(false)
+
+const checkMobile = () => {
+  isMobile.value = window.innerWidth < 768
+}
+
 // WebSocket 관련 상태
 const exportStatus = ref(null)
 const isConnected = ref(false)
@@ -340,10 +455,16 @@ const isWaitingForOther = ref(false) // 상대방 서명 대기 중
 const pdfUrl = ref('')
 const finalPdfData = ref(null)
 
-// 체크박스
-const hasTaxArrears = ref(false)
-const hasPriorFixedDate = ref(false)
+// 세금 체납 및 선순위 확정일자 (기본값: 없음)
+const hasTaxArrears = ref(false) // false = 없음, true = 있음
+const hasPriorFixedDate = ref(false) // false = 없음, true = 있음
 const mediationAgree = ref(true) // 항상 true로 설정
+
+// 본인인증 모달
+const showAuthModal = ref(false)
+// 에러 모달
+const showErrorModal = ref(false)
+const errorMessage = ref('')
 
 // 서명
 const signatures = ref({
@@ -535,6 +656,10 @@ const testWebSocketConnection = async () => {
 
 // 초기 PDF 로드 및 사용자 역할 설정
 onMounted(async () => {
+  // 모바일 체크
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+  
   // WebSocket 연결 테스트
   await testWebSocketConnection()
 
@@ -590,6 +715,7 @@ onMounted(async () => {
 
 // 컴포넌트 언마운트 시 정리
 onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
   stopStatusPolling()
   if (isConnected.value) {
     websocketService.offMessage(`/topic/contract/${contractId.value}/export/status`)
@@ -668,8 +794,7 @@ const loadInitialPDF = async () => {
       throw new Error('임시 URL 생성에 실패했습니다')
     }
   } catch (error) {
-    console.error('PDF URL 생성 실패:', error)
-    alert('계약서를 불러오는데 실패했습니다: ' + error.message)
+    handleError(error, '계약서를 불러오는데 실패했습니다.')
   } finally {
     isLoading.value = false
   }
@@ -694,8 +819,8 @@ const handleSignature3 = (data) => {
 const isSignatureComplete = computed(() => {
   const hasMainSignature = !!signatures.value.signature1
   const hasRequiredSignatures =
-    (!hasTaxArrears.value || !!signatures.value.signature2) &&
-    (!hasPriorFixedDate.value || !!signatures.value.signature3)
+    (hasTaxArrears.value || !!signatures.value.signature2) && // 체납이 있으면 서명 불필요, 없으면 서명 필요
+    (hasPriorFixedDate.value || !!signatures.value.signature3) // 확정일자가 있으면 서명 불필요, 없으면 서명 필요
   return hasMainSignature && hasRequiredSignatures && mediationAgree.value
 })
 
@@ -706,13 +831,83 @@ const isPasswordValid = computed(() => {
   )
 })
 
-// 서명 단계로 진행
+// 서명 단계로 진행 (본인인증 필요)
 const proceedToSignature = () => {
   if (!pdfUrl.value) {
     alert('PDF를 먼저 로드해주세요.')
     return
   }
+  // 본인인증 모달 표시
+  showAuthModal.value = true
+}
+
+// 본인인증 성공 후 처리
+const handleAuthSuccess = () => {
+  showAuthModal.value = false
+  // contract_step을 END로 설정하는 API 호출
+  updateContractStep('END')
+  // 서명 화면으로 이동
   currentStep.value = 'signature'
+}
+
+// 본인인증 취소 처리
+const handleAuthCancel = () => {
+  showAuthModal.value = false
+}
+
+// 본인인증 에러 처리
+const handleAuthError = (error) => {
+  console.error('본인인증 실패:', error)
+  showErrorModal.value = true
+  errorMessage.value = '본인인증에 실패했습니다. 다시 시도해주세요.'
+}
+
+// 전역 에러 처리 함수
+const handleError = (error, defaultMessage = '오류가 발생했습니다.') => {
+  console.error('에러 발생:', error)
+
+  let message = defaultMessage
+
+  if (error.response) {
+    const status = error.response.status
+    switch (status) {
+      case 400:
+        message = '잘못된 요청입니다.'
+        break
+      case 401:
+        message = '인증이 필요합니다.'
+        break
+      case 403:
+        message = '접근 권한이 없습니다.'
+        break
+      case 404:
+        message = '요청한 리소스를 찾을 수 없습니다.'
+        break
+      case 500:
+        message = '서버 오류가 발생했습니다.'
+        break
+      case 501:
+        message = '구현되지 않은 기능입니다.'
+        break
+      default:
+        message = `오류가 발생했습니다. (${status})`
+    }
+  }
+
+  showErrorModal.value = true
+  errorMessage.value = message
+}
+
+// contract_step 업데이트
+const updateContractStep = async (step) => {
+  try {
+    await api.post(`/api/contract/${contractId.value}/updateStep`, {
+      step: step,
+    })
+    console.log('Contract step updated to:', step)
+  } catch (error) {
+    console.error('Failed to update contract step:', error)
+  }
 }
 
 // 서명 완료 후 처리
@@ -796,8 +991,7 @@ const proceedToPassword = async () => {
         }
       }
     } catch (error) {
-      console.error('HTTP API 서명 상태 업데이트 실패:', error)
-      alert('서명 전송에 실패했습니다. 다시 시도해주세요.')
+      handleError(error, '서명 전송에 실패했습니다. 다시 시도해주세요.')
       return // 실패 시 대기 화면으로 가지 않음
     }
 
@@ -819,8 +1013,7 @@ const proceedToPassword = async () => {
     isWaitingForOther.value = true
     currentStep.value = 'waiting'
   } catch (error) {
-    console.error('서명 저장 실패:', error)
-    alert('서명 저장 중 오류가 발생했습니다.')
+    handleError(error, '서명 저장 중 오류가 발생했습니다.')
   } finally {
     // 완료 화면으로 가지 않는 경우에만 로딩 해제
     if (currentStep.value !== 'complete') {
@@ -861,8 +1054,7 @@ const completeContract = async () => {
     // 양측 모두 완료 시 최종 PDF는 서버에서 자동 생성
     // WebSocket을 통해 완료 알림을 받음
   } catch (error) {
-    console.error('계약 완료 실패:', error)
-    alert('계약서 처리 중 오류가 발생했습니다.')
+    handleError(error, '계약서 처리 중 오류가 발생했습니다.')
   } finally {
     isLoading.value = false
   }
@@ -1069,9 +1261,16 @@ const stopStatusPolling = () => {
   }
 }
 
+const { openConfirmModal } = useConfirmModal()
+
 // 취소
-const cancelExport = () => {
-  if (confirm('계약서 내보내기를 취소하시겠습니까?')) {
+const cancelExport = async () => {
+  const confirmed = await openConfirmModal({
+    title: '내보내기 취소',
+    message: '계약서 내보내기를 취소하시겠습니까?',
+  })
+
+  if (confirmed) {
     stopStatusPolling()
     // TODO: 이전 페이지로 이동
     window.history.back()

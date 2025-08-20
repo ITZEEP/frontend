@@ -584,6 +584,36 @@ const directMessageHandler = async (message) => {
 
   webSocketMessages.value.push(message)
   console.log('직접 추가 후 배열:', webSocketMessages.value)
+  
+  // 다른 사용자로부터 받은 메시지인 경우 알림 발생
+  if (message.senderId !== currentUserId.value) {
+    console.log('🔔 새 채팅 메시지 알림 발생:', {
+      senderId: message.senderId,
+      currentUserId: currentUserId.value,
+      content: message.content
+    })
+    
+    // FCM이 오지 않는 경우를 대비한 백업 알림
+    window.dispatchEvent(
+      new CustomEvent('new-notification', {
+        detail: {
+          hasNew: true,
+          payload: {
+            notification: { 
+              title: roomData.value?.ownerName || roomData.value?.buyerName || '새 메시지',
+              body: message.content 
+            },
+            data: { 
+              type: 'CHAT', 
+              chatRoomId: message.chatRoomId, 
+              senderId: message.senderId 
+            }
+          },
+          source: 'websocket-backup',
+        },
+      }),
+    )
+  }
 
   forceScrollToBottom()
 

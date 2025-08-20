@@ -68,7 +68,7 @@ const sendTokenToServer = async (token) => {
  */
 export const initializeFCM = async () => {
   try {
-    console.log('FCM 초기화 시작...')
+    console.log('🚀 FCM 초기화 시작...', new Date().toISOString())
 
     // 브라우저 지원 확인
     if (!('serviceWorker' in navigator)) {
@@ -132,7 +132,12 @@ export const initializeFCM = async () => {
  */
 const setupForegroundMessageListener = () => {
   onMessage(messaging, async (payload) => {
-    console.log('포그라운드에서 메시지 수신:', payload)
+    console.log('🔔 포그라운드에서 FCM 메시지 수신:', payload)
+    console.log('🔔 알림 데이터:', {
+      notification: payload.notification,
+      data: payload.data,
+      timestamp: new Date().toISOString()
+    })
 
     const { notification, data } = payload
 
@@ -392,6 +397,45 @@ export const resetNotificationState = () => {
   console.log('알림 상태 초기화 완료')
 }
 
+/**
+ * 테스트 알림 발생 (디버깅용)
+ */
+export const triggerTestNotification = (type = 'CHAT') => {
+  console.log('🧪 테스트 알림 발생:', type)
+  
+  const testPayload = {
+    notification: {
+      title: type === 'CHAT' ? '테스트 채팅 알림' : '테스트 시스템 알림',
+      body: type === 'CHAT' ? '이것은 테스트 채팅 메시지입니다.' : '이것은 테스트 시스템 알림입니다.'
+    },
+    data: {
+      type: type,
+      chatRoomId: type === 'CHAT' ? '123' : null,
+      timestamp: new Date().toISOString()
+    }
+  }
+  
+  // FCM 이벤트로 발생
+  window.dispatchEvent(
+    new CustomEvent('fcm-message', {
+      detail: testPayload
+    })
+  )
+  
+  // new-notification 이벤트로도 발생
+  window.dispatchEvent(
+    new CustomEvent('new-notification', {
+      detail: {
+        hasNew: true,
+        payload: testPayload,
+        source: 'test'
+      }
+    })
+  )
+  
+  console.log('✅ 테스트 알림 이벤트 발생 완료')
+}
+
 // 기존 Vue 컴포넌트에서 사용하던 메서드들 (호환성 유지)
 export const requestPermission = requestNotificationPermission
 
@@ -425,4 +469,5 @@ export default {
   markNotificationsAsRead,
   markSingleNotificationAsRead,
   resetNotificationState,
+  triggerTestNotification,
 }

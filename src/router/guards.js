@@ -45,7 +45,8 @@ export const authGuard = (to, from, next) => {
   
   // 인증이 필요한 페이지인데 인증되지 않은 경우
   if (requiresAuth && !isAuthenticated) {
-    // 로그인 후 원래 가려던 페이지로 리다이렉트하기 위해 쿼리 파라미터 추가
+    // 로그인 모달 표시 (라우터 가드에서는 리다이렉트만 처리)
+    // 실제 모달은 API 인터셉터에서 처리
     next({
       name: 'signin',
       query: { redirect: to.fullPath }

@@ -1,74 +1,38 @@
 <template>
-  <div :class="mobile ? 'flex flex-col gap-3' : 'flex gap-2 items-center'">
-    <!-- 로그인 했을 때-->
-    <template v-if="authStore.isLoggedIn">
-      <div :class="mobile ? 'flex flex-col gap-3 w-full' : 'flex items-center gap-4'">
-        <p class="text-base font-medium">
-          <span class="text-yellow-primary">
-            👋 {{ authStore.user?.nickname || authStore.user?.name || '사용자' }}
-          </span>
-          <span class="text-gray-500">님 안녕하세요!</span>
-        </p>
-        
-        <!-- PC에서만 알림 버튼 표시 (모바일은 헤더에서 별도 처리) -->
-        <div v-if="!mobile" class="relative">
-          <div
-            class="w-10 h-10 rounded-full flex items-center justify-center cursor-pointer hover:bg-gray-warm-600 transition-all duration-300 alarm-toggle-button relative shadow-lg hover:shadow-xl"
-            :class="{ shake: isShaking }"
-            @click="toggleDropdown"
-          >
-            <!-- FontAwesome 종 아이콘 -->
-            <i class="fas fa-bell text-white text-lg"></i>
+  <div class="relative">
+    <!-- 알림 버튼 -->
+    <div
+      class="w-10 h-10 rounded-full flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-all duration-300 relative"
+      :class="{ shake: isShaking }"
+      @click="toggleDropdown"
+    >
+      <!-- FontAwesome 종 아이콘 -->
+      <i class="fas fa-bell text-gray-700 text-lg"></i>
 
-            <!-- 빨간 점 배지 -->
-            <div
-              v-if="hasNewNotifications"
-              class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 border-2 border-white rounded-full pulse-dot"
-              title="새 알림이 있습니다"
-            ></div>
-          </div>
+      <!-- 빨간 점 배지 -->
+      <div
+        v-if="hasNewNotifications"
+        class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 border-2 border-white rounded-full pulse-dot"
+        title="새 알림이 있습니다"
+      ></div>
+    </div>
 
-          <AlarmDropdown
-            :is-visible="showDropdown"
-            @close="showDropdown = false"
-            @notification-click="handleNotificationClick"
-          />
-        </div>
-        
-        <BaseButton 
-          @click="handleNavigate('/mypage')" 
-          variant="primary" 
-          :class="mobile ? 'w-full rounded-md' : 'rounded-md'"
-        >
-          마이페이지
-        </BaseButton>
-      </div>
-    </template>
+    <!-- 알림 드롭다운 -->
+    <AlarmDropdown
+      :is-visible="showDropdown"
+      @close="showDropdown = false"
+      @notification-click="handleNotificationClick"
+    />
 
-    <!-- 로그아웃 했을 때 -->
-    <template v-else>
-      <BaseButton 
-        @click="handleNavigate(accountMenus.signin.url)" 
-        :class="mobile ? 'w-full' : 'w-fit'" 
-        variant="outline"
-      >
-        {{ accountMenus.signin.title }}
-      </BaseButton>
-      <BaseButton 
-        @click="handleNavigate(accountMenus.signup.url)" 
-        :class="mobile ? 'w-full' : 'w-fit'" 
-        variant="primary"
-      >
-        {{ accountMenus.signup.title }}
-      </BaseButton>
-    </template>
-
-    <!-- 새 알림 토스트 (간단 버전) -->
+  </div>
+  
+  <!-- 새 알림 토스트 (Teleport로 body에 렌더링) -->
+  <Teleport to="body">
     <div v-if="showNotificationToast" class="notification-toast" :class="{ show: isToastVisible }">
       <div class="p-4">
         <div class="flex items-start">
           <div class="flex-shrink-0">
-            <div class="w-8 h-8 bg-yellow-primary rounded-full flex items-center justify-center">
+            <div class="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
               <i class="fas fa-bell text-white text-sm"></i>
             </div>
           </div>
@@ -90,54 +54,37 @@
           </div>
         </div>
       </div>
-      <!-- 간단한 진행 바 -->
+      <!-- 진행 바 -->
       <div class="progress-container">
         <div class="progress-bar" :class="{ active: showProgressBar }"></div>
       </div>
     </div>
-  </div>
+  </Teleport>
 </template>
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import BaseButton from '@/components/common/BaseButton.vue'
-import config from '@/config'
 import AlarmDropdown from '@/components/alarm/AlarmDropdown.vue'
 import {
   getHasNewNotifications,
   setNotificationBadgeCallback,
   markNotificationsAsRead,
 } from '@/fcm/fcmService'
-
-const props = defineProps({
-  mobile: {
-    type: Boolean,
-    default: false
-  }
-})
-
-const emit = defineEmits(['navigate'])
+import { getUnreadNotificationCount } from '@/apis/chatApi'
+import websocketService from '@/apis/websocket'
+import { getCurrentUserId } from '@/apis/chatApi'
 
 const router = useRouter()
-const accountMenus = config.accountMenus
 const authStore = useAuthStore()
-
-// 네비게이션 핸들러
-const handleNavigate = (url) => {
-  router.push(url)
-  if (props.mobile) {
-    emit('navigate')
-  }
-}
 
 // 상태 관리
 const showDropdown = ref(false)
 const hasNewNotifications = ref(false)
 const isShaking = ref(false)
 
-// 토스트 알림 관련 상태 (간단하게)
+// 토스트 알림 관련 상태
 const showNotificationToast = ref(false)
 const isToastVisible = ref(false)
 const latestNotification = ref(null)
@@ -168,13 +115,14 @@ const shakeNotification = () => {
   }, 600)
 }
 
-// 토스트 표시 (간단 버전)
+// 토스트 표시
 const showToast = () => {
   if (toastTimeout) {
     clearTimeout(toastTimeout)
   }
 
-  console.log('토스트 표시 시작')
+  console.log('🍞 토스트 알림 표시 시작')
+  console.log('📝 토스트 내용:', latestNotification.value)
 
   // 1. 토스트 DOM에 추가
   showNotificationToast.value = true
@@ -189,13 +137,13 @@ const showToast = () => {
     showProgressBar.value = true
   }, 500)
 
-  // 4. 3.5초 후 닫기 (0.5초 애니메이션 + 3초 표시)
+  // 4. 3.5초 후 닫기
   toastTimeout = setTimeout(() => {
     closeToast()
   }, 3500)
 }
 
-// 토스트 닫기 (간단 버전)
+// 토스트 닫기
 const closeToast = () => {
   console.log('토스트 닫기')
 
@@ -233,16 +181,25 @@ const updateNotificationBadge = (hasNew) => {
 }
 
 const handleNewNotification = (event) => {
-  console.log('새 알림 수신:', event.detail)
+  console.log('🔔 새 알림 수신 (NotificationButton):', event.detail)
+  console.log('🔔 이벤트 타입:', event.type)
+  console.log('🔔 이벤트 소스:', event.detail?.source)
 
   hasNewNotifications.value = true
 
-  const { payload } = event.detail
+  const { payload } = event.detail || {}
   if (payload && payload.notification) {
     latestNotification.value = {
-      title: payload.notification.title,
-      content: payload.notification.body,
+      title: payload.notification.title || '새 알림',
+      content: payload.notification.body || payload.notification.content || '새로운 알림이 도착했습니다.',
       type: payload.data?.type || 'SYSTEM',
+    }
+  } else if (event.detail?.notification) {
+    // FCM 직접 전달 형식
+    latestNotification.value = {
+      title: event.detail.notification.title || '새 알림',
+      content: event.detail.notification.body || '새로운 알림이 도착했습니다.',
+      type: event.detail.data?.type || 'SYSTEM',
     }
   } else {
     latestNotification.value = {
@@ -251,6 +208,8 @@ const handleNewNotification = (event) => {
       type: 'SYSTEM',
     }
   }
+
+  console.log('🔔 처리된 알림 내용:', latestNotification.value)
 
   showToast()
   shakeNotification()
@@ -267,7 +226,7 @@ const handleNotificationsRead = () => {
   hasNewNotifications.value = false
 }
 
-onMounted(() => {
+onMounted(async () => {
   if (authStore.isLoggedIn) {
     hasNewNotifications.value = getHasNewNotifications()
     setNotificationBadgeCallback(updateNotificationBadge)
@@ -276,6 +235,63 @@ onMounted(() => {
     window.addEventListener('notification-count-updated', handleNotificationCountUpdate)
     window.addEventListener('notifications-read', handleNotificationsRead)
     window.addEventListener('fcm-message', handleNewNotification)
+
+    // WebSocket을 통한 실시간 알림 구독
+    try {
+      const userId = await getCurrentUserId()
+      if (userId) {
+        // WebSocket 연결 확인 및 연결
+        if (!websocketService.getConnectionStatus()) {
+          await websocketService.connect()
+        }
+
+        // 사용자별 알림 토픽 구독
+        const notificationTopic = `/user/${userId}/notifications`
+        console.log('📡 알림 토픽 구독:', notificationTopic)
+        
+        websocketService.onMessage(notificationTopic, (notification) => {
+          console.log('🔔 WebSocket 알림 수신:', notification)
+          
+          // 새 알림 처리
+          hasNewNotifications.value = true
+          latestNotification.value = {
+            title: notification.title || '새 알림',
+            content: notification.content || notification.message || '새로운 알림이 도착했습니다.',
+            type: notification.type || 'SYSTEM'
+          }
+          
+          showToast()
+          shakeNotification()
+
+          // 알림 이벤트 발생
+          window.dispatchEvent(new CustomEvent('new-notification', {
+            detail: {
+              hasNew: true,
+              payload: {
+                notification: {
+                  title: notification.title,
+                  body: notification.content || notification.message
+                },
+                data: notification
+              },
+              source: 'websocket'
+            }
+          }))
+        })
+
+        // 읽지 않은 알림 개수 초기 로드
+        try {
+          const response = await getUnreadNotificationCount()
+          if (response.success && response.data > 0) {
+            hasNewNotifications.value = true
+          }
+        } catch (error) {
+          console.error('알림 개수 로드 실패:', error)
+        }
+      }
+    } catch (error) {
+      console.error('WebSocket 알림 구독 실패:', error)
+    }
   }
 })
 
@@ -294,16 +310,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-/* 종 버튼 스타일 */
-.alarm-toggle-button {
-  background: #60584c;
-}
-
-.alarm-toggle-button:hover {
-  background: #78716c;
-}
-
-/* 간단한 종 흔들기 */
+/* 종 흔들기 애니메이션 */
 .shake {
   animation: shake 0.6s ease-in-out;
 }
@@ -321,7 +328,7 @@ onUnmounted(() => {
   }
 }
 
-/* 간단한 펄스 점 */
+/* 펄스 점 애니메이션 */
 .pulse-dot {
   animation: pulse 2s infinite;
 }
@@ -338,7 +345,7 @@ onUnmounted(() => {
   }
 }
 
-/* 토스트 스타일 (간단하게) */
+/* 토스트 스타일 */
 .notification-toast {
   position: fixed;
   top: 1rem;
@@ -360,7 +367,7 @@ onUnmounted(() => {
   opacity: 1;
 }
 
-/* 간단한 진행 바 */
+/* 진행 바 */
 .progress-container {
   height: 4px;
   background: #f3f4f6;
@@ -378,5 +385,16 @@ onUnmounted(() => {
 
 .progress-bar.active {
   width: 0;
+}
+
+/* 모바일에서 토스트 크기 조정 */
+@media (max-width: 640px) {
+  .notification-toast {
+    top: 0.5rem;
+    right: 0.5rem;
+    left: 0.5rem;
+    max-width: none;
+    width: auto;
+  }
 }
 </style>

@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { useLoginModal } from '@/composables/useLoginModal'
 
 // axios 인스턴스 생성
 const api = axios.create({
@@ -47,6 +48,16 @@ api.interceptors.response.use(
     if (status === 401 && !originalRequest._retry) {
       originalRequest._retry = true
 
+      // 토큰이 없는 경우 바로 로그인 모달 표시
+      const currentToken = localStorage.getItem('accessToken') || localStorage.getItem('access-token')
+      if (!currentToken) {
+        console.error('인증 토큰이 없습니다.')
+        const { openLoginModal } = useLoginModal()
+        const currentPath = router?.currentRoute.value.fullPath || window.location.pathname
+        openLoginModal(currentPath)
+        return Promise.reject(error)
+      }
+
       try {
         // 리프레시 토큰으로 새 액세스 토큰 요청
         const refreshToken = localStorage.getItem('refreshToken') || localStorage.getItem('refresh-token')
@@ -68,43 +79,56 @@ api.interceptors.response.use(
         }
       } catch (refreshError) {
         console.error('토큰 갱신 실패:', refreshError)
-        // 로그인 페이지로 리다이렉트
-        localStorage.removeItem('accessToken')
-        localStorage.removeItem('access-token')
-        localStorage.removeItem('refreshToken')
-        localStorage.removeItem('refresh-token')
-        localStorage.removeItem('userInfo')
-        localStorage.removeItem('user')
-        
-        if (router) {
-          router.push({ name: 'signin', query: { redirect: router.currentRoute.value.fullPath } })
-        } else {
-          window.location.href = '/auth/signin'
-        }
       }
+      
+      // 토큰 갱신 실패 또는 리프레시 토큰이 없는 경우
+      localStorage.removeItem('accessToken')
+      localStorage.removeItem('access-token')
+      localStorage.removeItem('refreshToken')
+      localStorage.removeItem('refresh-token')
+      localStorage.removeItem('userInfo')
+      localStorage.removeItem('user')
+      
+      // 로그인 모달 표시
+      const { openLoginModal } = useLoginModal()
+      const currentPath = router?.currentRoute.value.fullPath || window.location.pathname
+      openLoginModal(currentPath)
     }
+
+    // 현재 경로 확인 (ContractCompletePage에서는 페이지 이동 대신 에러 전달)
+    const currentPath = router?.currentRoute.value.path || window.location.pathname
+    const isContractCompletePage = currentPath.includes('/contract/') && currentPath.includes('/complete')
 
     // 404 Not Found
     if (status === 404) {
       console.error('404 에러:', error.response.data)
-      if (router && router.currentRoute.value.name !== 'not-found') {
+      if (!isContractCompletePage && router && router.currentRoute.value.name !== 'not-found') {
         router.push({ name: 'not-found' })
+      }
+      if (isContractCompletePage) {
+        return Promise.reject(error)
       }
     }
 
     // 403 Forbidden
     if (status === 403) {
       console.error('403 권한 없음:', error.response.data)
-      if (router) {
+      if (!isContractCompletePage && router) {
         router.push({ name: 'unauthorized' })
+      }
+      if (isContractCompletePage) {
+        return Promise.reject(error)
       }
     }
 
     // 500 Server Error
     if (status >= 500) {
       console.error('서버 에러:', error.response.data)
-      if (router && router.currentRoute.value.name !== 'server-error') {
+      if (!isContractCompletePage && router && router.currentRoute.value.name !== 'server-error') {
         router.push({ name: 'server-error' })
+      }
+      if (isContractCompletePage) {
+        return Promise.reject(error)
       }
     }
 

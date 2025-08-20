@@ -210,6 +210,7 @@ export async function refreshToken() {
 
     if (res.data.success && res.data.data.accessToken) {
       localStorage.setItem('accessToken', res.data.data.accessToken)
+      localStorage.setItem('access-token', res.data.data.accessToken) // 호환성 유지
       return true
     }
 

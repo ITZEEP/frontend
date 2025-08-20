@@ -99,6 +99,11 @@ watch(() => props.isOpen, (newValue) => {
   }
 })
 
+const handleLogin = () => {
+  // 로그인 페이지로 이동
+  window.location.href = '/auth/signin'
+}
+
 const closeLoginModal = () => {
   showLoginModal.value = false
   modalStore.close()
@@ -126,7 +131,7 @@ const closeLoginModal = () => {
               <IconLock class="w-12 h-12 text-gray-400" />
             </div>
             <p class="text-gray-600 mb-4">로그인이 필요한 서비스입니다.</p>
-            <BaseButton @click="showLoginModal = true" variant="primary" size="md">
+            <BaseButton @click="handleLogin" variant="primary" size="md">
               로그인하기
             </BaseButton>
           </div>
