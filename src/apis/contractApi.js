@@ -1,9 +1,21 @@
 import api from './index'
 
 const CONTRACT_BASE_URL = '/api/contract'
+const CONTRACT_CHAT_BASE_URL = '/api/chat/contract'
 
 // 전체 계약서 조회 (오른쪽)
 export const contractApi = {
+  // 계약 채팅방 URL로 이동
+  moveContractChat: async (chatRoomId) => {
+    try {
+      const response = await api.get(`${CONTRACT_CHAT_BASE_URL}/${chatRoomId}/moveContractChat`)
+      return response.data
+    } catch (error) {
+      console.error('계약 채팅방 이동 실패: ', error)
+      throw error
+    }
+  },
+
   getContractBasic: async (contractChatId) => {
     try {
       const response = await api.post(`${CONTRACT_BASE_URL}/${contractChatId}/getContract`)

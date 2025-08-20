@@ -71,6 +71,7 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useConfirmModal } from '@/composables/useConfirmModal'
 
 import BaseButton from '@/components/common/BaseButton.vue'
 import BasicInfoForm from '@/components/homes/homeupdate/BasicInfoForm.vue'
@@ -82,6 +83,7 @@ import { fetchListingById, updateListing } from '@/apis/listing.js'
 
 const route = useRoute()
 const router = useRouter()
+const { openConfirmModal } = useConfirmModal()
 const listingId = route.params.id
 
 const listing = ref({})
@@ -182,10 +184,13 @@ const updateListingData = async () => {
   }
 }
 
-const cancelUpdate = () => {
+const cancelUpdate = async () => {
   const hasChanges = JSON.stringify(listing.value) !== JSON.stringify(originalListing.value)
   if (hasChanges) {
-    const confirmed = confirm('작업 중인 내용이 있습니다. 정말 취소하시겠습니까?')
+    const confirmed = await openConfirmModal({
+      title: '수정 취소',
+      message: '작업 중인 내용이 있습니다. 정말 취소하시겠습니까?'
+    })
     if (!confirmed) return
   }
   router.push('/homes')

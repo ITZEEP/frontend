@@ -77,15 +77,6 @@ const updateField = (field, value) => {
     />
 
     <OCRFormField
-      :modelValue="modelValue.층수"
-      @update:modelValue="(value) => updateField('층수', value)"
-      label="층수"
-      :required="true"
-      :error="errors.층수"
-      :shake="shake"
-    />
-
-    <OCRFormField
       :modelValue="modelValue.사용승인일"
       @update:modelValue="(value) => updateField('사용승인일', value)"
       label="사용승인일"
@@ -104,11 +95,6 @@ const updateField = (field, value) => {
       />
     </div>
 
-    <OCRFormField
-      :modelValue="modelValue.발급일"
-      label="발급일"
-      :disabled="true"
-      :shake="false"
-    />
+    <OCRFormField :modelValue="modelValue.발급일" label="발급일" :disabled="true" :shake="false" />
   </OCRFormBox>
 </template>

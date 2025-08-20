@@ -37,11 +37,16 @@ class WebSocketService {
 
       this.isConnecting.value = true
 
-      const socket = new SockJS(import.meta.env.VITE_WS_URL || 'http://localhost:8080/ws')
+      // 개발 환경에서는 상대 경로 사용 (Vite proxy 활용)
+      const wsUrl = import.meta.env.DEV 
+        ? '/ws' 
+        : (import.meta.env.VITE_WS_URL || 'http://localhost:8080/ws')
+      console.log('WebSocket URL:', wsUrl)
+      const socket = new SockJS(wsUrl)
       this.stompClient = new Client({
         webSocketFactory: () => socket,
         reconnectDelay: 2000, // 재연결 지연 시간 단축
-        debug: (str) => console.log('[STOMP DEBUG]', str),
+        // debug: (str) => console.log('[STOMP DEBUG]', str),
         onConnect: (frame) => {
           console.log('STOMP 연결 성공:', frame)
           this.isConnected.value = true
@@ -82,48 +87,34 @@ class WebSocketService {
     })
   }
 
-  async sendMessage(destination, message, retryCount = 30) {
-    console.log('sendMessage 호출:', { destination, message })
-    console.log('STOMP 클라이언트 상태:', {
-      hasClient: !!this.stompClient,
-      isConnected: this.stompClient?.connected,
-      internalConnected: this.isConnected.value,
-      stompState: this.stompClient?.state,
-    })
-
-    // 내부 연결 상태와 STOMP 연결 상태를 모두 확인
-    if (!this.stompClient || (!this.stompClient.connected && !this.isConnected.value)) {
-      console.error('STOMP가 연결되지 않음')
-      return false
+  async sendMessage(destination, message, retryCount = 5) {
+    // STOMP 클라이언트가 없으면 연결 시도
+    if (!this.stompClient) {
+      await this.connect()
     }
 
-    // STOMP 상태가 CONNECTED가 아니면 재시도
-    if (this.stompClient.state !== 1 && retryCount > 0) {
-      // 1 = CONNECTED
-      console.warn(`STOMP 연결이 완전히 준비되지 않음. 재시도 대기... (남은 시도: ${retryCount})`)
-      await new Promise((resolve) => setTimeout(resolve, 200))
-      return this.sendMessage(destination, message, retryCount - 1)
-    } else if (this.stompClient.state !== 1) {
-      console.error('STOMP 연결 실패 - 재시도 횟수 초과')
-      return false
+    // 연결 상태 확인
+    const isReady = this.stompClient?.connected && this.isConnected.value
+
+    if (!isReady) {
+      if (retryCount > 0) {
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+        return this.sendMessage(destination, message, retryCount - 1)
+      } else {
+        console.error('STOMP 연결 실패 - 재시도 횟수 초과')
+        return false
+      }
     }
 
     try {
-      const payload = {
-        ...message,
-      }
-
-      console.log('전송할 페이로드:', payload)
       this.stompClient.publish({
         destination,
-        body: JSON.stringify(payload),
+        body: JSON.stringify(message),
       })
-      console.log('메시지 전송 성공')
       return true
     } catch (error) {
       console.error('메시지 전송 실패:', error)
       if (retryCount > 0) {
-        console.log(`메시지 전송 재시도... (남은 시도: ${retryCount})`)
         await new Promise((resolve) => setTimeout(resolve, 200))
         return this.sendMessage(destination, message, retryCount - 1)
       }
@@ -131,8 +122,8 @@ class WebSocketService {
     }
   }
 
-  sendChatMessage(chatRoomId, senderId, receiverId, content, type = 'TEXT', fileUrl = null) {
-    const success = this.sendMessage('/app/chat/send', {
+  async sendChatMessage(chatRoomId, senderId, receiverId, content, type = 'TEXT', fileUrl = null) {
+    const success = await this.sendMessage('/app/chat/send', {
       chatRoomId,
       senderId,
       receiverId,
@@ -163,8 +154,8 @@ class WebSocketService {
     })
   }
 
-  sendContractChatMessage(contractChatId, senderId, receiverId, content, type = 'TEXT') {
-    const success = this.sendMessage('/app/contract/chat/send', {
+  async sendContractChatMessage(contractChatId, senderId, receiverId, content, type = 'TEXT') {
+    const success = await this.sendMessage('/app/contract/chat/send', {
       contractChatId,
       senderId,
       receiverId,
@@ -196,16 +187,16 @@ class WebSocketService {
   }
 
   // 계약서 내보내기 관련 메서드
-  sendContractExportSignature(contractChatId, signatureData) {
-    return this.sendMessage(`/app/contract/${contractChatId}/export/signature`, signatureData)
+  async sendContractExportSignature(contractChatId, signatureData) {
+    return await this.sendMessage(`/app/contract/${contractChatId}/export/signature`, signatureData)
   }
 
-  sendContractExportPassword(contractChatId, passwordData) {
-    return this.sendMessage(`/app/contract/${contractChatId}/export/password`, passwordData)
+  async sendContractExportPassword(contractChatId, passwordData) {
+    return await this.sendMessage(`/app/contract/${contractChatId}/export/password`, passwordData)
   }
 
-  getContractExportStatus(contractChatId) {
-    return this.sendMessage(`/app/contract/${contractChatId}/export/status`, {})
+  async getContractExportStatus(contractChatId) {
+    return await this.sendMessage(`/app/contract/${contractChatId}/export/status`, {})
   }
 
   onMessage(topic, handler) {
@@ -245,8 +236,7 @@ class WebSocketService {
       const subscription = this.stompClient.subscribe(topic, (message) => {
         try {
           const data = JSON.parse(message.body)
-          const result = handler(data)
-          console.log('핸들러 호출 완료! 결과:', result)
+          handler(data)
         } catch (e) {
           console.error('파싱 실패:', e)
           console.error('Raw body:', message.body)

@@ -1,9 +1,17 @@
 <template>
-  <div class="flex gap-2 items-center">
+  <div :class="mobile ? 'flex flex-col gap-3' : 'flex gap-2 items-center'">
     <!-- 로그인 했을 때-->
     <template v-if="authStore.isLoggedIn">
-      <div class="flex items-center gap-2">
-        <div class="relative">
+      <div :class="mobile ? 'flex flex-col gap-3 w-full' : 'flex items-center gap-4'">
+        <p class="text-base font-medium">
+          <span class="text-yellow-primary">
+            👋 {{ authStore.user?.nickname || authStore.user?.name || '사용자' }}
+          </span>
+          <span class="text-gray-500">님 안녕하세요!</span>
+        </p>
+        
+        <!-- PC에서만 알림 버튼 표시 (모바일은 헤더에서 별도 처리) -->
+        <div v-if="!mobile" class="relative">
           <div
             class="w-10 h-10 rounded-full flex items-center justify-center cursor-pointer hover:bg-gray-warm-600 transition-all duration-300 alarm-toggle-button relative shadow-lg hover:shadow-xl"
             :class="{ shake: isShaking }"
@@ -26,7 +34,12 @@
             @notification-click="handleNotificationClick"
           />
         </div>
-        <BaseButton @click="router.push('/mypage')" variant="primary" class="rounded-md">
+        
+        <BaseButton 
+          @click="handleNavigate('/mypage')" 
+          variant="primary" 
+          :class="mobile ? 'w-full rounded-md' : 'rounded-md'"
+        >
           마이페이지
         </BaseButton>
       </div>
@@ -34,10 +47,18 @@
 
     <!-- 로그아웃 했을 때 -->
     <template v-else>
-      <BaseButton @click="router.push(accountMenus.signin.url)" class="w-fit" variant="outline">
+      <BaseButton 
+        @click="handleNavigate(accountMenus.signin.url)" 
+        :class="mobile ? 'w-full' : 'w-fit'" 
+        variant="outline"
+      >
         {{ accountMenus.signin.title }}
       </BaseButton>
-      <BaseButton @click="router.push(accountMenus.signup.url)" class="w-fit" variant="primary">
+      <BaseButton 
+        @click="handleNavigate(accountMenus.signup.url)" 
+        :class="mobile ? 'w-full' : 'w-fit'" 
+        variant="primary"
+      >
         {{ accountMenus.signup.title }}
       </BaseButton>
     </template>
@@ -90,9 +111,26 @@ import {
   markNotificationsAsRead,
 } from '@/fcm/fcmService'
 
+const props = defineProps({
+  mobile: {
+    type: Boolean,
+    default: false
+  }
+})
+
+const emit = defineEmits(['navigate'])
+
 const router = useRouter()
 const accountMenus = config.accountMenus
 const authStore = useAuthStore()
+
+// 네비게이션 핸들러
+const handleNavigate = (url) => {
+  router.push(url)
+  if (props.mobile) {
+    emit('navigate')
+  }
+}
 
 // 상태 관리
 const showDropdown = ref(false)

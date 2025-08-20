@@ -39,9 +39,7 @@ const fetchAnalysisHistory = async () => {
     isLoading.value = true
     error.value = null
     
-    console.log('분석 기록 조회 시작...')
     const response = await fraudApi.getRiskCheckList(1, 20) // 첫 페이지, 20개 조회
-    console.log('분석 기록 API 응답:', response)
     
     if (response && response.content) {
       // PageResponse의 content 직접 사용
@@ -53,14 +51,12 @@ const fetchAnalysisHistory = async () => {
         address: item.address || '',
         detailAddress: item.detailAddress || '',
         type: item.residenceType || '매물',
-        imageUrl: item.imageUrl || '',
+        image: item.imageUrl || '',  // PropertyItem은 image 필드를 사용
         checkedAt: item.checkedAt,
         riskCheckId: item.riskCheckId
       }))
-      console.log('변환된 분석 기록:', analysisHistory.value)
     } else {
       analysisHistory.value = []
-      console.log('분석 기록이 없습니다.')
     }
   } catch (err) {
     console.error('분석 기록 조회 실패:', err)
@@ -103,6 +99,11 @@ watch(() => props.isOpen, (newValue) => {
   }
 })
 
+const handleLogin = () => {
+  // 로그인 페이지로 이동
+  window.location.href = '/auth/signin'
+}
+
 const closeLoginModal = () => {
   showLoginModal.value = false
   modalStore.close()
@@ -130,7 +131,7 @@ const closeLoginModal = () => {
               <IconLock class="w-12 h-12 text-gray-400" />
             </div>
             <p class="text-gray-600 mb-4">로그인이 필요한 서비스입니다.</p>
-            <BaseButton @click="showLoginModal = true" variant="primary" size="md">
+            <BaseButton @click="handleLogin" variant="primary" size="md">
               로그인하기
             </BaseButton>
           </div>

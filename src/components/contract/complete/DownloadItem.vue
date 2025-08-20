@@ -2,7 +2,8 @@
   <button
     type="button"
     class="w-full flex items-center gap-4 rounded-xl border border-gray-100 bg-white px-4 py-3 text-left hover:bg-gray-50 transition"
-    @click="$emit('click')"
+    :disabled="disabled"
+    @click.stop="onClick"
   >
     <div
       class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 bg-gray-100 text-yellow-primary"
@@ -26,7 +27,9 @@ const props = defineProps({
   icon: { type: String, required: true },
   title: { type: String, required: true },
   description: { type: String, required: true },
+  disabled: { type: Boolean, default: false },
 })
+const emit = defineEmits(['activate'])
 
 const faClass = computed(() => {
   switch (props.icon) {
@@ -40,4 +43,9 @@ const faClass = computed(() => {
       return 'fa-file'
   }
 })
+
+const onClick = () => {
+  if (props.disabled) return
+  emit('activate')
+}
 </script>

@@ -6,17 +6,20 @@
       {{
         listing.leaseType === '전세'
           ? '전세 ' + formatNumber(listing.depositPrice) + '원'
-          : '월세 ' +
+          : '보증금 ' +
             formatNumber(listing.depositPrice) +
             '원' +
             ' / ' +
+            '월세 ' +
             formatNumber(listing.monthlyRent) +
             '원'
       }}
     </div>
 
+    <label class="text-gray-800">{{ listing.addr1 }}</label>
     <div class="text-yellow-500 font-semibold text-md">
-      관리비 {{ formatNumber(listing.maintenaceFee) }}원
+      관리비
+      {{ formatNumber(listing.maintenaceFee) }}원
     </div>
   </div>
 </template>

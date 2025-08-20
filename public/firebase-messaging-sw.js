@@ -183,7 +183,9 @@ if (typeof firebase !== 'undefined') {
   const messaging = firebase.messaging()
 
   messaging.onBackgroundMessage(async function (payload) {
-    console.log('[SW] 백그라운드 메시지 수신:', payload)
+    console.log('[SW] 🔔🔔🔔 백그라운드 메시지 수신:', payload)
+    console.log('[SW] 🔔 메시지 타입:', payload.data?.type)
+    console.log('[SW] 🔔 채팅방 ID:', payload.data?.chatRoomId)
 
     try {
       // 백그라운드 알림을 DB에 저장하지 않음 (백엔드에서 이미 저장됨)

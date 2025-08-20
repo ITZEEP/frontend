@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { authAPI, tokenUtils, userUtils } from '@/utils/auth'
+import { initializeFCM } from '@/fcm/fcmService'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
@@ -61,6 +62,16 @@ export const useAuthStore = defineStore('auth', () => {
         // 로그인 처리
         await loginWithToken(token, userInfo)
 
+        // FCM 알림 서비스 초기화
+        setTimeout(async () => {
+          try {
+            await initializeFCM()
+            console.log('✅ 로그인 후 FCM 알림 서비스 초기화 완료')
+          } catch (error) {
+            console.error('FCM 알림 서비스 초기화 실패:', error)
+          }
+        }, 1000)
+
         return { success: true }
       } else {
         throw new Error(response.data.message || '로그인 처리에 실패했습니다.')
@@ -77,6 +88,7 @@ export const useAuthStore = defineStore('auth', () => {
   const logout = async () => {
     try {
       isLoading.value = true
+
 
       // 서버에 로그아웃 요청 (선택적)
       try {

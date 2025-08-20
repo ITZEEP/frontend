@@ -1,33 +1,63 @@
 <template>
-  <div class="max-w-4xl mx-auto p-4 md:p-6">
-    <ImageGallery
-      v-if="images.length > 0"
-      :images="images"
-      :homeId="id"
-      :initialIsFavorite="isFavorite"
-    />
-
-    <div v-if="listing" class="mt-6 space-y-10">
-      <ListingBasicInfo :listing="listing" />
-      <RoomDetails :listing="listing" />
-
-      <TravelMap
-        :title="listing.residenceType + ' 매물 위치'"
-        :address="processedAddress"
-        class="rounded-md shadow-md"
-      />
-
-      <div class="w-full flex flex-col md:flex-row gap-4">
-        <BaseButton class="w-full" variant="primary" size="lg" @click="goToChat">
-          연락하기
-        </BaseButton>
-        <BaseButton class="w-full" variant="secondary" size="lg" @click="goRiskCheck">
-          <span class="w-full">사기위험도 분석</span>
-        </BaseButton>
-      </div>
+  <div>
+    <!-- 뒤로 가기 버튼 -->
+    <div class="max-w-4xl mx-auto px-4 md:px-6 py-2">
+      <button
+        @click="goBack"
+        class="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 19l-7-7 7-7"
+          />
+        </svg>
+      </button>
     </div>
 
-    <div v-else class="text-center text-gray-400 mt-10">매물을 찾을 수 없습니다.</div>
+    <!-- 이미지 갤러리 - 전체 화면 크기 (모바일에서만) -->
+    <div
+      class="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] md:w-full md:left-0 md:right-0 md:ml-0 md:mr-0 md:max-w-4xl md:mx-auto"
+    >
+      <ImageGallery
+        v-if="!isLoading && images.length > 0"
+        :images="images"
+        :homeId="id"
+        :initialIsFavorite="isFavorite"
+      />
+    </div>
+
+    <!-- 나머지 콘텐츠 - 적절한 여백으로 -->
+    <div class="max-w-4xl mx-auto px-4 md:px-6 my-6">
+      <!-- 로딩 상태 -->
+      <div v-if="isLoading" class="text-center text-gray-400 mt-10">불러오는 중입니다...</div>
+
+      <!-- 데이터 있음 -->
+      <div v-else-if="listing" class="mt-6 space-y-10">
+        <ListingBasicInfo :listing="listing" />
+        <RoomDetails :listing="listing" />
+
+        <TravelMap
+          :title="listing.residenceType + ' 매물 위치'"
+          :address="processedAddress"
+          class="rounded-md shadow-md"
+        />
+
+        <div class="w-full flex gap-3">
+          <BaseButton class="flex-1" variant="primary" size="md" @click="goToChat">
+            연락하기
+          </BaseButton>
+          <BaseButton class="flex-1" variant="secondary" size="md" @click="goRiskCheck">
+            사기위험도 분석
+          </BaseButton>
+        </div>
+      </div>
+
+      <!-- 데이터 없음 -->
+      <div v-else class="text-center text-gray-400 mt-10">매물을 찾을 수 없습니다.</div>
+    </div>
   </div>
 </template>
 
@@ -48,6 +78,7 @@ const route = useRoute()
 const router = useRouter()
 const id = Number(route.params.no)
 
+const isLoading = ref(true)
 const listing = ref(null)
 const images = ref([])
 const isFavorite = ref(false)
@@ -56,47 +87,31 @@ const processedAddress = ref('')
 onMounted(async () => {
   try {
     const data = await fetchListingById(id)
-    console.log('✅ 매물 상세 API 응답:', data)
-
     if (data) {
       listing.value = data
       images.value = data.imageUrls || []
-
-      if (data.addr1) {
-        processedAddress.value = data.addr1
-      } else {
-        processedAddress.value = data.addr2 || '주소정보 없음'
-      }
-
-      console.log('최종 가공된 주소:', processedAddress.value)
+      processedAddress.value = data.addr1 || data.addr2 || '주소정보 없음'
     }
   } catch (err) {
     console.error('매물 조회 실패:', err)
+  } finally {
+    isLoading.value = false
   }
 })
 
 const isCreatingChat = ref(false)
 
 const goToChat = async () => {
-  // props 대신 id 변수를 직접 사용합니다.
   if (!id) {
-    console.log('채팅방을 만들 수 없습니다 - 매물 ID 없음')
     alert('매물 정보를 찾을 수 없습니다. 페이지를 새로고침 해주세요.')
     return
   }
-
   isCreatingChat.value = true
   try {
-    console.log('Creating chat room with propertyId:', id)
     const response = await createChatRoom(id)
-    console.log('Chat room creation response:', response)
-
     if (response && response.data) {
-      // 채팅방 생성 성공 시 해당 채팅방으로 이동
-      console.log('Navigating to chat with roomId:', response.data)
       router.push(`/chat?roomId=${response.data}`)
     } else {
-      console.error('채팅방 생성 실패: 응답에 chatRoomId가 없습니다', response)
       alert('채팅방 생성에 실패했습니다. 다시 시도해주세요.')
     }
   } catch (error) {
@@ -109,5 +124,14 @@ const goToChat = async () => {
 
 function goRiskCheck() {
   router.push('/risk-check')
+}
+
+function goBack() {
+  // 이전 페이지가 있으면 뒤로 가고, 없으면 매물 목록으로
+  if (window.history.length > 1) {
+    router.go(-1)
+  } else {
+    router.push('/homes')
+  }
 }
 </script>

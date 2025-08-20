@@ -1,9 +1,9 @@
 // AI 버튼 규칙(콘텐츠/메타/senderId) 캡슐화
-import { computed } from 'vue'
+import { computed, unref } from 'vue'
 import { getAiButtonsForMessage, AI_SENDER } from '@/config/chat/aiUiRegistry'
 
 export function useChatAiButtons(currentStep, isOwnerFn) {
-  const stepNum = computed(() => Number(currentStep) || 3)
+  const stepNum = computed(() => Number(unref(currentStep)) || 3)
 
   const isAi = (m) =>
     [AI_SENDER.PLAIN, AI_SENDER.BUTTON, AI_SENDER.COMPLETE].includes(String(m?.senderId))

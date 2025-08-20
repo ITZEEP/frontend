@@ -1,9 +1,10 @@
-tjt
 <template>
-  <ChatLayout v-slot="{ selectedRoom }" :initial-room-id="initialRoomId">
-    <ChatRoom v-if="selectedRoom" :room="selectedRoom" />
-    <ChatPlaceholder v-else />
-  </ChatLayout>
+  <div class="h-[calc(100dvh-64px)]">
+    <ChatLayout class="h-full min-h-0" v-slot="{ selectedRoom }" :initial-room-id="initialRoomId">
+      <ChatRoom v-if="selectedRoom" :room="selectedRoom" />
+      <ChatPlaceholder v-else />
+    </ChatLayout>
+  </div>
 </template>
 
 <script setup>

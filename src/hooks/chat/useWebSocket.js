@@ -21,16 +21,16 @@ export function useWebSocket() {
     connectionStatus.value = 'disconnected'
   }
 
-  const sendMessage = (destination, message) => {
+  const sendMessage = async (destination, message) => {
     return websocketService.sendMessage(destination, message)
   }
 
-  const sendChatMessage = (chatRoomId, senderId, receiverId, content, type = 'TEXT') => {
+  const sendChatMessage = async (chatRoomId, senderId, receiverId, content, type = 'TEXT') => {
     return websocketService.sendChatMessage(chatRoomId, senderId, receiverId, content, type)
   }
 
   // 🔧 계약 채팅 메시지 전송 메서드 추가
-  const sendContractChatMessage = (
+  const sendContractChatMessage = async (
     contractChatId,
     senderId,
     receiverId,

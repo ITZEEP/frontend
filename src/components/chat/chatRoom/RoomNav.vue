@@ -1,35 +1,51 @@
 <template>
   <div class="bg-white border-b border-gray-200">
-    <!-- 기존 네비게이션 헤더 -->
-    <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-      <div class="flex items-center space-x-3"></div>
+    <!-- 모바일 최적화된 네비게이션 헤더 -->
+    <div class="flex items-center justify-between px-3 md:px-4 py-2 md:py-3 border-b border-gray-100">
+      <div class="flex items-center space-x-2 md:space-x-3">
+        <!-- 모바일 뒤로가기 버튼 -->
+        <button
+          @click="handleBack"
+          class="md:hidden p-2 -ml-2 rounded-full hover:bg-gray-100 transition-colors"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+        </button>
+      </div>
       <div class="flex items-center space-x-2">
-        <!-- 계약 작성 버튼 - 구매자에게만 보임 -->
-        <BaseButton v-if="isBuyer" @click="handleClickGoToContract" variant="gray">
-          계약서 작성하기
+        <!-- 계약 작성 버튼 - 구매자에게만 보임, 모바일 최적화 -->
+        <BaseButton 
+          v-if="isBuyer" 
+          @click="handleClickGoToContract" 
+          variant="gray"
+          class="text-xs md:text-sm px-3 md:px-4 py-1.5 md:py-2"
+        >
+          <span class="hidden md:inline">계약서 작성하기</span>
+          <span class="md:hidden">계약서</span>
         </BaseButton>
       </div>
     </div>
 
-    <!-- 매물 정보 섹션 -->
-    <div v-if="propertyInfo && propertyInfo.propertyAddress" class="px-4 py-3">
-      <div class="flex items-center space-x-3">
-        <!-- 매물 이미지 -->
+    <!-- 매물 정보 섹션 - 모바일 최적화 -->
+    <div v-if="propertyInfo && propertyInfo.propertyAddress" class="px-3 md:px-4 py-2 md:py-3">
+      <div class="flex items-center space-x-2 md:space-x-3">
+        <!-- 매물 이미지 - 모바일에서 작게 -->
         <div class="flex-shrink-0">
           <img
             :src="propertyInfo.propertyImageUrl"
             :alt="propertyInfo.propertyAddress"
-            class="w-12 h-12 rounded-lg object-cover border border-gray-200"
+            class="w-10 h-10 md:w-12 md:h-12 rounded-lg object-cover border border-gray-200"
             @error="handleImageError"
           />
         </div>
 
-        <!-- 매물 정보 -->
+        <!-- 매물 정보 - 모바일 폰트 크기 조정 -->
         <div class="flex-1 min-w-0">
-          <div class="text-sm font-medium text-gray-800 truncate">
+          <div class="text-xs md:text-sm font-medium text-gray-800 truncate">
             {{ propertyInfo.propertyAddress }}
           </div>
-          <div class="text-sm text-gray-600 mt-1">
+          <div class="text-xs md:text-sm text-gray-600 mt-0.5 md:mt-1">
             {{ propertyInfo.propertyTitle }}
           </div>
         </div>
@@ -67,6 +83,8 @@ const props = defineProps({
   },
 })
 
+const emit = defineEmits(['back'])
+
 const propertyInfo = ref(null)
 const loadingProperty = ref(false)
 
@@ -75,6 +93,11 @@ const loadingProperty = ref(false)
 const isBuyer = computed(() => {
   return props.currentUserId === props.room?.buyerId
 })
+
+// 뒤로가기 핸들러
+const handleBack = () => {
+  emit('back')
+}
 
 // 계약서 작성하러 가기
 const handleClickGoToContract = () => {

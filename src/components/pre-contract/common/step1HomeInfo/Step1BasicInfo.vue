@@ -22,15 +22,17 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { usePreContractStore } from '@/stores/preContract'
 import HomeInfoMain from './HomeInfoMain.vue'
 import HomeInfoDashboard from './HomeInfoDashboard.vue'
 import HomePhotos from './HomePhotos.vue'
 import HomeConfirm from './HomeConfirm.vue'
 import { fetchListingById } from '@/apis/listing' // ← 훅 import 경로 맞춰주세요
+import { getContractInfo } from '@/apis/contractChatApi'
 
 const route = useRoute()
+const router = useRouter()
 const store = usePreContractStore()
 
 const loading = ref(false)
@@ -52,21 +54,50 @@ const getMaintenanceNameById = (id) => {
 }
 
 async function load() {
-  const homeId = route.query?.homeId
+  let homeId = route.query?.homeId
+
+  // 1) homeId 쿼리가 없으면 contractChatId로 계약정보 조회해서 보강
   if (!homeId) {
-    error.value = 'homeId 쿼리가 없습니다.'
-    return
+    const contractChatId = route.params?.contractChatId || route.params?.id || route.params?.chatId
+
+    if (!contractChatId) {
+      error.value = 'contractChatId 파라미터가 없습니다.'
+      return
+    }
+
+    try {
+      const info = await getContractInfo(contractChatId)
+      if (info?.success && info.data?.homeId) {
+        homeId = String(info.data.homeId)
+
+        // 2) URL에 homeId 쿼리 주입 (뒤로 가기 동작도 자연스럽게)
+        const nextQuery = { ...route.query, homeId }
+        if (String(route.query?.homeId || '') !== String(homeId)) {
+          await router.replace({
+            path: route.path,
+            query: nextQuery,
+          })
+        }
+      } else {
+        error.value = info?.message || '계약 정보에서 homeId를 찾을 수 없습니다.'
+        return
+      }
+    } catch (e) {
+      console.error(e)
+      error.value = '계약 정보를 불러오는 중 오류가 발생했습니다.'
+      return
+    }
   }
 
+  // 3) 매물 정보 로드
   loading.value = true
   error.value = ''
   try {
     const data = await fetchListingById(homeId)
-    // API → UI 매핑
     view.value = mapApiToView(data)
 
-    // 스토어/로컬스토리지에 임대 형태 저장 (하위에서 사용한다면)
-    const leaseType = view.value?.home?.lease_type // 'JEONSE'/'WOLSE'
+    // 스토어/로컬스토리지 저장
+    const leaseType = view.value?.home?.lease_type
     if (leaseType) {
       localStorage.setItem('rent_type', leaseType)
       store.setLeaseType(leaseType)

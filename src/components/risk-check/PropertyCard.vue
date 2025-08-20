@@ -433,7 +433,7 @@ const closeLoginModal = () => {
                     address: property.address,
                     detailAddress: property.detailAddress,
                     type: property.name,
-                    imageUrl: property.image,
+                    image: property.image,
                     price: property.price,
                   }"
                   :selected="selectedPropertyId === property.id"

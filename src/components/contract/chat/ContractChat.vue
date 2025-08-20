@@ -24,8 +24,15 @@
           v-for="(m, i) in mergedMessages"
           :key="m.id || m._localId || m.tempId || m.sendTime || i"
         >
+          <!-- 법령 카드 (senderId: 9996) -->
+          <LawTipMessage
+            v-if="String(m.senderId) === '9996'"
+            :raw="m.content"
+            :sentAt="m.sendTime"
+          />
+
           <AiChatMessage
-            v-if="isAi(m)"
+            v-else-if="isAi(m)"
             :message="m.content"
             :buttons="visibleButtons(m)"
             :sentAt="m.sendTime"
@@ -40,6 +47,7 @@
             :myUserId="currentUserId"
             :isRead="m.isRead"
             :sendStatus="getMessageStatus(m)"
+            :hideIcon="String(m.senderId) === '9996'"
           />
         </template>
 
@@ -50,7 +58,7 @@
     </div>
 
     <!-- 스텝 별 시나리오 메시지 -->
-    <StepContainer class="shrink-0" />
+    <StepContainer class="shrink-0" @owner-edit-request="onOwnerEditRequest" />
 
     <!-- 입력 -->
     <ContractChatInput
@@ -64,6 +72,8 @@
       @typing="() => {}"
       @setStartPoint="handleSetStartPoint"
       @exportMessages="handleExportMessages"
+      @owner-edit-request="onOwnerEditRequest"
+      @owner-edit-failed="onOwnerEditFailed"
       class="shrink-0"
     />
 
@@ -72,15 +82,31 @@
     </div>
 
     <LoadingOverlay
-      :loading="isLoadingOverlayVisible"
+      :loading="amOwner && isLoadingOverlayVisible"
+      message="임대인 및 AI 응답 대기중 ..."
+      sub-message="임대인이 수락하면 AI 분석 요청됩니다. 잠시만 기다려주세요"
+    />
+    <LoadingOverlay
+      :loading="!amOwner && isLoadingOverlayVisible"
       message="AI가 특약 수정 중..."
       sub-message="잠시만 기다려주세요"
     />
+
+    <div
+      v-if="signingCountdown > 0"
+      class="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999]"
+    >
+      <div class="bg-white rounded-xl p-6 shadow-xl text-center w-[320px]">
+        <p class="text-lg font-semibold mb-2">임차인이 최종 확정했어요</p>
+        <p class="text-sm text-gray-600 mb-4">서명 페이지로 이동합니다…</p>
+        <div class="text-4xl font-bold text-yellow-primary">{{ signingCountdown }}</div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, watch, nextTick, onUnmounted } from 'vue'
 import { useRoundQuerySync } from '@/composables/chat/useRoundQuerySync'
 import { useChatBasics } from '@/composables/chat/useChatBasics'
 import { useChatMessages } from '@/composables/chat/useChatMessages'
@@ -92,6 +118,7 @@ import StepContainer from './StepContainer.vue'
 
 import LoadingOverlay from '@/components/common/LoadingOverlay.vue'
 import AiChatMessage from './messages/AiChatMessage.vue'
+import LawTipMessage from './messages/LawTipMessage.vue'
 import UserChatMessage from './messages/UserChatMessage.vue'
 import ContractChatInput from './ContractChatInput.vue'
 
@@ -123,6 +150,8 @@ const modalStore = useModalStore()
 const store = useSpecialContractStore()
 const route = useRoute()
 const router = useRouter()
+
+const stepFromUrl = computed(() => Number(route.query.step ?? props.currentStep ?? 3))
 
 const inflightSync = ref(false)
 let syncTimer = null
@@ -161,7 +190,7 @@ const {
 } = useContractChat(actualContractChatId, currentUserId, contractData)
 
 // 5) AI 버튼 규칙
-const { stepNum, isAi, aiButtons } = useChatAiButtons(props.currentStep, () => isOwner.value)
+const { stepNum, isAi, aiButtons } = useChatAiButtons(stepFromUrl, () => isOwner.value)
 
 // UI 상태
 const isLoadingOverlayVisible = ref(false)
@@ -184,6 +213,7 @@ const getLoadingMessage = () => {
 }
 
 const getMessageSenderName = (m) => {
+  if (String(m.senderId) === '9996') return '법령 정보'
   if (String(m.senderId) === String(currentUserId.value)) return '나'
   const { ownerId, buyerId } = contractData.value || {}
   if (String(m.senderId) === String(ownerId)) return '소유자'
@@ -230,6 +260,21 @@ const respondGoToStep2 = async (accepted) => {
       console.warn('postGoToStep2 실패:', res?.message)
       return
     }
+
+    if (accepted) {
+      alert(
+        amOwner.value
+          ? '임대인이 2단계 진행을 수락했습니다.'
+          : '임차인이 2단계 진행을 수락했습니다.',
+      )
+    } else {
+      alert(
+        amOwner.value
+          ? '임대인이 2단계 진행을 거절했습니다.'
+          : '임차인이 2단계 진행을 거절했습니다.',
+      )
+    }
+
     await loadMessages(id)
     nextTick(forceScrollToBottom)
   } catch (e) {
@@ -329,6 +374,23 @@ const responseFinalConfirm = async (accepted) => {
   if (res?.success) store.bumpFinalContractVersion()
 }
 
+const onOwnerEditRequest = () => {
+  if (amOwner.value) isLoadingOverlayVisible.value = true
+}
+const onOwnerEditFailed = () => {
+  if (amOwner.value) isLoadingOverlayVisible.value = false
+}
+
+const RE_ROUND_DONE = /(\d+)\s*차\s*수정이\s*완료되었습니다!.*\s*협상\s*라운드가\s*시작됩니다\./
+
+const RE_TENANT_ACCEPT_MOD =
+  /임차인이\s*특약\s*(\d+)\s*번\s*수정\s*요청을\s*수락했습니다\.\s*특약이\s*변경되었습니다\./
+const RE_TENANT_ACCEPT_DEL =
+  /임차인이\s*특약\s*(\d+)\s*번\s*삭제\s*요청을\s*수락했습니다\.\s*특약이\s*삭제되었습니다\./
+
+const RE_MORE_REQUEST = /(임차인|임대인).?이?\s*특약\s*대화를\s*더\s*요청했습니다\.?/
+const RE_START_CLAUSE_TALK = /(\d+)\s*번\s*특약에\s*대한\s*대화를\s*시작합니다!?/
+
 // 4단계 적법성 검토
 const responseFinal = async (accepted) => {
   const id = String(actualContractChatId.value)
@@ -346,6 +408,26 @@ const responseFinal = async (accepted) => {
     console.error('[ContractChat] 최종 확정 응답 실패:', e)
     alert('최종 확정 응답 중 오류가 발생했습니다.')
   }
+}
+
+const signingCountdown = ref(0)
+let signingTimer = null
+
+// 이 부분 계약서\s*서명하러\s*갈께요!?/ 만 남도록 수정할 예정
+const RE_TENANT_FINAL_ACCEPT =
+  /임차인이\s*최종\s*계약서를\s*수락했습니다!\s*계약서\s*서명하러\s*갈께요!?/
+
+const startSigningCountdown = (sec = 3) => {
+  if (signingTimer) clearInterval(signingTimer)
+  signingCountdown.value = sec
+  signingTimer = setInterval(() => {
+    signingCountdown.value -= 1
+    if (signingCountdown.value <= 0) {
+      clearInterval(signingTimer)
+      signingTimer = null
+      router.push(`/contract/complete/${String(actualContractChatId.value)}`)
+    }
+  }, 1000)
 }
 
 const dispatchAction = createActionDispatchers({
@@ -378,47 +460,40 @@ const handleAiAction = (payload) => {
 
 // 전송
 const sendMessageUi = async (content, callback) => {
-  console.log('📨 ContractChat: 메시지 전송 요청:', content)
-
   if (!isInputReady.value) {
     const result = { success: false, error: '채팅방이 준비되지 않았습니다.' }
-    if (callback) callback(result)
+    callback?.(result)
     return result
   }
 
   try {
-    // useContractChat의 sendContractMessage 호출
-    const result = sendContractMessage(content, 'TEXT')
+    // 서버 전송 (실패 시 throw)
+    await sendContractMessage(content, 'TEXT')
 
-    console.log('📤 ContractChat: 전송 결과:', result)
+    // ✅ 낙관적 업데이트: 즉시 로컬에 메시지 추가
+    hookMessages.value.push({
+      id: Date.now(), // 임시 키
+      _localId: (crypto?.randomUUID && crypto.randomUUID()) || `local-${Date.now()}`,
+      senderId: currentUserId.value,
+      receiverId: contractReceiverId.value,
+      content,
+      sendTime: new Date().toISOString(),
+      type: 'TEXT',
+      isRead: false,
+    })
 
-    // 🔧 전송 성공한 경우에만 화면에 메시지 추가
-    if (result) {
-      hookMessages.value.push({
-        id: Date.now(),
-        senderId: currentUserId.value,
-        receiverId: contractReceiverId.value,
-        content,
-        sendTime: new Date().toISOString(),
-        type: 'TEXT',
-        isRead: false,
-      })
-      nextTick(forceScrollToBottom)
-    } else {
-      console.warn('메시지 전송 실패:', result?.error || '알 수 없는 오류')
-    }
+    nextTick(forceScrollToBottom)
 
-    // 🔧 콜백으로 결과 전달
-    if (callback) callback(result)
-    return result
+    const ok = { success: true }
+    callback?.(ok)
+    return ok
   } catch (error) {
-    console.error('계약 메시지 전송 중 오류:', error)
-    const errorResult = {
+    const err = {
       success: false,
-      error: error.message || '메시지 전송 중 오류가 발생했습니다.',
+      error: error?.message || '메시지 전송 중 오류가 발생했습니다.',
     }
-    if (callback) callback(errorResult)
-    return errorResult
+    callback?.(err)
+    return err
   }
 }
 
@@ -480,7 +555,7 @@ const mergedMessages = computed(() => {
 
   const map = new Map()
   a.forEach((m, i) => map.set(keyOf(m, i), m))
-  b.forEach((m, i) => map.set(keyOf(m, i + 10000), m))
+  b.forEach((m, i) => map.set(keyOf(m, i, 10000), m))
 
   const arr = [...map.values()]
   arr.sort((x, y) => tsOf(x, 0) - tsOf(y, 0))
@@ -495,7 +570,7 @@ const isNewerThanApi = (live) => {
   return liveTs > apiTs
 }
 
-// 단일 디바운스 + 중복 방지
+// 단일 디바운스 중복 방지
 const scheduleSync = () => {
   const id = actualContractChatId.value
   if (!id) return
@@ -566,14 +641,28 @@ const visibleButtons = (message) => {
   return btns
 }
 
+onMounted(() => {
+  // 혹시 남아있던 타이머 정리
+  if (signingTimer) clearInterval(signingTimer)
+})
+onUnmounted(() => {
+  if (signingTimer) clearInterval(signingTimer)
+})
+
 watch(
   latestMsg,
   (m) => {
     if (!m) return
     const sid = String(m.senderId)
-    if (sid !== '9998' && sid !== '9999') return
-
     const t = normalizeText(m.content)
+
+    // ✅ 발신자와 무관하게 로딩 해제 트리거 우선 처리
+    if (RE_MORE_REQUEST.test(t) || RE_START_CLAUSE_TALK.test(t)) {
+      isLoadingOverlayVisible.value = false
+    }
+
+    // ⬇️ 아래부터는 AI 메시지에만 적용되는 기존 단계 전환/동기화 로직 유지
+    if (sid !== '9998' && sid !== '9999') return
 
     // --- 1단계 감지 ---
     if (t.includes(`사전 조사를 토대로`)) {
@@ -605,6 +694,15 @@ watch(
       return
     }
 
+    // 2) 임차인이 수락 → AI(9998)가 라운드 시작 알림을 보냄
+    if (amOwner.value && sid === '9998' && RE_ROUND_DONE.test(t)) {
+      isLoadingOverlayVisible.value = false
+    }
+
+    if (RE_TENANT_ACCEPT_MOD.test(t) || RE_TENANT_ACCEPT_DEL.test(t)) {
+      store.bumpFinalContractVersion()
+    }
+
     // --- 특약 수정 요청 허용 트리거 감지 ---
     if (t.includes('위 문제점들을 검토하시고 필요시 임대인께서 수정 요청을 해주세요')) {
       try {
@@ -615,6 +713,15 @@ watch(
       if (store && 'allowOwnerOngoingEdit' in store) {
         store.allowOwnerOngoingEdit = true
       }
+    }
+
+    // --- 4단계 감지 ---
+    if (RE_TENANT_FINAL_ACCEPT.test(t)) {
+      // 중복 실행 방지
+      if (signingCountdown.value <= 0) {
+        startSigningCountdown(3)
+      }
+      return
     }
   },
   { immediate: true },
@@ -697,6 +804,13 @@ watch(
     }
   },
   { immediate: false },
+)
+
+watch(
+  () => store.currentRound,
+  () => {
+    isLoadingOverlayVisible.value = false
+  },
 )
 </script>
 

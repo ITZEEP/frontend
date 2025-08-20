@@ -148,6 +148,7 @@
         type="date"
         class="border rounded p-2 w-full max-w-xs"
         :value="form.buildDate"
+        :max="today"
         @input="handleChange('buildDate', $event.target.value)"
       />
     </div>
@@ -172,7 +173,7 @@
       </div>
     </fieldset>
 
-    <fieldset class="rounded-md p-4">
+    <fieldset class="rounded-md">
       <OptionChecklist
         :modelValue="{
           facilityItemIds: form.facilityItemIds,
@@ -198,6 +199,9 @@ const props = defineProps({
 const emit = defineEmits(['update:form'])
 
 const { form } = toRefs(props)
+
+// 오늘 날짜 (YYYY-MM-DD 형식)
+const today = new Date().toISOString().split('T')[0]
 
 const handleChange = (key, value) => {
   emit('update:form', {
@@ -234,5 +238,6 @@ input[type='number'].no-spin::-webkit-outer-spin-button {
 
 input[type='number'].no-spin {
   -moz-appearance: textfield;
+  appearance: textfield;
 }
 </style>

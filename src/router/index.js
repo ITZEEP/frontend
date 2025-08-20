@@ -13,6 +13,14 @@ import mypageRoutes from './mypage'
 import TestPdfViewer from '../pages/TestPdfViewer.vue'
 import TestPdfDebug from '../pages/TestPdfDebug.vue'
 
+// Error pages
+import NotFoundPage from '../pages/error/NotFoundPage.vue'
+import UnauthorizedPage from '../pages/error/UnauthorizedPage.vue'
+import ServerErrorPage from '../pages/error/ServerErrorPage.vue'
+
+// Guards
+import { authGuard } from './guards'
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -25,12 +33,19 @@ const router = createRouter({
     ...riskCheckRoutes,
     ...chat,
     ...mypageRoutes,
+    
+    // Error pages
+    { path: '/401', name: 'unauthorized', component: UnauthorizedPage },
+    { path: '/500', name: 'server-error', component: ServerErrorPage },
+    { path: '/:pathMatch(.*)*', name: 'not-found', component: NotFoundPage },
   ],
 })
 
-// 인증이 필요한 라우트에 대한 네비게이션 가드
+// 전역 네비게이션 가드
+router.beforeEach(authGuard)
+
+// 계약서 내보내기 특별 라우트 접근 제어
 router.beforeEach(async (to, from, next) => {
-  // 계약서 내보내기 특별 라우트 접근 제어
   if (to.name === 'ContractExportTest') {
     try {
       // 토큰 확인

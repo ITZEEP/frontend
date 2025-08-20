@@ -1,5 +1,9 @@
 <template>
-  <section class="w-screen min-h-screen bg-yellow-50">
+  <!-- 모바일 차단 -->
+  <MobileNotSupported v-if="isMobile" />
+  
+  <!-- 데스크톱 컨텐츠 -->
+  <section v-else class="w-screen min-h-screen bg-yellow-50">
     <div class="w-full h-full px-4 sm:px-8 md:px-16 lg:px-24 xl:px-36 py-8 flex flex-col gap-8">
       <header class="flex flex-col gap-2">
         <h1 class="text-gray-warm-700 font-bold text-xl">협업 계약서 작성</h1>
@@ -25,13 +29,29 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import ContractChat from '@/components/contract/chat/ContractChat.vue'
 import StepContentWrapper from '@/components/contract/form/StepContentWrapper.vue'
 import ContractPresence from '@/components/contract/chat/ContractPresence.vue'
+import MobileNotSupported from '@/components/common/MobileNotSupported.vue'
 
 const route = useRoute()
+const isMobile = ref(false)
+
+const checkMobile = () => {
+  isMobile.value = window.innerWidth < 640
+}
+
+onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
+})
+
 const roomId = computed(() => route.params.id)
 
 const step = computed(() => {

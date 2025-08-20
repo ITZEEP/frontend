@@ -114,6 +114,7 @@
         type="date"
         class="border rounded p-2 w-full max-w-xs"
         :value="form.buildDate"
+        :max="today"
         @input="handleChange('buildDate', $event.target.value)"
       />
     </div>
@@ -164,6 +165,9 @@ const props = defineProps({
 const emit = defineEmits(['update:form'])
 
 const { form } = toRefs(props)
+
+// 오늘 날짜 (YYYY-MM-DD 형식)
+const today = new Date().toISOString().split('T')[0]
 
 const handleChange = (key, value) => {
   const updatedValue = typeof value === 'number' && isNaN(value) ? 0 : value

@@ -136,12 +136,17 @@ export const useMyPageStore = defineStore('mypage', () => {
   // 매물 삭제
   const deleteProperty = async (propertyId) => {
     try {
+      console.log('Store: 매물 삭제 요청 - propertyId:', propertyId)
       const response = await mypageAPI.deleteProperty(propertyId)
       if (response.success) {
-        // 목록에서 제거
-        properties.value = properties.value.filter((p) => p.id !== propertyId)
+        // 목록에서 제거 (propertyId 또는 id로 필터링)
+        properties.value = properties.value.filter((p) => 
+          (p.propertyId !== propertyId) && (p.id !== propertyId)
+        )
         summary.value.propertyCount--
+        console.log('Store: 매물 삭제 성공')
       }
+      return response
     } catch (error) {
       console.error('Delete property error:', error)
       throw error

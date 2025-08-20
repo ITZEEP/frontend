@@ -7,7 +7,8 @@
         icon="pdf"
         title="PDF 다운로드"
         description="계약서를 PDF로 저장"
-        @click="handleDownload"
+        :disabled="isDownloading"
+        @activate="handleDownload"
       />
       <!-- <DownloadItem
         icon="email"
@@ -109,8 +110,13 @@ const contractPassword = ref('')
 const emailAddress = ref('')
 const currentAction = ref('')
 
+const isDownloading = ref(false)
+
 // PDF 다운로드
 const handleDownload = async () => {
+  if (isDownloading.value) return
+  isDownloading.value = true
+
   if (props.finalPdfUrl) {
     // 서명된 최종 PDF 다운로드 (생년월일로 암호화)
     try {
@@ -138,6 +144,8 @@ const handleDownload = async () => {
     } catch (error) {
       console.error('다운로드 실패:', error)
       alert('다운로드에 실패했습니다.')
+    } finally {
+      isDownloading.value = false
     }
   } else {
     // 미완성 PDF 다운로드 (암호 필요)
@@ -147,10 +155,10 @@ const handleDownload = async () => {
 }
 
 // 이메일 전송
-const handleEmail = () => {
-  currentAction.value = 'email'
-  showEmailModal.value = true // 바로 이메일 모달 표시
-}
+// const handleEmail = () => {
+//   currentAction.value = 'email'
+//   showEmailModal.value = true // 바로 이메일 모달 표시
+// }
 
 // 암호 확인
 const confirmPassword = async () => {
@@ -169,6 +177,9 @@ const confirmPassword = async () => {
 
 // PDF 다운로드 실행
 const downloadPDF = async () => {
+  if (isDownloading.value) return
+  isDownloading.value = true
+
   try {
     const response = await downloadContractPDF(props.contractId, {
       contractPassword: contractPassword.value,
@@ -191,6 +202,8 @@ const downloadPDF = async () => {
   } catch (error) {
     console.error('다운로드 실패:', error)
     alert('다운로드에 실패했습니다. 암호를 확인해주세요.')
+  } finally {
+    isDownloading.value = false
   }
 }
 

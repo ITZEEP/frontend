@@ -159,7 +159,7 @@ const removeMortgagee = (index) => {
           + 근저당권 추가
         </button>
       </div>
-      
+
       <div v-if="modelValue.근저당권목록 && modelValue.근저당권목록.length > 0" class="space-y-4">
         <div
           v-for="(mortgagee, index) in modelValue.근저당권목록"
@@ -169,7 +169,7 @@ const removeMortgagee = (index) => {
           <div class="flex items-center justify-between mb-3">
             <h4 class="text-sm font-medium text-gray-700">{{ mortgagee.순위 }}순위</h4>
             <button
-              v-if="modelValue.근저당권목록.length > 1"
+              v-if="modelValue.근저당권목록.length > 0"
               type="button"
               @click="removeMortgagee(index)"
               class="text-sm text-red-600 hover:text-red-700"
@@ -177,7 +177,7 @@ const removeMortgagee = (index) => {
               삭제
             </button>
           </div>
-          
+
           <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
             <OCRFormField
               :modelValue="mortgagee.채권최고액"
@@ -187,7 +187,7 @@ const removeMortgagee = (index) => {
               :error="errors[`근저당권목록_${index}_채권최고액`]"
               :shake="shake"
             />
-            
+
             <OCRFormField
               :modelValue="mortgagee.채무자"
               @update:modelValue="(value) => updateMortgageeList(index, '채무자', value)"
@@ -195,7 +195,7 @@ const removeMortgagee = (index) => {
               :error="errors[`근저당권목록_${index}_채무자`]"
               :shake="shake"
             />
-            
+
             <OCRFormField
               :modelValue="mortgagee.근저당권자"
               @update:modelValue="(value) => updateMortgageeList(index, '근저당권자', value)"
@@ -207,8 +207,11 @@ const removeMortgagee = (index) => {
           </div>
         </div>
       </div>
-      
-      <div v-else class="text-sm text-gray-500 text-center py-4 bg-gray-50 rounded-lg border border-gray-200">
+
+      <div
+        v-else
+        class="text-sm text-gray-500 text-center py-4 bg-gray-50 rounded-lg border border-gray-200"
+      >
         근저당권 정보가 없습니다. 위의 '근저당권 추가' 버튼을 클릭하여 추가해주세요.
       </div>
     </div>
@@ -239,11 +242,6 @@ const removeMortgagee = (index) => {
       </div>
     </div>
 
-    <OCRFormField
-      :modelValue="modelValue.발급일"
-      label="발급일"
-      :disabled="true"
-      :shake="false"
-    />
+    <OCRFormField :modelValue="modelValue.발급일" label="발급일" :disabled="true" :shake="false" />
   </OCRFormBox>
 </template>

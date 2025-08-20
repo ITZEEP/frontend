@@ -10,12 +10,12 @@
   </div>
 
   <!--  사용자 정보가 로드된 후에만 채팅방 컴포넌트 렌더링 -->
-  <div v-else class="h-full flex flex-col">
+  <div v-else class="h-full min-h-0 flex flex-col">
     <!-- 상단 헤더 -->
-    <RoomNav :room="room" :current-user-id="currentUserId" />
+    <RoomNav :room="room" :current-user-id="currentUserId" @back="handleBackClick" />
 
-    <!-- 채팅 메시지 영역 -->
-    <div class="flex-1 p-4 bg-gray-50 chat-messages-container" ref="messagesContainer">
+    <!-- 채팅 메시지 영역 (카카오톡 스타일 배경) -->
+    <div class="flex-1 min-h-0 overflow-y-auto p-4 kakao-chat-bg" ref="messagesContainer">
       <div v-if="loadingMessages" class="text-center text-gray-500">메시지 로딩 중...</div>
 
       <div v-else-if="messagesError" class="text-center text-red-500">
@@ -27,14 +27,15 @@
         <div
           v-for="message in apiMessages"
           :key="'api-' + message.id"
-          class="mb-4 message-item"
-          :class="{ 'text-right': isMyMessage(message) }"
+          class="mb-3 message-item flex"
+          :class="{ 'justify-end': isMyMessage(message), 'justify-start': !isMyMessage(message) }"
         >
+          <!-- 카카오톡 스타일 메시지 버블 -->
           <div
-            class="inline-block max-w-xs lg:max-w-md px-4 py-2 rounded-lg break-words"
+            class="inline-block max-w-[70%] md:max-w-xs lg:max-w-md px-3 py-2 break-words kakao-message"
             :class="{
-              'bg-yellow-primary text-white': isMyMessage(message),
-              'bg-white text-gray-800 border': !isMyMessage(message),
+              'kakao-message-mine': isMyMessage(message),
+              'kakao-message-other': !isMyMessage(message),
             }"
           >
             <!-- 텍스트 메시지 -->
@@ -44,8 +45,8 @@
 
             <div v-else-if="message.type === 'URLLINK'">
               <BaseButton
-                :disabled="isMyMessage(message)"
-                @click="!isMyMessage(message) && handleUrlLinkClick(message)"
+                :disabled="!isClickableUrlButton(message)"
+                @click="isClickableUrlButton(message) && handleUrlLinkClick(message)"
                 class="disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {{ preContractButtonLabel(message) }}
@@ -91,21 +92,35 @@
               </div>
             </div>
 
-            <div v-else-if="message.type === 'CONTRACT_REQUEST'">
-              <BaseButton @click="handleAcceptContract">계약 요청 수락하기</BaseButton>
-              <BaseButton>거절</BaseButton>
-            </div>
-
-            <div class="text-xs mt-1 opacity-70 flex justify-between items-center">
-              <span>{{ formatMessageTime(message.sendTime) }}</span>
-              <span v-if="isMyMessage(message) && message.isRead" class="text-white ml-2"
-                >읽음</span
+            <div v-else-if="message.type === 'CONTRACT_REQUEST'" class="flex flex-col gap-2">
+              <BaseButton
+                variant="outline"
+                :disabled="isMyMessage(message) || acceptBusy"
+                @click="!isMyMessage(message) && handleAcceptContract()"
+                class="disabled:opacity-50 disabled:cursor-not-allowed"
               >
+                계약 요청 수락하기
+              </BaseButton>
+
+              <BaseButton
+                variant="outline"
+                :disabled="isMyMessage(message) || rejectBusy"
+                @click="!isMyMessage(message) && handleRejectContract()"
+                class="disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                계약 요청 거절하기
+              </BaseButton>
             </div>
 
+            <!-- 시간 표시 (카카오톡 스타일) -->
+            <div class="text-[10px] mt-1 opacity-60">
+              {{ formatMessageTime(message.sendTime) }}
+              <span v-if="isMyMessage(message) && message.isRead" class="ml-1">읽음</span>
+            </div>
+            <!--
             <BaseButton v-if="isSuccessBuildContract" @click="handleGoToContractRoom"
               >계약서 작성하러 가기</BaseButton
-            >
+            > -->
           </div>
         </div>
 
@@ -113,14 +128,15 @@
         <div
           v-for="(message, index) in webSocketMessages"
           :key="'ws-' + (message.id || message.sendTime || index)"
-          class="mb-4 message-item"
-          :class="{ 'text-right': isMyMessage(message) }"
+          class="mb-3 message-item flex"
+          :class="{ 'justify-end': isMyMessage(message), 'justify-start': !isMyMessage(message) }"
         >
+          <!-- 카카오톡 스타일 메시지 버블 -->
           <div
-            class="inline-block max-w-xs lg:max-w-md px-4 py-2 rounded-lg break-words"
+            class="inline-block max-w-[70%] md:max-w-xs lg:max-w-md px-3 py-2 break-words kakao-message"
             :class="{
-              'bg-yellow-primary text-white': isMyMessage(message),
-              'bg-white text-gray-800 border': !isMyMessage(message),
+              'kakao-message-mine': isMyMessage(message),
+              'kakao-message-other': !isMyMessage(message),
             }"
           >
             <!-- 텍스트 메시지 -->
@@ -138,9 +154,24 @@
               </BaseButton>
             </div>
 
-            <div v-else-if="message.type === 'CONTRACT_REQUEST'">
-              <BaseButton @click="handleAcceptContract">계약 요청 수락하기</BaseButton>
-              <BaseButton>거절</BaseButton>
+            <div v-else-if="message.type === 'CONTRACT_REQUEST'" class="flex flex-col gap-2">
+              <BaseButton
+                variant="outline"
+                :disabled="isMyMessage(message) || acceptBusy"
+                @click="!isMyMessage(message) && handleAcceptContract()"
+                class="disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                계약 요청 수락하기
+              </BaseButton>
+
+              <BaseButton
+                variant="outline"
+                :disabled="isMyMessage(message) || rejectBusy"
+                @click="!isMyMessage(message) && handleRejectContract()"
+                class="disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                계약 요청 거절하기
+              </BaseButton>
             </div>
             <!-- 파일 메시지 -->
             <div v-else-if="message.type === 'FILE'" class="space-y-2">
@@ -182,9 +213,10 @@
               </div>
             </div>
 
-            <div class="text-xs mt-1 opacity-70 flex justify-between items-center">
-              <span>{{ formatMessageTime(message.sendTime) }}</span>
-              <span v-if="isMyMessage(message) && message.isRead" class="text-blue-300">읽음</span>
+            <!-- 시간 표시 (카카오톡 스타일) -->
+            <div class="text-[10px] mt-1 opacity-60">
+              {{ formatMessageTime(message.sendTime) }}
+              <span v-if="isMyMessage(message) && message.isRead" class="ml-1">읽음</span>
             </div>
           </div>
         </div>
@@ -199,7 +231,12 @@
     </div>
 
     <!-- 입력창 -->
-    <ChatInput @sendMessage="sendMessage" :chatRoomId="chatRoomId" :receiverId="getOtherUserId()" />
+    <ChatInput
+      class="shrink-0 border-t bg-white"
+      @sendMessage="sendMessage"
+      :chatRoomId="chatRoomId"
+      :receiverId="getOtherUserId()"
+    />
 
     <!-- 이미지 확대 모달 -->
     <div
@@ -547,6 +584,36 @@ const directMessageHandler = async (message) => {
 
   webSocketMessages.value.push(message)
   console.log('직접 추가 후 배열:', webSocketMessages.value)
+  
+  // 다른 사용자로부터 받은 메시지인 경우 알림 발생
+  if (message.senderId !== currentUserId.value) {
+    console.log('🔔 새 채팅 메시지 알림 발생:', {
+      senderId: message.senderId,
+      currentUserId: currentUserId.value,
+      content: message.content
+    })
+    
+    // FCM이 오지 않는 경우를 대비한 백업 알림
+    window.dispatchEvent(
+      new CustomEvent('new-notification', {
+        detail: {
+          hasNew: true,
+          payload: {
+            notification: { 
+              title: roomData.value?.ownerName || roomData.value?.buyerName || '새 메시지',
+              body: message.content 
+            },
+            data: { 
+              type: 'CHAT', 
+              chatRoomId: message.chatRoomId, 
+              senderId: message.senderId 
+            }
+          },
+          source: 'websocket-backup',
+        },
+      }),
+    )
+  }
 
   forceScrollToBottom()
 
@@ -823,6 +890,22 @@ async function openUrl(raw) {
   }
 }
 
+function isContractChatUrl(message) {
+  const c = String(message?.content || '')
+  // 서버가 보내는 플레이스홀더 or 패턴에 맞는 실제 URL 둘 다 허용
+  return c === '계약 채팅방 URL' || /\/contract-?chat/i.test(c)
+}
+
+function isClickableUrlButton(message) {
+  // 내가 보낸 것이더라도 계약 채팅방 링크면 클릭 허용
+  return !isMyMessage(message) || isContractChatUrl(message)
+}
+
+// 뒤로가기 핸들러 (모바일)
+function handleBackClick() {
+  emit('room-closed')
+}
+
 // chatReady 상태 변경 감지
 watch(chatReady, async (ready, wasReady) => {
   if (ready && !wasReady) {
@@ -1009,9 +1092,32 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+/* 채팅 배경 - 데스크톱 기존 색상 */
+.kakao-chat-bg {
+  background: #f3f4f6; /* gray-100 */
+}
+
+/* 메시지 버블 스타일 - 카카오톡 레이아웃 유지 */
+.kakao-message {
+  border-radius: 0.5rem;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* 내 메시지 - yellow-primary */
+.kakao-message-mine {
+  background-color: #facc15; /* yellow-primary */
+  color: #ffffff;
+}
+
+/* 상대방 메시지 - 흰색 + 테두리 */
+.kakao-message-other {
+  background-color: #ffffff;
+  color: #1f2937; /* gray-800 */
+  border: 1px solid #e5e7eb;
+}
+
 .chat-messages-container {
-  height: 100%;
-  max-height: calc(100vh - 200px);
   overflow-y: auto !important;
   overflow-x: hidden;
 
@@ -1141,7 +1247,6 @@ onUnmounted(() => {
     /* 모바일에서 더 부드러운 스크롤 */
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
-    max-height: calc(100vh - 180px); /* 모바일에서 높이 조정 */
   }
 }
 
@@ -1150,16 +1255,5 @@ onUnmounted(() => {
   .max-w-xs {
     max-width: 280px;
   }
-
-  .chat-messages-container {
-    max-height: calc(100vh - 160px); /* 작은 화면에서 높이 조정 */
-  }
-}
-
-/*  전체 채팅 컨테이너 높이 설정 */
-.h-full.flex.flex-col {
-  height: 100vh;
-  max-height: 100vh;
-  overflow: hidden; /* 전체 페이지 스크롤 방지 */
 }
 </style>

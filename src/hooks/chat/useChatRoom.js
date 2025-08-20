@@ -81,7 +81,7 @@ export function useChatRoom(chatRoomId, currentUserId, roomData) {
   }
 
   // 메시지 전송
-  const sendMessage = (content, type = 'TEXT', fileUrl = null) => {
+  const sendMessage = async (content, type = 'TEXT', fileUrl = null) => {
     // 필수 조건 체크 - undefined와 null 모두 체크
     if (!chatRoomId.value) {
       console.error('채팅방 ID가 없습니다:', chatRoomId.value)

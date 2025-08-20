@@ -85,11 +85,11 @@ const autoAdjustmentLabel = computed(() =>
 )
 
 const restoreCategory = ref([])
-const hasConditionLog = ref(false)
-const hasPenalty = ref(false)
-const hasPriorityExtension = ref(false)
-const hasAutoPriceAdjustment = ref(false)
-const allowJeonseRight = ref(false)
+const hasConditionLog = ref(null)
+const hasPenalty = ref(null)
+const hasPriorityExtension = ref(null)
+const hasAutoPriceAdjustment = ref(null)
+const allowJeonseRight = ref(null)
 const isInitialized = ref(false)
 
 const patchContractStep2 = async () => {
@@ -136,14 +136,14 @@ onMounted(async () => {
     store.setCanProceed(false)
     try {
       const response = await OwnerPreContractAPI.getContractStep2(contractChatId)
-      const data = response.data
+      const data = response.data || {}
 
       restoreCategory.value = data.restoreCategories ?? []
-      hasConditionLog.value = data.hasConditionLog ?? false
-      hasPenalty.value = data.hasPenalty ?? false
-      hasPriorityExtension.value = data.hasPriorityForExtension ?? false
-      hasAutoPriceAdjustment.value = data.hasAutoPriceAdjustment ?? false
-      allowJeonseRight.value = data.allowJeonseRightRegistration ?? false
+      hasConditionLog.value = data.hasConditionLog ?? null
+      hasPenalty.value = data.hasPenalty ?? null
+      hasPriorityExtension.value = data.hasPriorityForExtension ?? null
+      hasAutoPriceAdjustment.value = data.hasAutoPriceAdjustment ?? null
+      allowJeonseRight.value = data.allowJeonseRightRegistration ?? null
     } catch (error) {
       console.error('계약 정보 설정 Step 2 조회 실패', error)
     }

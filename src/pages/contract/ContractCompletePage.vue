@@ -1,7 +1,11 @@
 <template>
-  <div class="max-w-screen min-h-screen mx-auto bg-yellow-50">
-    <!-- 헤더 -->
-    <ContractCompleteHeader :step="currentStep" />
+  <!-- 모바일 차단 -->
+  <MobileNotSupported v-if="isMobile" />
+
+  <!-- 데스크톱 컨텐츠 -->
+  <div v-else class="max-w-screen min-h-screen mx-auto bg-yellow-50">
+    <!-- 헤더 - 완료 단계에서만 표시 -->
+    <ContractCompleteHeader v-if="currentStep === 'complete'" />
 
     <!-- 단계별 컨텐츠 -->
     <div v-if="currentStep === 'preview'" class="px-16 py-8">
@@ -29,17 +33,59 @@
           </div>
         </div>
 
-        <!-- 체크박스 (임대인만 표시) -->
-        <div v-if="userRole === 'owner'" class="space-y-4 mb-6">
-          <label class="flex items-center">
-            <input type="checkbox" v-model="hasTaxArrears" class="mr-2" />
-            <span>세금 체납 사실이 없음을 확인합니다.</span>
-          </label>
+        <!-- 세금 체납 여부 (임대인만 표시) -->
+        <div v-if="userRole === 'owner'" class="space-y-6 mb-6 p-4 bg-gray-50 rounded-lg">
+          <div>
+            <h3 class="font-semibold mb-3">세금 체납 여부</h3>
+            <div class="space-y-2">
+              <label class="flex items-center">
+                <input
+                  type="radio"
+                  :value="false"
+                  v-model="hasTaxArrears"
+                  name="taxArrears"
+                  class="mr-2"
+                />
+                <span>세금 체납 사실이 없음</span>
+              </label>
+              <label class="flex items-center">
+                <input
+                  type="radio"
+                  :value="true"
+                  v-model="hasTaxArrears"
+                  name="taxArrears"
+                  class="mr-2"
+                />
+                <span>세금 체납 사실이 있음</span>
+              </label>
+            </div>
+          </div>
 
-          <label class="flex items-center">
-            <input type="checkbox" v-model="hasPriorFixedDate" class="mr-2" />
-            <span>선순위 확정일자가 없음을 확인합니다.</span>
-          </label>
+          <div>
+            <h3 class="font-semibold mb-3">선순위 확정일자 여부</h3>
+            <div class="space-y-2">
+              <label class="flex items-center">
+                <input
+                  type="radio"
+                  :value="false"
+                  v-model="hasPriorFixedDate"
+                  name="priorFixedDate"
+                  class="mr-2"
+                />
+                <span>선순위 확정일자가 없음</span>
+              </label>
+              <label class="flex items-center">
+                <input
+                  type="radio"
+                  :value="true"
+                  v-model="hasPriorFixedDate"
+                  name="priorFixedDate"
+                  class="mr-2"
+                />
+                <span>선순위 확정일자가 있음</span>
+              </label>
+            </div>
+          </div>
         </div>
 
         <!-- 버튼 -->
@@ -82,8 +128,8 @@
             </div>
           </div>
 
-          <!-- 세금 체납 없음 서명 (조건부) -->
-          <div v-if="hasTaxArrears && userRole === 'owner'" class="border rounded-lg p-4">
+          <!-- 세금 체납 없음 서명 (조건부 - 체납이 없을 때만) -->
+          <div v-if="!hasTaxArrears && userRole === 'owner'" class="border rounded-lg p-4">
             <h3 class="font-semibold mb-3">세금 체납 없음 확인 서명</h3>
             <div class="w-full">
               <SignaturePad
@@ -97,8 +143,8 @@
             </div>
           </div>
 
-          <!-- 선순위 확정일자 없음 서명 (조건부) -->
-          <div v-if="hasPriorFixedDate && userRole === 'owner'" class="border rounded-lg p-4">
+          <!-- 선순위 확정일자 없음 서명 (조건부 - 확정일자가 없을 때만) -->
+          <div v-if="!hasPriorFixedDate && userRole === 'owner'" class="border rounded-lg p-4">
             <h3 class="font-semibold mb-3">선순위 확정일자 없음 확인 서명</h3>
             <div class="w-full">
               <SignaturePad
@@ -277,10 +323,18 @@
       </div>
     </div>
 
-    <div v-else-if="currentStep === 'complete'" class="flex gap-6 px-16 py-8">
-      <!-- 완료 단계 -->
-      <ContractPreviewBox :pdfData="finalPdfData" :contractChatId="contractId" />
-      <ContractSidePanel :contractId="contractId" :finalPdfUrl="exportStatus?.finalPdfUrl" />
+    <div v-else-if="currentStep === 'complete'" class="flex flex-col">
+      <div class="flex gap-6 px-16 py-8">
+        <!-- 완료 단계 -->
+        <ContractPreviewBox :pdfData="finalPdfData" :contractChatId="contractId" />
+        <ContractSidePanel :contractId="contractId" :finalPdfUrl="exportStatus?.finalPdfUrl" />
+      </div>
+
+      <div class="w-full flex justify-center items-center mb-8">
+        <BaseButton class="w-96" size="lg" @click="handleGoToHistory"
+          >계약서 내역 확인하기</BaseButton
+        >
+      </div>
     </div>
 
     <!-- 로딩 오버레이 -->
@@ -294,24 +348,54 @@
       </div>
     </div>
   </div>
+
+  <!-- 에러 모달 -->
+  <div
+    v-if="showErrorModal"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+  >
+    <div class="bg-white rounded-2xl shadow-xl max-w-md w-full mx-4 p-6">
+      <div class="text-center">
+        <div
+          class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4"
+        >
+          <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.864-.833-2.634 0L5.232 19.5c-.77.833.192 2.5 1.732 2.5z"
+            ></path>
+          </svg>
+        </div>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">오류 발생</h3>
+        <p class="text-sm text-gray-500 mb-6">{{ errorMessage }}</p>
+        <button
+          @click="showErrorModal = false"
+          class="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+        >
+          확인
+        </button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { useConfirmModal } from '@/composables/useConfirmModal'
 // PdfViewer 제거 - 기본 iframe 사용
 import ContractCompleteHeader from '@/components/contract/complete/ContractCompleteHeader.vue'
+import MobileNotSupported from '@/components/common/MobileNotSupported.vue'
 import ContractPreviewBox from '@/components/contract/complete/ContractPreviewBox.vue'
 import ContractSidePanel from '@/components/contract/complete/ContractSidePanel.vue'
 import SignaturePad from '@/components/common/SignaturePad.vue'
 import websocketService from '@/apis/websocket'
 import SockJS from 'sockjs-client'
-import { useAuthStore } from '@/stores/auth'
 import api from '@/apis'
+import BaseButton from '@/components/common/BaseButton.vue'
 import {
-  startContractExport,
-  saveSignature,
-  saveFinalContract,
   getUserRole,
   updateSignatureStatus,
   getExportStatus,
@@ -319,8 +403,15 @@ import {
 } from '@/apis/contractChatApi'
 
 const route = useRoute()
-const authStore = useAuthStore()
 const contractId = ref(route.params.contractChatId)
+const router = useRouter()
+
+// 모바일 체크
+const isMobile = ref(false)
+
+const checkMobile = () => {
+  isMobile.value = window.innerWidth < 640
+}
 
 // WebSocket 관련 상태
 const exportStatus = ref(null)
@@ -335,10 +426,14 @@ const isWaitingForOther = ref(false) // 상대방 서명 대기 중
 const pdfUrl = ref('')
 const finalPdfData = ref(null)
 
-// 체크박스
-const hasTaxArrears = ref(false)
-const hasPriorFixedDate = ref(false)
+// 세금 체납 및 선순위 확정일자 (기본값: 없음)
+const hasTaxArrears = ref(false) // false = 없음, true = 있음
+const hasPriorFixedDate = ref(false) // false = 없음, true = 있음
 const mediationAgree = ref(true) // 항상 true로 설정
+
+// 에러 모달
+const showErrorModal = ref(false)
+const errorMessage = ref('')
 
 // 서명
 const signatures = ref({
@@ -419,23 +514,46 @@ watch(
 
 // WebSocket 메시지 핸들러
 const handleExportStatusUpdate = (data) => {
-  console.log('WebSocket 메시지 수신:', data)
+  console.log('=== WebSocket 상태 업데이트 수신 ===')
+  console.log('받은 데이터:', JSON.stringify(data, null, 2))
+  console.log('현재 userRole:', userRole.value)
 
   // 이전 상태 저장
   const prevStatus = exportStatus.value ? { ...exportStatus.value } : null
+  console.log('이전 상태:', prevStatus)
 
   // 새로운 상태 업데이트
   exportStatus.value = data
 
-  // 상대방이 방금 서명한 경우 - UI 상태만 업데이트 (alert 제거)
+  // 상태 변경 감지
   if (prevStatus && data) {
     const wasOwnerSigned = prevStatus.ownerSignatureCompleted
-    const isBuyerSigned = prevStatus.buyerSignatureCompleted
+    const wasBuyerSigned = prevStatus.buyerSignatureCompleted
     const nowOwnerSigned = data.ownerSignatureCompleted
     const nowBuyerSigned = data.buyerSignatureCompleted
 
-    // 상태 변경이 있으면 자동으로 UI가 업데이트됨
-    // alert 없이 진행 상태만 표시
+    // 상대방이 방금 서명한 경우
+    if (!wasOwnerSigned && nowOwnerSigned && userRole.value !== 'owner') {
+      console.log('임대인이 서명을 완료했습니다')
+    }
+    if (!wasBuyerSigned && nowBuyerSigned && userRole.value === 'owner') {
+      console.log('임차인이 서명을 완료했습니다')
+    }
+
+    // 양쪽 모두 서명 완료된 경우
+    if (nowOwnerSigned && nowBuyerSigned && (!wasOwnerSigned || !wasBuyerSigned)) {
+      console.log('양쪽 서명 완료! 최종 계약서 생성 시작...')
+      isLoading.value = true
+
+      // 최종 PDF가 이미 있으면 바로 완료 화면으로
+      if (data.finalPdfUrl) {
+        loadFinalPdf(data.finalPdfUrl).then(() => {
+          currentStep.value = 'complete'
+          isLoading.value = false
+          isWaitingForOther.value = false
+        })
+      }
+    }
   }
 }
 
@@ -467,20 +585,15 @@ const setupWebSocket = async () => {
       `/topic/contract/${contractId.value}/export/status`,
       handleExportStatusUpdate,
     )
-    console.log('WebSocket 구독 완료:', `/topic/contract/${contractId.value}/export/status`)
 
     // 계약 완료 알림 구독
     websocketService.onMessage(
       `/topic/contract/${contractId.value}/completion`,
       handleContractCompletion,
     )
-    console.log('WebSocket 완료 알림 구독:', `/topic/contract/${contractId.value}/completion`)
 
-    // 초기 상태 요청 (즉시 전송)
-    console.log('초기 상태 요청 즉시 전송')
-    console.log('WebSocket 연결 상태:', websocketService.getConnectionStatus())
-    const result = websocketService.getContractExportStatus(contractId.value)
-    console.log('초기 상태 요청 결과:', result)
+    // 초기 상태 요청
+    await websocketService.getContractExportStatus(contractId.value)
   } catch (error) {
     console.error('WebSocket 연결 실패:', error)
     isConnected.value = false
@@ -512,6 +625,10 @@ const testWebSocketConnection = async () => {
 
 // 초기 PDF 로드 및 사용자 역할 설정
 onMounted(async () => {
+  // 모바일 체크
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+
   // WebSocket 연결 테스트
   await testWebSocketConnection()
 
@@ -567,6 +684,7 @@ onMounted(async () => {
 
 // 컴포넌트 언마운트 시 정리
 onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
   stopStatusPolling()
   if (isConnected.value) {
     websocketService.offMessage(`/topic/contract/${contractId.value}/export/status`)
@@ -645,8 +763,7 @@ const loadInitialPDF = async () => {
       throw new Error('임시 URL 생성에 실패했습니다')
     }
   } catch (error) {
-    console.error('PDF URL 생성 실패:', error)
-    alert('계약서를 불러오는데 실패했습니다: ' + error.message)
+    handleError(error, '계약서를 불러오는데 실패했습니다.')
   } finally {
     isLoading.value = false
   }
@@ -670,9 +787,16 @@ const handleSignature3 = (data) => {
 // 서명 완료 여부
 const isSignatureComplete = computed(() => {
   const hasMainSignature = !!signatures.value.signature1
+
+  // 임차인인 경우 메인 서명만 있으면 완료
+  if (userRole.value === 'buyer' || userRole.value === 'tenant') {
+    return hasMainSignature && mediationAgree.value
+  }
+
+  // 임대인인 경우 추가 서명 필요
   const hasRequiredSignatures =
-    (!hasTaxArrears.value || !!signatures.value.signature2) &&
-    (!hasPriorFixedDate.value || !!signatures.value.signature3)
+    (hasTaxArrears?.value || !!signatures.value.signature2) && // 체납이 있으면 서명 불필요, 없으면 서명 필요
+    (hasPriorFixedDate?.value || !!signatures.value.signature3) // 확정일자가 있으면 서명 불필요, 없으면 서명 필요
   return hasMainSignature && hasRequiredSignatures && mediationAgree.value
 })
 
@@ -689,7 +813,58 @@ const proceedToSignature = () => {
     alert('PDF를 먼저 로드해주세요.')
     return
   }
+  // contract_step을 END로 설정하는 API 호출
+  updateContractStep('END')
+  // 서명 화면으로 이동
   currentStep.value = 'signature'
+}
+
+// 전역 에러 처리 함수
+const handleError = (error, defaultMessage = '오류가 발생했습니다.') => {
+  console.error('에러 발생:', error)
+
+  let message = defaultMessage
+
+  if (error.response) {
+    const status = error.response.status
+    switch (status) {
+      case 400:
+        message = '잘못된 요청입니다.'
+        break
+      case 401:
+        message = '인증이 필요합니다.'
+        break
+      case 403:
+        message = '접근 권한이 없습니다.'
+        break
+      case 404:
+        message = '요청한 리소스를 찾을 수 없습니다.'
+        break
+      case 500:
+        message = '서버 오류가 발생했습니다.'
+        break
+      case 501:
+        message = '구현되지 않은 기능입니다.'
+        break
+      default:
+        message = `오류가 발생했습니다. (${status})`
+    }
+  }
+
+  showErrorModal.value = true
+  errorMessage.value = message
+}
+
+// contract_step 업데이트
+const updateContractStep = async (step) => {
+  try {
+    await api.post(`/api/contract/${contractId.value}/updateStep`, {
+      step: step,
+    })
+    console.log('Contract step updated to:', step)
+  } catch (error) {
+    console.error('Failed to update contract step:', error)
+  }
 }
 
 // 서명 완료 후 처리
@@ -702,7 +877,9 @@ const proceedToPassword = async () => {
   isLoading.value = true
   try {
     // 서버에 서명 저장
+    console.log('서명 서버 저장 시작...')
     await saveSignatureToServer()
+    console.log('서명 서버 저장 완료')
 
     // WebSocket 연결 확인
     if (!websocketService.getConnectionStatus()) {
@@ -724,8 +901,8 @@ const proceedToPassword = async () => {
       signature1: signatures.value.signature1?.dataUrl || '', // base64 encoded signature
       signature2: signatures.value.signature2?.dataUrl || '',
       signature3: signatures.value.signature3?.dataUrl || '',
-      hasTaxArrears: hasTaxArrears.value,
-      hasPriorFixedDate: hasPriorFixedDate.value,
+      hasTaxArrears: !hasTaxArrears.value,
+      hasPriorFixedDate: !hasPriorFixedDate.value,
       mediationAgree: true, // 항상 true로 설정
       submittedAt: Date.now(),
     }
@@ -735,33 +912,65 @@ const proceedToPassword = async () => {
     console.log('WebSocket 연결 상태:', websocketService.getConnectionStatus())
 
     // WebSocket 서비스 메서드 사용 (await 추가)
+    console.log('서명 전송 시작, contractId:', contractId.value)
+    console.log('서명 메시지:', JSON.stringify(signatureMessage, null, 2))
+
+    // WebSocket 전송 시도
     const sendResult = await websocketService.sendContractExportSignature(
       contractId.value,
       signatureMessage,
     )
-    console.log('메시지 전송 결과:', sendResult)
+    console.log('WebSocket 서명 전송 결과:', sendResult)
 
+    // WebSocket 실패 시 또는 백업으로 HTTP API 사용
     if (!sendResult) {
       console.warn('WebSocket 메시지 전송 실패. HTTP API 사용...')
-      try {
-        // HTTP API를 통한 서명 상태 업데이트
-        const httpResult = await updateSignatureStatus(contractId.value, signatureMessage)
-        console.log('HTTP API 서명 상태 업데이트 결과:', httpResult)
-
-        // 상태 폴링 시작
-        startStatusPolling()
-      } catch (error) {
-        console.error('HTTP API 서명 상태 업데이트 실패:', error)
-      }
     }
+
+    // 항상 HTTP API로도 전송 (백업)
+    try {
+      console.log('HTTP API로 서명 상태 업데이트 시도...')
+      const httpResult = await updateSignatureStatus(contractId.value, signatureMessage)
+      console.log('HTTP API 서명 상태 업데이트 결과:', httpResult)
+
+      // HTTP API 성공 시 본인 서명 상태를 즉시 업데이트
+      if (httpResult && httpResult.success) {
+        if (userRole.value === 'owner') {
+          exportStatus.value = {
+            ...exportStatus.value,
+            ownerSignatureCompleted: true,
+          }
+        } else {
+          exportStatus.value = {
+            ...exportStatus.value,
+            buyerSignatureCompleted: true,
+          }
+        }
+      }
+    } catch (error) {
+      handleError(error, '서명 전송에 실패했습니다. 다시 시도해주세요.')
+      return // 실패 시 대기 화면으로 가지 않음
+    }
+
+    // 서명 완료 후 즉시 상태 폴링 시작
+    console.log('상태 폴링 시작...')
+    startStatusPolling()
+
+    // WebSocket이 실패한 경우에도 HTTP API로 상태 조회
+    setTimeout(async () => {
+      const latestStatus = await getExportStatus(contractId.value)
+      if (latestStatus) {
+        console.log('HTTP로 가져온 최신 상태:', latestStatus)
+        exportStatus.value = latestStatus
+      }
+    }, 1000)
 
     // 대기 화면으로 이동 (백엔드에서 자동으로 최종 계약서 생성)
     console.log('서명 완료. 최종 계약서 생성 대기 중...')
     isWaitingForOther.value = true
     currentStep.value = 'waiting'
   } catch (error) {
-    console.error('서명 저장 실패:', error)
-    alert('서명 저장 중 오류가 발생했습니다.')
+    handleError(error, '서명 저장 중 오류가 발생했습니다.')
   } finally {
     // 완료 화면으로 가지 않는 경우에만 로딩 해제
     if (currentStep.value !== 'complete') {
@@ -772,10 +981,10 @@ const proceedToPassword = async () => {
 
 // 자동으로 최종 계약서 생성 (현재는 백엔드에서 자동 처리)
 // 이 함수는 참조용으로 남겨둠
-const autoCompleteFinalContract = async () => {
-  // 백엔드에서 자동으로 처리하므로 프론트엔드에서는 대기만 함
-  console.log('백엔드에서 최종 계약서 자동 생성 중...')
-}
+// const autoCompleteFinalContract = async () => {
+//   // 백엔드에서 자동으로 처리하므로 프론트엔드에서는 대기만 함
+//   console.log('백엔드에서 최종 계약서 자동 생성 중...')
+// }
 
 // 계약 완료 (수동 암호 설정용 - 현재는 사용하지 않음)
 const completeContract = async () => {
@@ -802,8 +1011,7 @@ const completeContract = async () => {
     // 양측 모두 완료 시 최종 PDF는 서버에서 자동 생성
     // WebSocket을 통해 완료 알림을 받음
   } catch (error) {
-    console.error('계약 완료 실패:', error)
-    alert('계약서 처리 중 오류가 발생했습니다.')
+    handleError(error, '계약서 처리 중 오류가 발생했습니다.')
   } finally {
     isLoading.value = false
   }
@@ -861,7 +1069,7 @@ const saveSignatureToServer = async () => {
     formData.append('dto', dtoBlob, 'dto.json')
 
     // 이미지 파일들 추가
-    signatureBlobs.forEach((file, index) => {
+    signatureBlobs.forEach((file) => {
       formData.append('imgFiles', file)
     })
 
@@ -932,23 +1140,67 @@ let pollingInterval = null
 const startStatusPolling = () => {
   console.log('상태 폴링 시작')
 
+  // 즉시 한 번 실행
+  getExportStatus(contractId.value)
+    .then((status) => {
+      if (status) {
+        console.log('초기 폴링 상태:', status)
+        exportStatus.value = status
+      }
+    })
+    .catch((err) => {
+      console.error('초기 상태 조회 실패:', err)
+    })
+
   pollingInterval = setInterval(async () => {
     try {
       const status = await getExportStatus(contractId.value)
       console.log('폴링 상태 확인:', status)
 
+      // null 체크
+      if (!status) {
+        console.warn('상태 조회 결과가 null입니다')
+        return
+      }
+
       // 상태 업데이트
       exportStatus.value = status
 
-      // 완료 상태 확인
+      // 양쪽 서명 완료 확인
+      if (status.ownerSignatureCompleted && status.buyerSignatureCompleted) {
+        console.log('양쪽 서명 완료 확인!')
+
+        // 최종 PDF가 생성되었으면
+        if (status.finalPdfUrl) {
+          console.log('최종 계약서 생성 완료!')
+          stopStatusPolling()
+          isWaitingForOther.value = false
+          isLoading.value = false
+
+          // 완료 화면으로 이동
+          loadFinalPdf(status.finalPdfUrl).then(() => {
+            currentStep.value = 'complete'
+            alert('계약서 서명이 완료되어 최종 계약서가 생성되었습니다!')
+          })
+        } else {
+          // PDF 생성 중
+          console.log('최종 계약서 생성 중...')
+          isLoading.value = true
+        }
+      }
+
+      // 완료 상태 확인 (별도 체크)
       if ((status.isCompleted || status.completed) && status.finalPdfUrl) {
         console.log('폴링: 최종 계약서 생성 완료!')
         stopStatusPolling()
+        isWaitingForOther.value = false
+        isLoading.value = false
 
         // 완료 화면으로 이동
         if (currentStep.value === 'waiting') {
           loadFinalPdf(status.finalPdfUrl).then(() => {
             currentStep.value = 'complete'
+            alert('계약서 서명이 완료되어 최종 계약서가 생성되었습니다!')
           })
         }
       }
@@ -966,12 +1218,24 @@ const stopStatusPolling = () => {
   }
 }
 
+const { openConfirmModal } = useConfirmModal()
+
 // 취소
-const cancelExport = () => {
-  if (confirm('계약서 내보내기를 취소하시겠습니까?')) {
+const cancelExport = async () => {
+  const confirmed = await openConfirmModal({
+    title: '내보내기 취소',
+    message: '계약서 내보내기를 취소하시겠습니까?',
+  })
+
+  if (confirmed) {
     stopStatusPolling()
     // TODO: 이전 페이지로 이동
     window.history.back()
   }
+}
+
+// 계약서 확인하러 가기 매물
+const handleGoToHistory = () => {
+  router.push('/mypage/contracts')
 }
 </script>

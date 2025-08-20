@@ -6,10 +6,14 @@ export const authAPI = {
   getKakaoLoginUrl: () => api.get('/api/auth/kakao/login-url'),
 
   // OAuth2 로그인 완료 처리 (code를 토큰으로 교환)
-  completeOAuth2Login: (code) => 
-    api.post('/oauth2/login/complete', {}, { 
-      params: { code } 
-    }),
+  completeOAuth2Login: (code) =>
+    api.post(
+      '/oauth2/login/complete',
+      {},
+      {
+        params: { code },
+      },
+    ),
 
   // 사용자 정보 조회
   getUserInfo: () => api.get('/api/auth/user'),

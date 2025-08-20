@@ -52,6 +52,9 @@
           { label: '없음', value: false },
         ]"
       />
+      <p class="text-[12px] text-gray-500">
+        *없음을 선택할 경우 최종 계약서에 해당 항목에 대한 서명이 필요합니다.
+      </p>
 
       <div v-if="hasTaxArrears === true" class="w-full flex flex-col gap-2">
         <p class="text-sm font-medium text-gray-600">미납 국세 지방세의 금액을 입력하세요.</p>
@@ -65,10 +68,14 @@
         label="선순위 확정일자가 존재하나요?"
         v-model="hasPriorFixedDate"
         :options="[
-          { label: '해당 없음', value: true },
-          { label: '해당 있음', value: false },
+          { label: '있음', value: true },
+          { label: '없음', value: false },
         ]"
+        class="mt-4"
       />
+      <p class="text-[12px] text-gray-500">
+        *없음을 선택할 경우 최종 계약서에 해당 항목에 대한 서명이 필요합니다.
+      </p>
     </div>
   </div>
 </template>

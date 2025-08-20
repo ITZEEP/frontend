@@ -1,11 +1,11 @@
 <template>
-  <div class="p-4 border-t bg-white">
-    <div class="flex space-x-2">
+  <div class="p-3 md:p-4 bg-white border-t">
+    <div class="flex items-center space-x-2">
       <!-- 파일 업로드 버튼 -->
       <div class="relative" ref="fileMenuContainer">
         <button
           @click="showFileMenu = !showFileMenu"
-          class="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors"
+          class="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors flex-shrink-0"
         >
           <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -17,10 +17,10 @@
           </svg>
         </button>
 
-        <!-- 파일 메뉴 -->
+        <!-- 파일 메뉴 - 모바일에서 위쪽에 표시 -->
         <div
           v-if="showFileMenu"
-          class="absolute bottom-12 left-0 bg-white border rounded-lg shadow-lg py-2 w-48 z-10"
+          class="absolute bottom-12 left-0 md:left-auto md:right-0 bg-white border rounded-lg shadow-lg py-2 w-48 z-10"
         >
           <button
             @click="openFileInput('image')"
@@ -51,7 +51,7 @@
         v-model="messageInput"
         @keyup.enter="sendMessage"
         @input="handleTyping"
-        class="flex-1 border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        class="flex-1 border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-sm md:text-base"
         placeholder="메시지를 입력하세요"
         :disabled="isUploading"
       />
@@ -60,7 +60,7 @@
       <button
         @click="sendMessage"
         :disabled="!messageInput.trim() || isUploading"
-        class="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+        class="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 disabled:bg-gray-300 disabled:cursor-not-allowed flex-shrink-0"
       >
         <span v-if="isUploading">업로드중...</span>
         <span v-else>전송</span>

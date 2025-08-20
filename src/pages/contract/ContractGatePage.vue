@@ -1,5 +1,9 @@
 <template>
-  <section class="flex flex-col items-center justify-center h-full text-center px-4 py-10">
+  <!-- 모바일 차단 -->
+  <MobileNotSupported v-if="isMobile" />
+  
+  <!-- 데스크톱 컨텐츠 -->
+  <section v-else class="flex flex-col items-center justify-center h-full text-center px-4 py-10">
     <!-- <img src="@/assets/contract-guide.svg" alt="계약서 작성 안내" class="w-48 mb-6" /> -->
     <h2 class="text-xl font-semibold text-gray-700 mb-2">계약서 작성을 시작하려면</h2>
     <p class="text-gray-500 mb-6">
@@ -21,9 +25,26 @@
 </template>
 
 <script setup>
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import MobileNotSupported from '@/components/common/MobileNotSupported.vue'
 
 const router = useRouter()
+const isMobile = ref(false)
+
+const checkMobile = () => {
+  isMobile.value = window.innerWidth < 640
+}
+
+onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobile)
+})
+
 const goToHomes = () => router.push('/homes')
 const goToChat = () => router.push('/chat')
 </script>
