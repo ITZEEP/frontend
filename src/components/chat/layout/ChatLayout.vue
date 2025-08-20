@@ -1,25 +1,46 @@
 <template>
-  <div class="flex h-[calc(100dvh-64px)] min-h-0">
-    <div class="w-1/3 border-r min-h-0 overflow-y-auto">
-      <ChatList
-        @selectRoom="handleRoomSelection"
-        :initial-room-id="initialRoomId"
-        ref="chatListRef"
-      />
-    </div>
-    <div class="flex-1 min-h-0 flex flex-col">
-      <!--  선택된 채팅방이 있을 때만 렌더링 -->
-      <ChatRoom
-        v-if="selectedRoom"
-        :room="selectedRoom"
-        :key="`room-${selectedRoom.chatRoomId}`"
-        @room-closed="handleRoomClosed"
-      />
-      <div v-else class="flex items-center justify-center h-full text-gray-500">
-        <div class="text-center bg-white rounded-2xl shadow-lg p-12 max-w-md mx-4">
-          <!-- 채팅 아이콘 -->
-          <div class="mb-8 flex items-center justify-center text-gray-300">
-            <IconChatWait />
+  <div class="flex h-[calc(100dvh-64px)] min-h-0 bg-gray-50">
+    <!-- 컨텐츠 영역 -->
+    <div class="flex-1 flex min-h-0">
+      <!-- 모바일: 채팅방이 선택되면 목록 숨기고 채팅방만 표시 -->
+      <!-- 데스크톱: 사이드바 형태로 유지 -->
+      
+      <!-- 채팅 목록 사이드바 -->
+      <div 
+        class="bg-white transition-all duration-300 border-r"
+        :class="{
+          'w-full md:w-[320px] lg:w-[360px]': true,
+          'hidden md:block': selectedRoom && isMobile,
+          'block': !selectedRoom || !isMobile
+        }"
+      >
+        <ChatList
+          @selectRoom="handleRoomSelection"
+          :initial-room-id="initialRoomId"
+          ref="chatListRef"
+        />
+      </div>
+
+      <!-- 채팅방 영역 -->
+      <div 
+        class="flex-1 min-h-0 flex flex-col bg-white"
+        :class="{
+          'hidden md:flex': !selectedRoom,
+          'flex': selectedRoom
+        }"
+      >
+        <!--  선택된 채팅방이 있을 때만 렌더링 -->
+        <ChatRoom
+          v-if="selectedRoom"
+          :room="selectedRoom"
+          :key="`room-${selectedRoom.chatRoomId}`"
+          @room-closed="handleRoomClosed"
+        />
+        <div v-else class="hidden md:flex items-center justify-center h-full text-gray-500">
+          <div class="text-center bg-white rounded-2xl shadow-lg p-12 max-w-md mx-4">
+            <!-- 채팅 아이콘 -->
+            <div class="mb-8 flex items-center justify-center text-gray-300">
+              <IconChatWait />
           </div>
           <!-- 제목 -->
           <h2 class="text-2xl font-bold text-gray-800 mb-8">채팅 에티켓 안내</h2>
@@ -131,12 +152,13 @@
           </div>
         </div>
       </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import ChatList from '@/components/chat/chatList/ChatList.vue'
 import ChatRoom from '@/components/chat/chatRoom/ChatRoom.vue'
 import IconChatWait from '@/components/icons/IconChatWait.vue'
@@ -150,6 +172,7 @@ defineProps({
 
 const selectedRoom = ref(null) //  초기값을 null로 설정
 const chatListRef = ref(null)
+const isMobile = ref(window.innerWidth < 768)
 
 //  채팅방 선택 핸들러
 function handleRoomSelection(room) {
@@ -171,4 +194,18 @@ function handleRoomClosed() {
     chatListRef.value.setCurrentChatRoom(null)
   }
 }
+
+// 화면 크기 변경 감지
+function handleResize() {
+  isMobile.value = window.innerWidth < 768
+}
+
+onMounted(() => {
+  window.addEventListener('resize', handleResize)
+  handleResize()
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+})
 </script>

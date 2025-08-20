@@ -1,7 +1,13 @@
 <template>
-  <div class="white-box hover:bg-yellow-50 cursor-pointer p-4 border-b" @click="$emit('click')">
-    <div class="flex items-center space-x-3">
-      <!-- 상대방 프로필 이미지 -->
+  <div 
+    class="kakao-chat-item hover:bg-yellow-50 cursor-pointer px-4 py-3 transition-all" 
+    :class="{
+      'bg-yellow-50': isSelected
+    }"
+    @click="$emit('click')"
+  >
+    <div class="flex items-start space-x-3">
+      <!-- 프로필 이미지 - 데스크톱 기존 스타일 -->
       <div class="w-12 h-12 rounded-full bg-gray-300 flex-shrink-0 overflow-hidden">
         <img
           v-if="room?.otherUserProfileUrl"
@@ -12,32 +18,32 @@
         />
         <div
           v-else
-          class="w-full h-full bg-gray-400 flex items-center justify-center text-white text-sm"
+          class="w-full h-full bg-gray-400 flex items-center justify-center text-white font-medium"
         >
           {{ getInitial(room?.otherUserNickname) }}
         </div>
       </div>
 
       <div class="flex-1 min-w-0">
-        <!-- 상대방 닉네임 -->
-        <h3 class="text-base font-semibold text-gray-800 truncate">
-          {{ room?.otherUserNickname || '알 수 없는 사용자' }}
-        </h3>
-
-        <!-- 마지막 메시지 -->
-        <p class="text-sm text-gray-500 truncate">
-          {{ lastMessageDisplay }}
-        </p>
-
-        <!-- 시간 및 읽지 않은 메시지 수 -->
-        <div class="flex justify-between items-center mt-1">
+        <!-- 상대방 닉네임과 시간 -->
+        <div class="flex items-center justify-between mb-0.5">
+          <h3 class="text-base font-semibold text-gray-800 truncate flex-1 mr-2">
+            {{ room?.otherUserNickname || '알 수 없는 사용자' }}
+          </h3>
           <span class="text-xs text-gray-400">
             {{ timeDisplay }}
           </span>
-          <!-- ✅ 핵심 수정: getDisplayUnreadCount 함수 사용 -->
+        </div>
+
+        <!-- 마지막 메시지와 읽지 않은 수 -->
+        <div class="flex items-center justify-between">
+          <p class="text-sm text-gray-500 truncate flex-1 mr-2">
+            {{ lastMessageDisplay }}
+          </p>
+          <!-- 알림 배지 -->
           <span
             v-if="getDisplayUnreadCount() > 0"
-            class="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center animate-pulse"
+            class="bg-red-500 text-white text-xs rounded-full min-w-[20px] px-2 py-1 text-center flex-shrink-0"
           >
             {{ getDisplayUnreadCount() > 99 ? '99+' : getDisplayUnreadCount() }}
           </span>
@@ -60,6 +66,11 @@ const props = defineProps({
 
 // 부모 컴포넌트에서 현재 채팅방 ID 주입받기
 const currentChatRoomId = inject('currentChatRoomId', { value: null })
+
+// 현재 아이템이 선택되었는지 확인
+const isSelected = computed(() => {
+  return props.room?.chatRoomId === currentChatRoomId.value
+})
 
 watch(
   () => props.room?.lastMessage,
@@ -166,28 +177,13 @@ function onImageError(event) {
 </script>
 
 <style scoped>
-.white-box {
-  transition: background-color 0.2s ease;
+/* 채팅 아이템 스타일 */
+.kakao-chat-item {
+  border-bottom: 1px solid #e5e7eb;
+  transition: background-color 0.15s ease;
 }
 
-/* 호버 효과 개선 */
-.white-box:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-/* 읽지 않은 메시지 배지 애니메이션 */
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
-}
-
-.animate-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+.kakao-chat-item:last-child {
+  border-bottom: none;
 }
 </style>
