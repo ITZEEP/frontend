@@ -22,6 +22,9 @@ app.use(VueAwesomePaginate)
 app.use(createPinia())
 app.use(router)
 
+// 전역 라우터 인스턴스 설정 (axios 인터셉터에서 사용)
+window.$router = router
+
 app.mount('#app')
 
 setTimeout(async () => {

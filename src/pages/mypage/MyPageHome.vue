@@ -373,7 +373,7 @@ const handleLogout = async () => {
     try {
       await authStore.logout()
       await showAlert('로그아웃되었습니다.')
-      await router.push('/')
+      router.push({ name: 'home' })
     } catch (error) {
       console.error('Logout error:', error)
       await showAlert('로그아웃에 실패했습니다.')

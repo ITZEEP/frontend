@@ -4,6 +4,7 @@ import { getCurrentUser } from '@/apis/chatApi'
 
 // VAPID 키
 const vapidKey =
+  import.meta.env.VITE_FIREBASE_VAPID_KEY || 
   'BBwhqrm3fd9077YciPjcCv1H7E1rrEbfIko3CwjtE4PlpkY-3PGnV0V1TBUAU_epvIP9ug_ktwaDvxQsYAQobk0'
 
 // 알림 상태 관리를 위한 전역 상태

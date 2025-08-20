@@ -85,7 +85,7 @@ async function handleKakaoLogin() {
 async function handleLogout() {
   try {
     await authStore.logout()
-    router.push('/')
+    router.push({ name: 'home' })
   } catch (err) {
     console.error('Logout error:', err)
     error.value = '로그아웃 중 오류가 발생했습니다.'
