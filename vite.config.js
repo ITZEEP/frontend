@@ -12,18 +12,6 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
-  optimizeDeps: {
-    include: ['pdfjs-dist'],
-  },
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          'pdfjs': ['pdfjs-dist']
-        }
-      }
-    }
-  },
   server: {
     proxy: {
       '/api': {

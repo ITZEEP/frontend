@@ -236,12 +236,7 @@ const handleLogout = async () => {
   }
   
   .logout-section {
-    border-top: none;
-    border-left: 1px solid #dde1e4;
-    padding-top: 0;
-    padding-left: 12px;
-    margin-top: 0;
-    margin-left: 12px;
+    display: none;
   }
   
   .logout-btn {

@@ -2,9 +2,11 @@ import { getToken as getFirebaseToken, onMessage } from 'firebase/messaging'
 import { messaging } from '@/fcm/fcmIndex'
 import { getCurrentUser } from '@/apis/chatApi'
 
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
+
 // VAPID 키
 const vapidKey =
-  import.meta.env.VITE_FIREBASE_VAPID_KEY || 
+  import.meta.env.VITE_FIREBASE_VAPID_KEY ||
   'BBwhqrm3fd9077YciPjcCv1H7E1rrEbfIko3CwjtE4PlpkY-3PGnV0V1TBUAU_epvIP9ug_ktwaDvxQsYAQobk0'
 
 // 알림 상태 관리를 위한 전역 상태
@@ -30,7 +32,7 @@ const sendTokenToServer = async (token) => {
 
     const authToken = localStorage.getItem('accessToken') || localStorage.getItem('access-token')
 
-    const response = await fetch('/api/fcm/token', {
+    const response = await fetch(`${BASE_URL}/api/fcm/token`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
